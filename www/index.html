@@ -1,0 +1,2584 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cosmii Sudoku</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F4ECDF;
+    --card: #FFFFFF;
+    --card-soft: #FBF1E2;
+    --text: #6B4A3E;
+    --text-muted: #B49A87;
+    --accent: #F0A33E;
+    --accent-2: #4FA6C7;
+    --accent-dark: #E0862F;
+    --danger: #E2574C;
+    --line: rgba(107,74,62,0.10);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Nunito',sans-serif;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+  }
+  .display{font-family:'Baloo 2',cursive;}
+  /* Japanese wraps mid-phrase by default, which reads badly in short tip
+     cards. auto-phrase breaks on grammatical boundaries instead; balance
+     evens out the ragged edge of any line we didn't break by hand. */
+  html[lang="ja"] .coach-tip,
+  html[lang="ja"] .modal-card,
+  html[lang="ja"] .rulecard p,
+  html[lang="ja"] .title-card h3{ word-break:auto-phrase; line-break:strict; }
+  .coach-tip, .modal-card .best-line, .rulecard p{ text-wrap:balance; }
+  #app{
+    position:relative; width:100%; height:100%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+  }
+  .screen{
+    position:absolute; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:22px 16px;
+    opacity:0; pointer-events:none;
+    transition:opacity .3s ease;
+  }
+  .screen.active{opacity:1; pointer-events:auto;}
+
+  /* ---------- Title screen ---------- */
+  #title-screen{
+    justify-content:flex-start;
+    padding-top:calc(54px + env(safe-area-inset-top));
+    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+    background-image:
+      radial-gradient(circle at 12% 8%, rgba(107,74,62,0.05) 0 34px, transparent 35px),
+      radial-gradient(circle at 60% 4%, rgba(107,74,62,0.05) 0 30px, transparent 31px),
+      radial-gradient(circle at 90% 14%, rgba(107,74,62,0.05) 0 26px, transparent 27px),
+      radial-gradient(circle at 30% 88%, rgba(107,74,62,0.05) 0 32px, transparent 33px),
+      radial-gradient(circle at 78% 92%, rgba(107,74,62,0.05) 0 28px, transparent 29px);
+  }
+  .topbar-right{display:flex; align-items:center; gap:10px;}
+  .coin-icon{width:24px; height:24px; flex-shrink:0; object-fit:contain; border-radius:50%; display:block;}
+  .coin-chip{
+    display:flex; align-items:center; gap:6px;
+    background:var(--card); border-radius:20px; padding:6px 13px 6px 9px;
+    font-family:'Baloo 2'; font-weight:700; font-size:16px; color:#B07A17;
+    box-shadow:0 2px 0 rgba(107,74,62,0.08);
+  }
+  .coin-chip.bump{animation:coinBump .45s ease;}
+  @keyframes coinBump{
+    0%,100%{transform:scale(1);} 35%{transform:scale(1.16);}
+  }
+  .coin-reward{
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    background:var(--card-soft); border-radius:14px; padding:9px;
+    margin:2px 0 4px;
+  }
+  .coin-reward .coin-icon{width:26px; height:26px; object-fit:contain; border-radius:50%; display:block;}
+  .coin-reward .coin-gain{
+    font-family:'Baloo 2'; font-weight:800; font-size:19px; color:#B07A17;
+  }
+  .coin-reward .coin-total{font-size:12px; font-weight:800; color:var(--text-muted);}
+  .modal-overlay.active .coin-reward .coin-gain{
+    display:inline-block; animation:coinPop .5s .15s backwards cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes coinPop{
+    0%{opacity:0; transform:translateY(8px) scale(.6);}
+    100%{opacity:1; transform:translateY(0) scale(1);}
+  }
+  .lang-toggle{
+    display:flex; background:var(--card); border-radius:20px; padding:3px;
+    box-shadow:0 2px 0 rgba(107,74,62,0.08);
+  }
+  .lang-toggle button{
+    border:none; background:none; cursor:pointer; padding:6px 11px;
+    border-radius:16px; font-family:'Nunito',sans-serif;
+    font-weight:800; font-size:12px; color:var(--text-muted);
+  }
+  .lang-toggle button.on{background:var(--accent); color:#fff;}
+  .title-topbar{
+    width:100%; max-width:420px; display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:24px;
+    padding-top:10px;
+  }
+  .avatar-btn{
+    width:60px; height:60px; border-radius:18px; border:3px solid var(--accent-2);
+    background:linear-gradient(160deg,#EAF6EE,#D9EEE0); display:flex; align-items:center; justify-content:center;
+    padding:8px; cursor:pointer;
+  }
+  .avatar-btn:active{transform:scale(0.95);}
+  .avatar-btn svg, .avatar-btn img{width:100%; height:100%; display:block;}
+  .avatar-btn img{object-fit:contain; border-radius:12px;}
+  .title-cards{
+    width:100%; max-width:420px; display:flex; gap:12px;
+    margin:auto 0 0;                 /* pushes the group down off the header */
+  }
+  .title-card{
+    flex:1; border-radius:20px; padding:15px; min-height:158px; text-align:left;
+    display:flex; flex-direction:column; cursor:pointer; position:relative; color:#fff;
+  }
+  .title-card:active{transform:translateY(2px);}
+  .title-card h3{margin:0; font-size:15px; font-weight:800; line-height:1.3;}
+  .title-card.daily{background:linear-gradient(160deg,#7F86D6,#5B62B8);}
+  .title-card.daily.locked{opacity:0.92;}
+  .title-card.streak{background:linear-gradient(160deg,#FFC94F,#F0A020);}
+  .card-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center;}
+  .lock-icon{width:38px; height:46px; opacity:0.95;}
+  .sun-icon{width:66px; height:66px;}
+  .card-sub{font-size:12px; font-weight:800; opacity:0.9; text-align:center;}
+  .card-count-pill{
+    background:rgba(255,255,255,0.55); border-radius:14px; text-align:center; padding:6px;
+    font-family:'Baloo 2'; font-weight:800; font-size:18px; color:#7A4E00; margin-top:8px;
+  }
+  .card-check{
+    position:absolute; top:12px; right:12px; width:24px; height:24px; border-radius:50%;
+    background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900;
+  }
+  .cosmii-wordmark{
+    display:flex; align-items:center; justify-content:center;
+    margin:clamp(18px, 5.5vh, 42px) 0 14px;
+    padding:0 8px;
+  }
+  .cosmii-wordmark-image{
+    width:min(86vw, 320px);
+    max-width:100%;
+    height:auto;
+    display:block;
+    object-fit:contain;
+  }
+  .promo-strip{
+    width:100%; max-width:420px;
+    margin:18px auto 0;
+    overflow:hidden;
+    border-radius:24px;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 18px 40px rgba(49,25,11,.12);
+    border:1px solid rgba(255,255,255,.55);
+    touch-action: pan-y;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  .promo-track{
+    display:flex;
+    width:auto;
+    transition:transform .5s ease;
+    will-change:transform;
+    touch-action: none;
+  }
+  .promo-card{
+    min-width:100%;
+    flex:0 0 100%;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:16px 18px;
+    text-decoration:none;
+    color:var(--text);
+    font-weight:700;
+    font-size:14px;
+    line-height:1.3;
+    transition:background .2s ease;
+    scroll-snap-align:start;
+  }
+  .promo-strip{scroll-snap-type:x mandatory;}
+  .promo-card:hover{
+    background:rgba(240,163,62,.08);
+  }
+  .promo-icon{
+    width:44px;
+    height:44px;
+    min-width:44px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+    color:#fff;
+    font-size:22px;
+  }
+  .promo-icon.apple-store{
+    background:#000;
+  }
+  .promo-icon.apple-store svg{
+    width:24px;
+    height:24px;
+  }
+  .promo-title{
+    display:block;
+    max-width:calc(100% - 56px);
+  }
+  .promo-track .promo-card:nth-child(2) .promo-icon{background:linear-gradient(135deg,#6B8AFF,#3E8BFF);}
+  .promo-track .promo-card:nth-child(3) .promo-icon{background:linear-gradient(135deg,#D24BFF,#9C5CFF);}
+  .promo-track .promo-card:nth-child(4) .promo-icon{background:linear-gradient(135deg,#FF7E3F,#FF4D66);}
+  .cosmii-logo{display:flex; align-items:center; gap:2px;}
+  .cosmii-sub{
+    margin-top:2px; font-weight:700; font-size:17px;
+    letter-spacing:8px; text-indent:8px;      /* indent offsets trailing space */
+    color:var(--text-muted);
+  }
+  .cosmii-logo .lw{line-height:1.05;}
+  .cosmii-logo .lw{font-family:'Baloo 2'; font-weight:800; font-size:52px; color:var(--text); letter-spacing:1px;}
+  .cosmii-logo .lw.accent-i{color:var(--accent-2); position:relative;}
+  .cosmii-logo .lw.accent-i2{color:var(--accent); position:relative;}
+  .cosmii-logo .sparkle{position:absolute; top:-14px; right:-4px; font-size:16px; color:var(--accent-2);}
+  .level-btn{
+    position:relative;
+    z-index:1;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;
+    width:280px; max-width:78vw; padding:16px 18px; border:none; border-radius:24px;
+    margin:clamp(20px, 4vh, 42px) 0 auto;    /* auto below centres the group */
+    flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;
+    font-family:'Baloo 2'; font-weight:700; font-size:19px; cursor:pointer;
+    box-shadow:0 4px 0 rgba(200,110,20,0.35);
+  }
+  .level-btn:active{transform:translateY(3px); box-shadow:none;}
+
+  /* ---------- Game screen ---------- */
+  #game-screen{
+    justify-content:flex-start;
+    padding-top:calc(48px + env(safe-area-inset-top));
+    padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  }
+  .topbar{
+    width:100%; max-width:420px;
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .circle-btn{
+    background:var(--card); border:none; color:var(--text);
+    width:42px; height:42px; border-radius:50%; font-size:18px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+    box-shadow:0 2px 0 rgba(107,74,62,0.08);
+  }
+  .circle-btn:active{transform:scale(0.94);}
+  .header-stats{display:flex; gap:26px;}
+  .header-stat{text-align:center;}
+  .header-stat .label{font-size:11px; color:var(--text-muted); font-weight:800;}
+  .header-stat .value{font-size:20px; font-weight:800; font-family:'Baloo 2'; color:var(--text); line-height:1.1;}
+
+  .pillrow{
+    width:100%; max-width:420px;
+    display:flex; gap:10px; justify-content:center; margin-bottom:8px;
+  }
+  .pill{
+    background:var(--card); border-radius:20px; padding:8px 16px;
+    display:flex; align-items:center; gap:6px;
+    font-weight:800; font-size:14px;
+    box-shadow:0 2px 0 rgba(107,74,62,0.06);
+  }
+  .fortune-icon{
+    width:16px;
+    height:16px;
+    object-fit:contain;
+    display:inline-block;
+  }
+  .pill .frac-cur{color:#3F9A5C;}
+  .lifepip{width:15px; height:15px;}
+
+  .rulecards{
+    width:100%; max-width:420px;
+    display:flex; gap:8px; margin-bottom:8px;
+  }
+  .rulecard{
+    flex:1; background:var(--card-soft); border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; gap:5px; padding:8px 4px;
+  }
+  .rulecard .mini-grid{
+    display:grid; grid-template-columns:repeat(3,13px); grid-template-rows:repeat(3,13px); gap:1px;
+    flex-shrink:0;
+  }
+  .rulecard .mini-cell{
+    background:#DFC9AE; border-radius:2px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:8px; color:#9c8267; font-weight:900;
+  }
+  .rulecard .mini-cell.face{background:var(--accent-2);}
+  .rulecard .mini-face-dot{width:8px; height:8px; border-radius:50%; background:#20223f; position:relative;}
+  .rulecard p{margin:0; font-size:10px; font-weight:800; line-height:1.3; color:var(--text); text-align:center;}
+
+  #grid-wrap{
+    position:relative; display:grid; background:var(--card);
+    border-radius:16px; padding:5px; gap:2px;
+    box-shadow:0 4px 0 rgba(107,74,62,0.08);
+    width:min(100%, 420px);
+    max-width:100%;
+    overflow:hidden;
+  }
+  .cell{
+    position:relative; display:flex; align-items:center; justify-content:center;
+    border-radius:8px; cursor:pointer; margin:0;
+    transition:opacity .2s ease;
+  }
+  /* Absolutely centred rather than flex-centred: the cell size is a rounded
+     integer, so flex could leave a half-pixel bias, and this also makes the
+     pop-in animation scale from the exact middle of the square. */
+  .cell .piece, .cell .cross-svg{
+    position:absolute; top:50%; left:50%; display:block; opacity:0;
+    transform:translate(-50%,-50%) scale(0.5); transform-origin:center center;
+  }
+  .cell .piece{width:84%; height:84%;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1), opacity .15s;}
+  .cell.filled .piece{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  .cell.filled.character-filled .piece{opacity:0; transform:translate(-50%,-50%) scale(0.6);}
+  .cell.filled.hinted .piece{filter:drop-shadow(0 0 5px #fff176);}
+  .cell .cross-svg{width:56%; height:56%;
+    transition:transform .15s ease, opacity .15s ease;}
+  .cell .cross-svg .halo{stroke:none; stroke-width:22; fill:none;}
+  .cell .cross-svg .mark{stroke:rgba(255,255,255,0.92); stroke-width:14; fill:none;}
+  .cell.crossed .cross-svg{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  /* A wrong guess is recorded permanently: that cell provably holds no Cosmii,
+     so the mark is both a penalty and a genuine deduction the player keeps.
+     White halo behind red keeps it readable on every region colour. */
+  .cell.wrong .cross-svg{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  .cell.wrong .cross-svg .halo{stroke:rgba(255,255,255,0.95);}
+  .cell.wrong .cross-svg .mark{stroke:#D8382C; stroke-width:15;}
+  .cell.wrong{cursor:default;}
+  .cell.wrong::after{
+    content:''; position:absolute; inset:0; border-radius:8px;
+    background:rgba(60,20,16,0.16); pointer-events:none;
+  }
+  .cell .pattern-mark{
+    position:absolute; top:3px; right:4px; font-size:9px; color:rgba(255,255,255,0.85);
+    display:none; font-weight:900;
+  }
+  .cell .character-img{
+    position:absolute;
+    width:84%;
+    height:84%;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%) scale(0.95);
+    object-fit:contain;
+    opacity:0;
+    transition:opacity .18s ease, transform .18s cubic-bezier(.34,1.56,.64,1);
+    pointer-events:none;
+  }
+  .cell.filled.character-filled .piece{
+    opacity:0;
+    transform:translate(-50%,-50%) scale(0.6);
+  }
+  .cell.filled.character-filled .character-img{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+    animation:characterPop .35s ease forwards, characterFloat 3.5s ease-in-out .35s infinite alternate;
+  }
+  @keyframes characterPop{
+    0%{opacity:0; transform:translate(-50%,-50%) scale(0.8);}
+    60%{opacity:1; transform:translate(-50%,-50%) scale(1.05);}
+    100%{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  }
+  @keyframes characterFloat{
+    0%{transform:translate(-50%,-50%) translateY(0);}    
+    100%{transform:translate(-50%,-50%) translateY(-4px);}
+  }
+
+  /* Constrain grid during coach/tutorial so characters never overflow */
+  body.coaching #grid-wrap{
+    max-width:88vw;
+    max-height:48vh;
+    margin-left:auto; margin-right:auto;
+    overflow:hidden;
+  }
+  #grid-wrap.pattern-on .pattern-mark{display:block;}
+  .cell.locked-pulse .piece,
+  .cell.locked-pulse .cross-svg{animation:lockedPulse .4s ease;}
+  @keyframes lockedPulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);}
+    40%{transform:translate(-50%,-50%) scale(1.14);}
+  }
+  .cell.filled{cursor:default;}
+  .cell.shake{animation:shake .35s;}
+  @keyframes shake{
+    0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(4px);}
+    60%{transform:translateX(-3px);} 80%{transform:translateX(3px);}
+  }
+  .floatpts{
+    position:absolute; left:50%; top:20%; transform:translate(-50%,0);
+    font-family:'Baloo 2'; font-weight:800; font-size:15px; color:var(--accent-dark);
+    pointer-events:none; animation:floatUp .8s ease forwards; z-index:5;
+  }
+  @keyframes floatUp{
+    0%{opacity:0; transform:translate(-50%,10px) scale(0.8);}
+    20%{opacity:1; transform:translate(-50%,0) scale(1);}
+    100%{opacity:0; transform:translate(-50%,-38px) scale(1);}
+  }
+  .banner-great{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%);
+    font-family:'Baloo 2'; font-weight:800; font-size:22px; color:var(--accent-2);
+    text-shadow:0 2px 0 rgba(255,255,255,0.6);
+    animation:bannerPop 1s ease forwards; z-index:6; pointer-events:none;
+  }
+  @keyframes bannerPop{
+    0%{opacity:0; transform:translateX(-50%) scale(0.6);}
+    25%{opacity:1; transform:translateX(-50%) scale(1.08);}
+    35%{transform:translateX(-50%) scale(1);}
+    80%{opacity:1;}
+    100%{opacity:0; transform:translateX(-50%) scale(1) translateY(-10px);}
+  }
+
+  .bottombar{display:flex; gap:22px; margin-top:20px; align-items:flex-end;}
+  .badge-btn{position:relative; display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer;}
+  .badge-circle{
+    width:56px; height:56px; border-radius:50%; background:var(--card);
+    display:flex; align-items:center; justify-content:center; font-size:24px;
+    box-shadow:0 3px 0 rgba(107,74,62,0.1);
+  }
+  .badge-btn:active .badge-circle{transform:translateY(2px); box-shadow:none;}
+  .badge-count{
+    position:absolute; top:-2px; right:-2px; background:var(--danger); color:#fff;
+    font-size:11px; font-weight:900; border-radius:50%; min-width:19px; height:19px;
+    display:flex; align-items:center; justify-content:center; border:2px solid var(--bg);
+  }
+  .badge-label{font-size:11px; font-weight:800; color:var(--text-muted);}
+  .mode-cosmii{width:34px; height:34px; display:block;}
+  /* Off state is deliberately muted so the mode is readable at a glance. */
+  #btn-place-mode .badge-circle{border:3px solid transparent; transition:.18s;}
+  #btn-place-mode .mode-cosmii{opacity:.45; filter:grayscale(1); transition:.18s;}
+  #btn-place-mode.on .badge-circle{
+    border-color:var(--accent); background:#FFF4E2;
+    box-shadow:0 3px 0 rgba(224,134,47,.35);
+  }
+  #btn-place-mode.on .mode-cosmii{opacity:1; filter:none;}
+  #btn-place-mode.on .badge-label{color:var(--accent-dark);}
+  .badge-btn.disabled{opacity:.4; pointer-events:none;}
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position:absolute; inset:0; background:rgba(60,40,30,0.55);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .25s ease; z-index:30;
+  }
+  .modal-overlay.active{opacity:1; pointer-events:auto;}
+  .loading-overlay{
+    position:absolute; inset:0; background:rgba(255,255,255,0.92);
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none; transition:opacity .2s ease;
+    z-index:45;
+  }
+  .loading-overlay.active{
+    opacity:1; pointer-events:auto;
+  }
+  .loading-card{
+    display:flex; flex-direction:column; align-items:center; gap:14px;
+    padding:20px 24px; border-radius:22px;
+    background:#fff; box-shadow:0 18px 40px rgba(49,25,11,.15);
+  }
+  .loading-spinner{
+    width:42px; height:42px; border:4px solid rgba(240,163,62,.25);
+    border-top-color:var(--accent-dark); border-radius:50%; animation:spin .9s linear infinite;
+  }
+  .loading-text{
+    font-size:16px; font-weight:800; color:var(--text);
+  }
+  @keyframes spin{100%{transform:rotate(360deg);}}
+  .modal-card{
+    background:var(--card); border-radius:22px; padding:26px 24px; width:min(92vw,360px); max-width:360px; text-align:center;
+    transform:translateY(10px) scale(.96); transition:transform .25s ease;
+  }
+  .modal-overlay.active .modal-card{transform:translateY(0) scale(1);}
+  .modal-card h2{font-family:'Baloo 2'; margin:2px 0 8px; font-size:22px;}
+  .modal-card .time-big{font-size:28px; font-weight:800; color:var(--accent-dark); font-family:'Baloo 2';}
+  .modal-card .best-line{color:var(--text-muted); font-size:13px; margin:4px 0 16px;}
+  .modal-card .record{color:#3F9A5C; font-weight:900;}
+  .modal-btn{width:100%; padding:12px; margin-top:8px; border:none; border-radius:14px;
+    font-family:'Baloo 2'; font-weight:700; font-size:15px; cursor:pointer;}
+  .modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;}
+  .modal-btn.secondary{background:var(--card-soft); color:var(--text);}
+
+  /* ---------- Settings modal ---------- */
+  .settings-card{width:100%; padding:22px 22px 24px; max-width:360px; text-align:left;}
+  .settings-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .settings-head h2{margin:0;}
+  .settings-close{background:none; border:none; font-size:20px; color:var(--text-muted); cursor:pointer;}
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card-soft); border-radius:14px; padding:10px 14px; margin-bottom:8px;
+  }
+  .toggle-row .trow-label{font-weight:800; font-size:13px; display:flex; align-items:center; gap:8px;}
+  .switch{position:relative; width:44px; height:24px;}
+  .switch input{opacity:0; width:0; height:0;}
+  .slider{position:absolute; inset:0; background:#D9C4B0; border-radius:20px; cursor:pointer; transition:.2s;}
+  .slider:before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;}
+  .switch input:checked + .slider{background:#3F9A5C;}
+  .switch input:checked + .slider:before{transform:translateX(20px);}
+  .feedback-btn{width:100%; padding:11px; border-radius:14px; border:2px solid var(--card-soft);
+    background:none; color:var(--text); font-weight:800; font-size:13px; margin:10px 0 0; cursor:pointer;}
+  .toast{
+    position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
+    background:var(--text); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;
+    opacity:0; transition:opacity .25s; pointer-events:none; z-index:60;
+  }
+  .toast.show{opacity:1;}
+
+  /* ---------- Coach (interactive tutorial) ---------- */
+  /* The player actually performs each gesture on the board, so the layer must
+     never swallow taps: only the tip card and its buttons are clickable. */
+  #grid-wrap.coach-focus .cell{opacity:.28; pointer-events:none;}
+  #grid-wrap.coach-focus .cell.coach-target{opacity:1; pointer-events:auto; z-index:3;}
+  #grid-wrap.coach-focus .cell.coach-done{opacity:1; pointer-events:none;}
+  .cell.coach-target::after{
+    content:''; position:absolute; inset:-3px; border-radius:11px;
+    border:3px solid #fff; box-shadow:0 0 0 3px var(--accent), 0 0 14px rgba(240,163,62,.9);
+    animation:coachPulse 1.15s ease-in-out infinite; pointer-events:none;
+  }
+  @keyframes coachPulse{
+    0%,100%{transform:scale(1); opacity:1;}
+    50%{transform:scale(1.09); opacity:.75;}
+  }
+  .coach{
+    position:absolute; left:0; right:0; bottom:20px;
+    display:none; flex-direction:column; align-items:center; gap:12px;
+    padding:0 16px; z-index:55; pointer-events:none;
+  }
+  .coach.active{display:flex;}
+  .coach-tip{
+    background:#fff; border-radius:18px; padding:14px 18px; max-width:340px; text-align:center;
+    font-weight:800; font-size:14px; line-height:1.65; color:var(--text);
+    box-shadow:0 8px 24px rgba(107,74,62,.20); pointer-events:auto;
+  }
+  .coach-tip .kw{color:var(--danger);}
+  .coach-tip .step{
+    display:block; font-family:'Baloo 2'; font-size:11px; letter-spacing:1px;
+    color:var(--text-muted); margin-bottom:4px;
+  }
+  .coach-tip .count{
+    display:block; margin-top:8px; font-family:'Baloo 2'; font-weight:700;
+    font-size:14px; color:var(--accent-dark);
+  }
+  .coach-tip.nudge{animation:tipNudge .4s;}
+  @keyframes tipNudge{
+    0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
+  }
+  .coach-actions{display:flex; gap:10px; pointer-events:auto;}
+  .coach-btn{
+    border:none; border-radius:16px; padding:11px 26px; cursor:pointer;
+    font-family:'Baloo 2'; font-weight:700; font-size:15px;
+  }
+  .coach-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;}
+  .coach-btn.ghost{background:rgba(255,255,255,.85); color:var(--text-muted); font-size:13px; padding:11px 18px;}
+  body.coaching .bottombar{visibility:hidden;}
+  body.coaching .topbar .circle-btn{opacity:.35; pointer-events:none;}
+  /* The rule cards restate exactly what the tutorial is teaching, so hiding
+     them during coaching buys back a whole row of vertical space. */
+  body.coaching .rulecards{display:none;}
+  /* Scaled from its top edge so the board can never slide under the tip
+     sheet. Cells stay fully tappable at any scale. */
+  #grid-wrap{transform-origin:top center; transition:transform .22s ease;}
+  /* Without this a horizontal sweep is claimed by the browser as a pan or
+     text selection and the paint stroke dies after the first cell. */
+  #grid-wrap, .cell{touch-action:none;}
+/* ---------- Splash screen ---------- */
+#splash-screen{
+  background:#fff;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  position:absolute;
+  inset:0;
+  z-index:100;
+}
+
+.splash-logo{
+  width:min(78vw,520px);
+  height:auto;
+}
+
+.splash-start{
+  position:absolute;
+  bottom:60px;
+  border:none;
+  background:none;
+  color:#c8c8c8;
+  font-size:22px;
+  cursor:pointer;
+  animation:splashBlink 1.8s infinite;
+}
+
+@keyframes splashBlink{
+  0%,100%{opacity:.35;}
+  50%{opacity:1;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div class="screen active" id="splash-screen">
+  <img src="assets/images/AIRISGAMES.PNG"
+       alt="AIRIS GAMES"
+       class="splash-logo">
+
+  <button id="btn-splash-start" class="splash-start">
+    タップしてはじめる
+  </button>
+</div>
+
+  <!-- TITLE -->
+  <div class="screen" id="title-screen">
+    <div class="title-topbar">
+      <div class="avatar-btn" id="btn-avatar">
+        <img id="btn-avatar-img" src="assets/images/CosmiiGreen.PNG" alt="Cosmii Collection">
+      </div>
+      <div class="coin-chip" id="coin-chip">
+        <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
+        <span id="coin-balance">0</span>
+      </div>
+      <div class="topbar-right">
+        <div class="lang-toggle" id="lang-toggle">
+          <button type="button" data-lang="ja">日本語</button>
+          <button type="button" data-lang="en">EN</button>
+        </div>
+        <button class="circle-btn" id="btn-settings-title">⚙</button>
+      </div>
+    </div>
+
+    <div class="title-cards">
+      <div class="title-card daily locked" id="card-daily">
+        <h3 data-i18n="daily_title"></h3>
+        <div class="card-icon-wrap">
+          <svg class="lock-icon" viewBox="0 0 24 30" fill="none"><rect x="2" y="12" width="20" height="16" rx="4" fill="#fff"/><path d="M6 12V8a6 6 0 0 1 12 0v4" stroke="#fff" stroke-width="3" fill="none"/></svg>
+        </div>
+        <div class="card-sub" id="daily-unlock-label"></div>
+      </div>
+      <div class="title-card streak" id="card-streak">
+        <h3 data-i18n="streak_title"></h3>
+        <div class="card-icon-wrap">
+          <svg class="sun-icon" viewBox="0 0 100 100">
+            <path fill="#fff" opacity="0.9" d="M50 4 L57 22 L72 10 L68 29 L88 27 L74 40 L92 50 L74 60 L88 73 L68 71 L72 90 L57 78 L50 96 L43 78 L28 90 L32 71 L12 73 L26 60 L8 50 L26 40 L12 27 L32 29 L28 10 L43 22 Z"/>
+            <circle cx="50" cy="50" r="24" fill="#fff"/>
+          </svg>
+        </div>
+        <div class="card-count-pill" id="streak-count">1</div>
+        <div class="card-check" id="streak-check" style="display:none;">✓</div>
+      </div>
+    </div>
+
+    <div class="cosmii-wordmark">
+      <img src="assets/images/CosmiiSudoku.PNG" alt="Cosmii Sudoku" class="cosmii-wordmark-image">
+    </div>
+
+    <button class="level-btn" id="btn-play" type="button" data-i18n="start_button"></button>
+
+    <div class="promo-strip">
+      <div class="promo-track" id="promo-track">
+        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-3-matchpuzzle-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%91%E3%82%BA%E3%83%AB/id6784988703" target="_blank" rel="noopener">
+          <span class="promo-icon apple-store" aria-hidden="true">
+            <svg viewBox="0 0 96 96" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M34 20L62 60" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M62 20L34 60" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M42 26L54 26L40 70" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+          <span class="promo-title">Cosmii 3 Match Puzzle</span>
+        </a>
+        <a class="promo-card" href="https://apps.apple.com/jp/app/%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-mogu-mogu-panic/id6789935783" target="_blank" rel="noopener">
+          <span class="promo-icon"></span>
+          <span class="promo-title">コスミー MoguMogu Panic</span>
+        </a>
+        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-arcade-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%82%A2%E3%83%BC%E3%82%B1%E3%83%BC%E3%83%88/id6790154239" target="_blank" rel="noopener">
+          <span class="promo-icon"></span>
+          <span class="promo-title">Cosmii Arcade</span>
+        </a>
+        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-beat-dash-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5/id6792287027" target="_blank" rel="noopener">
+          <span class="promo-icon"></span>
+          <span class="promo-title">Cosmii Beat Dash</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-card">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading...</div>
+    </div>
+  </div>
+
+  <!-- GAME -->
+  <div class="screen" id="game-screen">
+    <div class="topbar">
+      <button class="circle-btn" id="btn-back">←</button>
+      <div class="header-stats">
+        <div class="header-stat"><div class="label" data-i18n="level_word"></div><div class="value" id="stat-level">1</div></div>
+        <div class="header-stat"><div class="label" data-i18n="score_word"></div><div class="value" id="stat-score">0</div></div>
+      </div>
+      <button class="circle-btn" id="btn-settings">⚙</button>
+    </div>
+
+    <div class="pillrow">
+      <div class="pill"><img class="fortune-icon" src="assets/images/CosmiiRed.PNG" alt="占い"> <span><span class="frac-cur" id="progress-cur">0</span>/<span id="progress-max">6</span></span></div>
+      <div class="pill" id="stat-hearts"></div>
+    </div>
+
+    <div class="rulecards">
+      <div class="rulecard">
+        <div class="mini-grid">
+          <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
+          <div class="mini-cell face"><div class="mini-face-dot"></div></div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
+          <div class="mini-cell">✕</div><div class="mini-cell"></div><div class="mini-cell"></div>
+        </div>
+        <p data-i18n="rule_area"></p>
+      </div>
+      <div class="rulecard">
+        <div class="mini-grid">
+          <div class="mini-cell">✕</div><div class="mini-cell face"><div class="mini-face-dot"></div></div><div class="mini-cell">✕</div>
+          <div class="mini-cell">✕</div><div class="mini-cell"></div><div class="mini-cell"></div>
+          <div class="mini-cell">✕</div><div class="mini-cell"></div><div class="mini-cell"></div>
+        </div>
+        <p data-i18n="rule_line"></p>
+      </div>
+      <div class="rulecard">
+        <div class="mini-grid">
+          <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
+          <div class="mini-cell">✕</div><div class="mini-cell face"><div class="mini-face-dot"></div></div><div class="mini-cell">✕</div>
+          <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
+        </div>
+        <p data-i18n="rule_touch"></p>
+      </div>
+    </div>
+
+    <div id="grid-wrap"></div>
+
+    <div class="bottombar">
+      <div class="badge-btn" id="btn-place-mode">
+        <div class="badge-circle">
+          <img class="mode-cosmii" src="assets/images/CosmiiBlue.PNG" alt="Cosmii Place Mode">
+        </div>
+        <div class="badge-count" id="place-count">3</div>
+        <div class="badge-label" data-i18n="place_mode"></div>
+      </div>
+      <div class="badge-btn" id="btn-hint">
+        <div class="badge-circle">✨</div>
+        <div class="badge-count" id="hint-count">3</div>
+        <div class="badge-label" data-i18n="hint"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLEAR MODAL -->
+  <div class="modal-overlay" id="clear-modal">
+    <div class="modal-card">
+      <h2 class="display" data-i18n="clear_title"></h2>
+      <div class="time-big" id="clear-time">00:00</div>
+      <div class="best-line" id="clear-best">ベスト 00:00</div>
+      <div class="coin-reward" id="coin-reward">
+        <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
+        <span class="coin-gain">+10</span>
+        <span class="coin-total" id="coin-total"></span>
+      </div>
+      <button class="modal-btn primary" id="btn-next" data-i18n="next_puzzle"></button>
+      <button class="modal-btn secondary" id="btn-menu-1" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- GAME OVER MODAL -->
+  <div class="modal-overlay" id="over-modal">
+    <div class="modal-card">
+      <h2 class="display" data-i18n="over_title"></h2>
+      <p class="best-line" data-i18n="over_body"></p>
+      <button class="modal-btn primary" id="btn-retry" data-i18n="retry"></button>
+      <button class="modal-btn secondary" id="btn-menu-2" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-card settings-card">
+      <div class="settings-head">
+        <h2 class="display">プロフィール</h2>
+        <button class="settings-close" id="btn-profile-close">✕</button>
+      </div>
+      <div class="profile-selected-row">
+        <div class="profile-preview" id="profile-preview"></div>
+        <div>
+          <div class="profile-id" id="profile-id">ID 000000</div>
+          <div class="profile-coins"><img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin"> <span id="profile-coin-count">0</span></div>
+        </div>
+      </div>
+        <div class="profile-grid" id="profile-grid"></div>
+      <div class="profile-note">他のプロフィールは今後追加予定です。</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-card settings-card">
+      <div class="settings-head">
+        <h2 class="display" data-i18n="settings"></h2>
+        <button class="settings-close" id="btn-settings-close">✕</button>
+      </div>
+      <div class="toggle-row">
+        <span class="trow-label" data-i18n="opt_sound"></span>
+        <label class="switch"><input type="checkbox" id="toggle-sound" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="trow-label" data-i18n="opt_vibrate"></span>
+        <label class="switch"><input type="checkbox" id="toggle-vibrate" checked><span class="slider"></span></label>
+      </div>
+      <div class="toggle-row">
+        <span class="trow-label" data-i18n="opt_pattern"></span>
+        <label class="switch"><input type="checkbox" id="toggle-pattern"><span class="slider"></span></label>
+      </div>
+      <button class="feedback-btn" id="btn-feedback" data-i18n="feedback"></button>
+      <button class="modal-btn primary" id="btn-restart" data-i18n="restart"></button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- COACH (interactive tutorial) -->
+  <div class="coach" id="coach">
+    <div class="coach-tip" id="coach-tip"></div>
+    <div class="coach-actions">
+      <button class="coach-btn ghost" id="coach-skip" data-i18n="coach_skip"></button>
+      <button class="coach-btn primary" id="coach-next">次へ</button>
+    </div>
+  </div>
+
+</div>
+
+<audio id="bgm" loop preload="auto" playsinline webkit-playsinline>
+  <source src="assets/audio/bgm.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+/* ---------------- Utility / RNG ---------------- */
+function mulberry32(seed){
+  return function(){
+    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++){ h=(Math.imul(31,h)+s.charCodeAt(i))|0; } return h; }
+function todayStr(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function randInt(min, max){ return min + Math.floor(Math.random()*(max-min+1)); }
+
+/* ---------------- Puzzle generation ---------------- */
+function generateSolution(n, rng){
+  const cols = Array.from({length:n},(_,i)=>i);
+  const solution = new Array(n).fill(-1);
+  const usedCols = new Set();
+  function shuffle(arr){
+    const a=arr.slice();
+    for(let i=a.length-1;i>0;i--){ const j=Math.floor(rng()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+  function backtrack(row){
+    if(row===n) return true;
+    for(const c of shuffle(cols)){
+      if(usedCols.has(c)) continue;
+      if(row>0 && Math.abs(c-solution[row-1])===1) continue;
+      solution[row]=c; usedCols.add(c);
+      if(backtrack(row+1)) return true;
+      usedCols.delete(c); solution[row]=-1;
+    }
+    return false;
+  }
+  return backtrack(0) ? solution.slice() : null;
+}
+
+// Difficulty is driven by the SHAPE of the colour regions, and the strongest
+// single dial is how uneven their sizes are. A 1-cell region is a free gift:
+// that cell must hold a Cosmii, which instantly kills a row, a column and its
+// neighbours. Easy boards therefore get a couple of 1-cell regions plus a few
+// large sprawling ones (e.g. 5x5 -> 1,1,2,10,11), which is exactly the shape
+// of the reference screenshots. As levels rise the sizes even out, the free
+// footholds disappear, and the player has to chain real deductions.
+function makeTargetSizes(n, rng, smalls){
+  const total = n*n;
+  const small = smalls.slice(0, n-1);
+  const bigCount = n - small.length;
+  const remain = total - small.reduce((a,b)=>a+b,0);
+  const base = Math.floor(remain/bigCount);
+  const bigs = new Array(bigCount).fill(base);
+  const extra = remain - base*bigCount;
+  for(let i=0;i<extra;i++) bigs[i%bigCount]++;
+  for(let k=0;k<bigCount;k++){          // light jitter so big regions aren't twins
+    const i=(rng()*bigCount)|0, j=(rng()*bigCount)|0;
+    if(i!==j && bigs[i]>2){ bigs[i]--; bigs[j]++; }
+  }
+  const all = small.concat(bigs);
+  for(let i=all.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [all[i],all[j]]=[all[j],all[i]]; }
+  return all;
+}
+
+// `compact` (0..1) is the chance of growing a region into its most-connected
+// neighbouring cell. High values give round, easy-to-read blobs; low values
+// give thin winding shapes that are much harder to scan.
+function generateRegions(n, solution, rng, targets, compact){
+  const regionOf = Array.from({length:n},()=>new Array(n).fill(-1));
+  const frontiers = Array.from({length:n},()=>new Set());
+  const sizes = new Array(n).fill(1);
+  const key=(r,c)=>r*n+c;
+  const neighbors=(r,c)=>{
+    const res=[];
+    if(r>0) res.push([r-1,c]); if(r<n-1) res.push([r+1,c]);
+    if(c>0) res.push([r,c-1]); if(c<n-1) res.push([r,c+1]);
+    return res;
+  };
+  for(let reg=0; reg<n; reg++){
+    const sc=solution[reg];
+    regionOf[reg][sc]=reg;
+    for(const [nr,nc] of neighbors(reg,sc)) if(regionOf[nr][nc]===-1) frontiers[reg].add(key(nr,nc));
+  }
+  let claimed=n; const total=n*n; let guard=0;
+  while(claimed<total && guard<total*20){
+    guard++;
+    const active=[];
+    for(let reg=0; reg<n; reg++){
+      for(const k of Array.from(frontiers[reg])){
+        const rr=(k/n)|0, cc=k%n;
+        if(regionOf[rr][cc]!==-1) frontiers[reg].delete(k);
+      }
+      if(frontiers[reg].size>0) active.push(reg);
+    }
+    if(active.length===0) break;
+
+    // Regions that already hit their target size stop growing, so the small
+    // ones stay small. If everyone is full but cells remain, let anybody take
+    // them rather than leaving holes.
+    let want = active.filter(r=>sizes[r] < targets[r]);
+    if(want.length===0) want = active;
+    let reg;
+    if(rng() < 0.85){
+      let maxDef=-Infinity;
+      for(const r of want){ const d=targets[r]-sizes[r]; if(d>maxDef) maxDef=d; }
+      const best = want.filter(r=>targets[r]-sizes[r]===maxDef);
+      reg = best[(rng()*best.length)|0];
+    } else {
+      reg = want[(rng()*want.length)|0];
+    }
+
+    const arr = Array.from(frontiers[reg]);
+    let k;
+    if(rng() < compact){
+      let bestScore=-1, bestCells=[];
+      for(const cand of arr){
+        const rr=(cand/n)|0, cc=cand%n;
+        let score=0;
+        for(const [nr,nc] of neighbors(rr,cc)) if(regionOf[nr][nc]===reg) score++;
+        if(score>bestScore){ bestScore=score; bestCells=[cand]; }
+        else if(score===bestScore) bestCells.push(cand);
+      }
+      k = bestCells[(rng()*bestCells.length)|0];
+    } else {
+      k = arr[(rng()*arr.length)|0];
+    }
+
+    const rr=(k/n)|0, cc=k%n;
+    regionOf[rr][cc]=reg; claimed++; sizes[reg]++;
+    frontiers[reg].delete(k);
+    for(const [nr,nc] of neighbors(rr,cc)) if(regionOf[nr][nc]===-1) frontiers[reg].add(key(nr,nc));
+  }
+  if(claimed<total) return null;
+  return regionOf;
+}
+
+function countSolutions(n, regionOf, limit){
+  const usedCols=new Set(), usedRegions=new Set();
+  let count=0;
+  function backtrack(row, prevCol){
+    if(count>=limit) return;
+    if(row===n){ count++; return; }
+    for(let c=0;c<n;c++){
+      if(usedCols.has(c)) continue;
+      if(prevCol!==null && Math.abs(c-prevCol)===1) continue;
+      const reg = regionOf[row][c];
+      if(usedRegions.has(reg)) continue;
+      usedCols.add(c); usedRegions.add(reg);
+      backtrack(row+1,c);
+      usedCols.delete(c); usedRegions.delete(reg);
+      if(count>=limit) return;
+    }
+  }
+  backtrack(0,null);
+  return count;
+}
+
+// A puzzle can have exactly one solution yet still force a 50/50 guess partway
+// through. This simulates a human solving purely by elimination, and also
+// reports how often the harder "this region owns that row" inference was
+// needed — a decent proxy for perceived difficulty.
+function analyseSolvability(n, regionOf){
+  const rowDone=new Array(n).fill(false), colDone=new Array(n).fill(false), regDone=new Array(n).fill(false);
+  const dead=Array.from({length:n},()=>new Array(n).fill(false));
+  let assigned=0, hardSteps=0;
+  const alive=(r,c)=>!dead[r][c] && !rowDone[r] && !colDone[c] && !regDone[regionOf[r][c]];
+  function place(r,c){
+    rowDone[r]=true; colDone[c]=true; regDone[regionOf[r][c]]=true;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(regionOf[i][j]===regionOf[r][c]) dead[i][j]=true;
+    for(let di=-1;di<=1;di++) for(let dj=-1;dj<=1;dj++){
+      const ni=r+di,nj=c+dj; if(ni>=0&&ni<n&&nj>=0&&nj<n) dead[ni][nj]=true;
+    }
+    assigned++;
+  }
+  let progressed=true;
+  while(progressed && assigned<n){
+    progressed=false;
+    for(let r=0;r<n&&!progressed;r++){
+      if(rowDone[r]) continue;
+      const cands=[]; for(let c=0;c<n;c++) if(alive(r,c)) cands.push(c);
+      if(cands.length===1){ place(r,cands[0]); progressed=true; }
+    }
+    if(progressed) continue;
+    for(let c=0;c<n&&!progressed;c++){
+      if(colDone[c]) continue;
+      const cands=[]; for(let r=0;r<n;r++) if(alive(r,c)) cands.push(r);
+      if(cands.length===1){ place(cands[0],c); progressed=true; }
+    }
+    if(progressed) continue;
+    for(let reg=0;reg<n&&!progressed;reg++){
+      if(regDone[reg]) continue;
+      const cands=[];
+      for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(regionOf[r][c]===reg && alive(r,c)) cands.push([r,c]);
+      if(cands.length===1){ place(cands[0][0],cands[0][1]); progressed=true; }
+    }
+    if(progressed) continue;
+    // A region whose remaining candidates all sit in one row (or column) must
+    // supply that line's Cosmii, so every other region's cells in that line
+    // can be ruled out even before the exact cell is known.
+    for(let reg=0;reg<n&&!progressed;reg++){
+      if(regDone[reg]) continue;
+      const cells=[];
+      for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(regionOf[r][c]===reg && alive(r,c)) cells.push([r,c]);
+      if(cells.length===0) continue;
+      const rows=new Set(cells.map(p=>p[0]));
+      if(rows.size===1){ const r=[...rows][0];
+        for(let c=0;c<n;c++) if(regionOf[r][c]!==reg && alive(r,c)){ dead[r][c]=true; progressed=true; } }
+      const cols=new Set(cells.map(p=>p[1]));
+      if(cols.size===1){ const c=[...cols][0];
+        for(let r=0;r<n;r++) if(regionOf[r][c]!==reg && alive(r,c)){ dead[r][c]=true; progressed=true; } }
+      if(progressed) hardSteps++;
+    }
+    if(progressed) continue;
+    // The mirror image: if every remaining candidate in a row (or column)
+    // belongs to a single region, that region is spoken for by this line, so
+    // its cells elsewhere are out. Large boards lean on this constantly.
+    for(let r=0;r<n && !progressed; r++){
+      if(rowDone[r]) continue;
+      const gs=new Set();
+      for(let c=0;c<n;c++) if(alive(r,c)) gs.add(regionOf[r][c]);
+      if(gs.size===1){
+        const g=[...gs][0];
+        for(let i=0;i<n;i++) for(let j=0;j<n;j++)
+          if(i!==r && regionOf[i][j]===g && alive(i,j)){ dead[i][j]=true; progressed=true; }
+        if(progressed) hardSteps++;
+      }
+    }
+    if(progressed) continue;
+    for(let c=0;c<n && !progressed; c++){
+      if(colDone[c]) continue;
+      const gs=new Set();
+      for(let r=0;r<n;r++) if(alive(r,c)) gs.add(regionOf[r][c]);
+      if(gs.size===1){
+        const g=[...gs][0];
+        for(let i=0;i<n;i++) for(let j=0;j<n;j++)
+          if(j!==c && regionOf[i][j]===g && alive(i,j)){ dead[i][j]=true; progressed=true; }
+        if(progressed) hardSteps++;
+      }
+    }
+  }
+  return {solved:assigned===n, hardSteps};
+}
+
+function generatePuzzle(n, rng, smalls, compact, requireLogical, minSolo, maxHard){
+  const outerN = n<=6 ? 80 : 60;
+  const innerN = n<=6 ? 60 : 60;
+  for(let a=0;a<outerN;a++){
+    const solution = generateSolution(n, rng);
+    if(!solution) continue;
+    for(let b=0;b<innerN;b++){
+      const targets = makeTargetSizes(n, rng, smalls);
+      const regionOf = generateRegions(n, solution, rng, targets, compact);
+      if(!regionOf) continue;
+      if(minSolo){
+        // A 1-cell region is a free, self-evident placement. Early levels need
+        // several of them: with only one, the rest of the board still demands
+        // a full chain of deductions, which is too much for a first puzzle.
+        const sz = new Array(n).fill(0);
+        for(let r=0;r<n;r++) for(let c=0;c<n;c++) sz[regionOf[r][c]]++;
+        if(sz.filter(x=>x===1).length < minSolo) continue;
+      }
+      if(countSolutions(n, regionOf, 2)!==1) continue;
+      const info = analyseSolvability(n, regionOf);
+      if(requireLogical && !info.solved) continue; // never force a blind guess
+      // maxHard caps how often the harder "this region owns that line"
+      // inference is needed. 0 means plain elimination is always enough.
+      if(maxHard !== undefined && info.hardSteps > maxHard) continue;
+      return {n, solution, regionOf};
+    }
+  }
+  return null;
+}
+
+// Generation can miss its attempt budget on unlucky seeds. Rather than ever
+// showing the player an error, relax the recipe step by step: nudge shapes
+// rounder, then allow an extra small region, then drop the strict
+// no-guessing rule, then finally shrink the board.
+/* ---------------- Large boards (8x8 and up) ----------------
+   Growing regions at random and hoping for a unique solution collapses past
+   7x7: measured over three seconds, roughly 1 layout in 2,500 is unique at
+   8x8 and none at all at 9x9 or beyond. Big boards are therefore *carved*
+   instead — take any layout, repeatedly find a rival solution, and delete it
+   by moving one of its cells into a neighbouring region that already hosts
+   one of its queens. The intended solution is never touched, so it survives
+   every edit.
+------------------------------------------------------------- */
+function cellNeighbors(n,r,c){
+  const res=[];
+  if(r>0) res.push([r-1,c]); if(r<n-1) res.push([r+1,c]);
+  if(c>0) res.push([r,c-1]); if(c<n-1) res.push([r,c+1]);
+  return res;
+}
+// Rows fill top to bottom and the only cross-row coupling is that neighbouring
+// rows must sit 2+ columns apart, so the whole search state is (columns used,
+// regions used, previous column). Many different orderings reach the same
+// state, which makes memoising dead ends enormously effective — this is what
+// takes an 11x11 search from minutes to milliseconds.
+function findRivalSolution(n, regionOf, avoid){
+  const dead = new Set();
+  const cur = new Array(n);
+  let found = null;
+  function rec(row, colMask, regMask, prev, diverged){
+    if(row===n){ if(diverged){ found=cur.slice(); return true; } return false; }
+    const key = ((colMask*2048 + regMask)*16 + (prev+1))*2 + (diverged?1:0);
+    if(dead.has(key)) return false;
+    for(let c=0;c<n;c++){
+      if(colMask & (1<<c)) continue;
+      if(prev>=0 && Math.abs(c-prev)<=1) continue;
+      const g = regionOf[row][c];
+      if(regMask & (1<<g)) continue;
+      cur[row]=c;
+      if(rec(row+1, colMask|(1<<c), regMask|(1<<g), c, diverged || c!==avoid[row])) return true;
+    }
+    dead.add(key);
+    return false;
+  }
+  rec(0,0,0,-1,false);
+  return found;
+}
+// Flood fill from one surviving cell and compare counts. Uses a flat typed
+// array and inlined neighbour steps: this runs inside the carve loop tens of
+// thousands of times on a big board, so allocating arrays here was costing
+// more than the search itself.
+const _seen = new Uint8Array(16*16);
+function regionStaysWhole(n, regionOf, g, skipR, skipC){
+  let total=0, startR=-1, startC=-1;
+  for(let r=0;r<n;r++){
+    const row=regionOf[r];
+    for(let c=0;c<n;c++){
+      if(row[c]!==g || (r===skipR && c===skipC)) continue;
+      total++;
+      if(startR<0){ startR=r; startC=c; }
+    }
+  }
+  if(!total) return false;
+  _seen.fill(0, 0, n*n);
+  const stack=[startR*n+startC];
+  _seen[startR*n+startC]=1;
+  let reached=0;
+  while(stack.length){
+    const k=stack.pop(); reached++;
+    const r=(k/n)|0, c=k%n;
+    if(r>0)   { const nk=k-n; if(!_seen[nk] && regionOf[r-1][c]===g && !(r-1===skipR&&c===skipC)){_seen[nk]=1;stack.push(nk);} }
+    if(r<n-1) { const nk=k+n; if(!_seen[nk] && regionOf[r+1][c]===g && !(r+1===skipR&&c===skipC)){_seen[nk]=1;stack.push(nk);} }
+    if(c>0)   { const nk=k-1; if(!_seen[nk] && regionOf[r][c-1]===g && !(r===skipR&&c-1===skipC)){_seen[nk]=1;stack.push(nk);} }
+    if(c<n-1) { const nk=k+1; if(!_seen[nk] && regionOf[r][c+1]===g && !(r===skipR&&c+1===skipC)){_seen[nk]=1;stack.push(nk);} }
+  }
+  return reached===total;
+}
+function carveUnique(n, regionOf, solution, rng, maxEdits){
+  for(let it=0; it<maxEdits; it++){
+    const rival = findRivalSolution(n, regionOf, solution);
+    if(!rival) return true;
+    const rows=[];
+    for(let r=0;r<n;r++) if(rival[r]!==solution[r]) rows.push(r);
+    for(let i=rows.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
+    // Which regions the rival already occupies — computed once per edit
+    // rather than rescanned for every candidate neighbour.
+    const rivalHosts = new Uint8Array(n);
+    for(let rr=0;rr<n;rr++) rivalHosts[regionOf[rr][rival[rr]]] = 1;
+
+    let moved=false, fallback=null;
+    for(const r of rows){
+      const c=rival[r], g=regionOf[r][c];
+      // Connectivity is a property of (g, r, c) alone, so test it once up
+      // front and skip the cell entirely if removing it would split g.
+      if(!regionStaysWhole(n,regionOf,g,r,c)) continue;
+      const good=[], any=[];
+      for(const [nr,nc] of cellNeighbors(n,r,c)){
+        const h=regionOf[nr][nc];
+        if(h===g || any.indexOf(h)>=0) continue;
+        any.push(h);
+        // Moving the cell into a region the rival already uses makes the
+        // rival illegal outright; that is the edit we want.
+        if(rivalHosts[h] && regionOf[r][c]!==h) good.push(h);
+      }
+      if(good.length){ regionOf[r][c]=good[(rng()*good.length)|0]; moved=true; break; }
+      if(!fallback && any.length) fallback=[r,c,any];
+    }
+    if(!moved){
+      if(!fallback) return false;
+      const [r,c,any]=fallback;
+      regionOf[r][c]=any[(rng()*any.length)|0];
+    }
+  }
+  return findRivalSolution(n, regionOf, solution)===null;
+}
+// A freshly carved board is only *barely* unique, which usually means it needs
+// deep reasoning. Trimming a cell off a large region tightens the constraints
+// and tends to open up a plain elimination path, so shave cells until the
+// deduction solver can finish unaided.
+function trimOneCell(n, regionOf, solution, rng){
+  const order=[];
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(solution[r]!==c) order.push([r,c]);
+  for(let i=order.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [order[i],order[j]]=[order[j],order[i]]; }
+  const size=new Array(n).fill(0);
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) size[regionOf[r][c]]++;
+  for(const [r,c] of order){
+    const g=regionOf[r][c];
+    if(size[g]<=2) continue;
+    const cand=[];
+    for(const [nr,nc] of cellNeighbors(n,r,c)){
+      const h=regionOf[nr][nc];
+      if(h!==g && cand.indexOf(h)<0) cand.push(h);
+    }
+    if(!cand.length || !regionStaysWhole(n,regionOf,g,r,c)) continue;
+    regionOf[r][c]=cand[(rng()*cand.length)|0];
+    return true;
+  }
+  return false;
+}
+function generateLargePuzzle(cfg, rng, budgetMs){
+  const n = cfg.n;
+  const t0 = Date.now();
+  while(Date.now()-t0 < budgetMs){
+    const solution = generateSolution(n, rng);
+    if(!solution) continue;
+    const targets = makeTargetSizes(n, rng, cfg.smalls);
+    const regionOf = generateRegions(n, solution, rng, targets, cfg.compact);
+    if(!regionOf) continue;
+    if(!carveUnique(n, regionOf, solution, rng, 600)) continue;
+    for(let k=0; k<80 && Date.now()-t0 < budgetMs; k++){
+      if(analyseSolvability(n, regionOf).solved) return {n, solution, regionOf};
+      if(!trimOneCell(n, regionOf, solution, rng)) break;
+      // trimOneCell only ever shrinks a region, which can revive a rival, so
+      // re-carve — but carveUnique already returns immediately when there is
+      // no rival, making a separate check redundant.
+      if(!carveUnique(n, regionOf, solution, rng, 300)) break;
+    }
+  }
+  return null;
+}
+
+function generatePuzzleRobust(cfg, rng){
+  const n = cfg.n;
+  if(n >= 8){
+    const big = generateLargePuzzle(cfg, rng, 2500);
+    if(big) return big;
+    // Never surface a failure: drop back to a size the classic path nails.
+    return generatePuzzle(7, rng, [1,2], 0.5, true, 0, undefined)
+        || generatePuzzle(6, rng, [1,2], 0.6, false, 0, undefined);
+  }
+  const solo = cfg.minSolo || 0;
+  const hard = cfg.maxHard;
+  const plans = [
+    {n, smalls:cfg.smalls,            compact:cfg.compact,                     logical:true,  solo,     hard},
+    {n, smalls:cfg.smalls,            compact:Math.min(0.75, cfg.compact+0.2), logical:true,  solo,     hard},
+    {n, smalls:cfg.smalls,            compact:cfg.compact,                     logical:true,  solo,     hard:undefined},
+    {n, smalls:[1,1,2],               compact:0.55,                            logical:true,  solo:Math.min(solo,1), hard:undefined},
+    {n, smalls:cfg.smalls,            compact:cfg.compact,                     logical:false, solo:0,   hard:undefined},
+    {n:Math.max(4,n-1), smalls:[1,2], compact:0.55,                            logical:false, solo:0,   hard:undefined},
+  ];
+  for(const p of plans){
+    const r = generatePuzzle(p.n, rng, p.smalls, p.compact, p.logical, p.solo, p.hard);
+    if(r) return r;
+  }
+  return null;
+}
+
+/* ---------------- Level ladder ----------------
+   smalls  = target sizes of the deliberately tiny regions (free footholds)
+   compact = how blobby/readable the regions are (high = easier to scan)
+   Lv1-3 mirror the reference boards: 5x5 / 5x5 / 6x6 with two 1-cell
+   regions and a couple of big ones, generous hints, occasional given.
+------------------------------------------------ */
+function levelToConfig(level){
+  // minSolo = how many 1-cell regions must exist (free, obvious placements)
+  // maxHard = 0 means plain "only one candidate left" elimination solves it,
+  //           with no pigeonhole reasoning needed anywhere.
+  // Lv1 is the fixed 4x4 tutorial board. Note there are only two legal Cosmii
+  // arrangements on a 4x4 at all, so the colours vary but the answer pattern
+  // does not — which is fine for a first board and deliberate.
+  if(level<=1) return {n:4, smalls:[1,1],   compact:0.80, hearts:3, hints:3, prefillChance:0,    prefillMax:1, minSolo:2, maxHard:0};
+  if(level<=2) return {n:5, smalls:[1,1,2], compact:0.80, hearts:3, hints:5, prefillChance:0.35, prefillMax:1, minSolo:2, maxHard:0};
+  if(level<=3) return {n:6, smalls:[1,1,2], compact:0.80, hearts:3, hints:5, prefillChance:0.45, prefillMax:1, minSolo:2, maxHard:1};
+  if(level<=5) return {n:6, smalls:[1,2],   compact:0.70, hearts:3, hints:4, prefillChance:0.30, prefillMax:1, minSolo:1};
+  // From Lv6 the board size is drawn at random each time, with 11x11 in the
+  // mix and the pool shifting larger as levels climb. Bigger boards get an
+  // extra life and extra hints, since a single slip costs far more there.
+  let pool;
+  if(level<=7)      pool=[6,6,7,7,8,9,11];
+  else if(level<=10)pool=[7,7,8,8,9,10,11,11];
+  else              pool=[7,8,8,9,9,10,11,11,11];
+  const n = pool[(Math.random()*pool.length)|0];
+  if(n <= 7){
+    return {n, smalls:[1,2], compact: level<=7 ? 0.55 : (level<=10 ? 0.50 : 0.35),
+            hearts:3, hints:3, prefillChance:0.15, prefillMax:1};
+  }
+  // More small regions up front means the first layout is already close to
+  // uniquely solvable, so the carve loop has far less to undo. Measured on
+  // 11x11 this alone cut median generation from ~200ms to ~8ms.
+  return {n, smalls: n>=10 ? [1,1,1,1,2,2] : [1,1,1,2,2], compact:0.65,
+          hearts:3, hints: n>=10 ? 5 : 4,
+          prefillChance:0, prefillMax:1};
+}
+
+/* ---------------- Storage ---------------- */
+async function loadJSON(key, fallback){
+  try{ const r = await window.storage.get(key, false); return r ? JSON.parse(r.value) : fallback; }
+  catch(e){ return fallback; }
+}
+async function saveJSON(key, obj){
+  try{ await window.storage.set(key, JSON.stringify(obj), false); }catch(e){}
+}
+
+/* ---------------- Sound / haptics ---------------- */
+let audioCtx=null;
+function beep(freq, dur, type){
+  if(!settings.sound) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.type = type||'sine'; o.frequency.value = freq;
+    o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function vibrate(ms){ if(settings.vibrate && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+
+/* ---------------- Localisation ----------------
+   One term to rename the coloured areas per language; everything else keys
+   off this table. Strings that need a number are functions.
+------------------------------------------------ */
+const AREA_JA = '星域';
+const AREA_EN = 'star zone';
+
+const I18N = {
+  ja:{
+    daily_title:'デイリー<br>チャレンジ',
+    daily_play:'プレイする',
+    daily_locked:lv=>`Lv.${lv} で解放`,
+    streak_title:'ストリーク',
+    start_button:'START',
+    level_word:'レベル',
+    score_word:'スコア',
+    rule_area:`${AREA_JA}ごとに1体`,
+    rule_line:'行と列に1体ずつ',
+    rule_touch:'Cosmii同士は接触不可',
+    place_mode:'Cosmii配置',
+    hint:'ヒント',
+    clear_title:'🎉 クリア！',
+    best:tm=>`ベスト ${tm}`,
+    record:'🏆 新記録！',
+    next_puzzle:'次のパズルへ',
+    back_menu:'メニューへ戻る',
+    over_title:'😿 残念…',
+    over_body:'ミスが続いてしまいました',
+    retry:'同じ盤面でリトライ',
+    settings:'設定',
+    opt_sound:'🔊 サウンド',
+    opt_vibrate:'📳 バイブレーション',
+    opt_pattern:'🔷 パターンモード',
+    feedback:'フィードバック',
+    restart:'やり直す',
+    coin_name:'コスモコイン',
+    coin_total:v=>`所持 ${v}`,
+    toast_coins:v=>`コスモコイン：${v} 枚`,
+    toast_collection:'Cosmiiコレクション（準備中）',
+    toast_streak:d=>`現在のストリーク：${d}日`,
+    toast_daily_locked:lv=>`Lv.${lv} で解放されます`,
+    toast_feedback:'ご意見ありがとうございます！',
+    toast_genfail:'パズルを作れませんでした。もう一度お試しください',
+    coach_next:'次へ',
+    coach_start:'はじめる！',
+    coach_skip:'スキップ',
+    coach_left:n=>`あと ${n} マス`,
+    coach_alldone:'できた！',
+    coach:[
+      `<span class="step">RULE 1 / 3</span>宇宙は同じ色の<span class="kw">${AREA_JA}</span>に分かれています。<br>どの${AREA_JA}にも Cosmii が<br>ちょうど<span class="kw">1体</span>だけ暮らしています。`,
+      `<span class="step">TRY IT</span>光っているマスは<span class="kw">1マスだけの${AREA_JA}</span>。<br>ここは必ず Cosmii が住みます。<br><span class="kw">ダブルタップ</span>で置いてみよう！`,
+      `<span class="step">RULE 2 / 3</span>Cosmii は<span class="kw">同じ行・同じ列</span>に2体置けません。<br>光ったマスを<span class="kw">シングルタップ</span>して、<br>置けない場所に ✕ をつけていこう！<span class="count" id="coach-count"></span>`,
+      `<span class="step">RULE 3 / 3</span>Cosmii 同士は<span class="kw">ナナメにも隣接できません</span>。<br>残りの光ったマスにも ✕ をつけよう！<span class="count" id="coach-count"></span>`,
+      `<span class="step">READY</span>✕ は候補を消すメモなので、<br>何度でも付け外しできます。<br>この要領で全部置けたらクリアです！`,
+    ],
+  },
+  en:{
+    daily_title:'Daily<br>Challenge',
+    daily_play:'Play',
+    daily_locked:lv=>`Unlocks at Lv.${lv}`,
+    streak_title:'Streak',
+    start_button:'START',
+    level_word:'Level',
+    score_word:'Score',
+    rule_area:`One per ${AREA_EN}`,
+    rule_line:'One per row & column',
+    rule_touch:'Cosmii can never touch',
+    place_mode:'Place Cosmii',
+    hint:'Hint',
+    clear_title:'🎉 Cleared!',
+    best:tm=>`Best ${tm}`,
+    record:'🏆 New record!',
+    next_puzzle:'Next puzzle',
+    back_menu:'Back to menu',
+    over_title:'😿 Out of lives',
+    over_body:'Too many mistakes this time',
+    retry:'Retry this board',
+    settings:'Settings',
+    opt_sound:'🔊 Sound',
+    opt_vibrate:'📳 Vibration',
+    opt_pattern:'🔷 Pattern mode',
+    feedback:'Feedback',
+    restart:'Restart board',
+    coin_name:'Cosmo Coin',
+    coin_total:v=>`Total ${v}`,
+    toast_coins:v=>`Cosmo Coins: ${v}`,
+    toast_collection:'Cosmii collection (coming soon)',
+    toast_streak:d=>`Current streak: ${d} day${d===1?'':'s'}`,
+    toast_daily_locked:lv=>`Unlocks at Level ${lv}`,
+    toast_feedback:'Thanks for the feedback!',
+    toast_genfail:'Could not build a puzzle. Please try again',
+    coach_next:'Next',
+    coach_start:'Start!',
+    coach_skip:'Skip',
+    coach_left:n=>`${n} square${n===1?'':'s'} to go`,
+    coach_alldone:'Done!',
+    coach:[
+      `<span class="step">RULE 1 / 3</span>The board is split into coloured <span class="kw">${AREA_EN}s</span>.<br>Exactly <span class="kw">one Cosmii</span> lives in each one.`,
+      `<span class="step">TRY IT</span>The glowing square is a <span class="kw">one-cell ${AREA_EN}</span>,<br>so a Cosmii has to live there.<br><span class="kw">Double-tap</span> to place it!`,
+      `<span class="step">RULE 2 / 3</span>No two Cosmii share a <span class="kw">row or column</span>.<br><span class="kw">Single-tap</span> each glowing square<br>to cross it off.<span class="count" id="coach-count"></span>`,
+      `<span class="step">RULE 3 / 3</span>Cosmii can't touch — <span class="kw">not even diagonally</span>.<br>Cross off the rest.<span class="count" id="coach-count"></span>`,
+      `<span class="step">READY</span>Crosses are only notes,<br>so tap again to remove one.<br>Place every Cosmii to clear the board!`,
+    ],
+  },
+};
+
+let lang = 'ja';
+function t(key, ...args){
+  const dict = I18N[lang] || I18N.ja;
+  const v = (dict[key] !== undefined) ? dict[key] : I18N.ja[key];
+  return (typeof v === 'function') ? v(...args) : v;
+}
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.querySelectorAll('[data-i18n]').forEach(el=>{ el.innerHTML = t(el.dataset.i18n); });
+  document.querySelectorAll('#lang-toggle button').forEach(b=>{
+    b.classList.toggle('on', b.dataset.lang === lang);
+  });
+  renderTitleScreen();
+  if(coach.active) renderCoachStep();
+}
+
+/* ---------------- Game state ---------------- */
+// Twelve hues spread evenly around the wheel with alternating lightness, so
+// that even neighbouring hues separate on brightness alone. Measured in CIELAB
+// the closest pair here is dE 28; the previous palette had a pair at dE 18,
+// which is where the "these two look identical" indigo/violet clash came from.
+const COLORS = ['#2E9FD4','#63C24A','#E8AB0E','#E04236','#9B4FCB','#128A5E',
+                '#F27C1B','#2E48B5','#DA4B8C','#2FC9BC','#8A6238','#AFC70F'];
+const SHAPE_GLYPHS = ['●','▲','■','◆','★','⬟','⬢','✚','⬣','◐','▼','⬤'];
+
+// Perceptual (CIELAB) distance between two palette entries. Plain RGB distance
+// badly misjudges how similar colours actually look.
+const LAB = COLORS.map(hex=>{
+  const v = [1,3,5].map(i=>parseInt(hex.substr(i,2),16)/255)
+    .map(x=> x>0.04045 ? Math.pow((x+0.055)/1.055, 2.4) : x/12.92);
+  const X=(v[0]*0.4124+v[1]*0.3576+v[2]*0.1805)/0.95047;
+  const Y= v[0]*0.2126+v[1]*0.7152+v[2]*0.0722;
+  const Z=(v[0]*0.0193+v[1]*0.1192+v[2]*0.9505)/1.08883;
+  const f=t=> t>0.008856 ? Math.cbrt(t) : (7.787*t+16/116);
+  return [116*f(Y)-16, 500*(f(X)-f(Y)), 200*(f(Y)-f(Z))];
+});
+function labDist(a,b){
+  return Math.hypot(LAB[a][0]-LAB[b][0], LAB[a][1]-LAB[b][1], LAB[a][2]-LAB[b][2]);
+}
+
+// Every region on the board gets its own colour — never a repeat, even between
+// regions that don't touch. Two same-coloured blobs read as one region no
+// matter how far apart they sit, which makes "one Cosmii per zone" unreadable.
+// With at most 11 regions and 12 hues this is always possible, and we pick the
+// subset that maximises the closest pair so small boards look wildly distinct.
+function assignColors(n, regionOf, rng){
+  const total = COLORS.length;
+  let best=null, bestScore=-1;
+  for(let seed=0; seed<total; seed++){
+    const sel=[seed];
+    while(sel.length < n){
+      let pick=-1, pickScore=-1;
+      for(let i=0;i<total;i++){
+        if(sel.indexOf(i)>=0) continue;
+        let nearest=Infinity;
+        for(const s of sel) nearest = Math.min(nearest, labDist(i,s));
+        if(nearest > pickScore){ pickScore=nearest; pick=i; }
+      }
+      sel.push(pick);
+    }
+    let score=Infinity;
+    for(let i=0;i<sel.length;i++) for(let j=i+1;j<sel.length;j++)
+      score = Math.min(score, labDist(sel[i], sel[j]));
+    if(score > bestScore){ bestScore=score; best=sel; }
+  }
+  // Shuffle so the same board size doesn't always wear the same colours,
+  // then hand the most contrasting pairs to regions that actually touch.
+  const pool = best.slice();
+  for(let i=pool.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [pool[i],pool[j]]=[pool[j],pool[i]]; }
+
+  const adj = Array.from({length:n},()=>new Set());
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    const g = regionOf[r][c];
+    if(r+1<n){ const h=regionOf[r+1][c]; if(h!==g){ adj[g].add(h); adj[h].add(g); } }
+    if(c+1<n){ const h=regionOf[r][c+1]; if(h!==g){ adj[g].add(h); adj[h].add(g); } }
+  }
+  const order = Array.from({length:n},(_,i)=>i).sort((a,b)=>adj[b].size-adj[a].size);
+  const out = new Array(n).fill(-1);
+  const free = pool.slice();
+  for(const g of order){
+    let bestIdx=0, bestSep=-1;
+    for(let i=0;i<free.length;i++){
+      let sep=Infinity;
+      for(const h of adj[g]) if(out[h]>=0) sep=Math.min(sep, labDist(free[i], out[h]));
+      if(sep===Infinity) sep = 1000;               // no coloured neighbour yet
+      if(sep > bestSep){ bestSep=sep; bestIdx=i; }
+    }
+    out[g] = free.splice(bestIdx,1)[0];
+  }
+  return out;
+}
+
+let state = null;
+let timerHandle = null;
+let bestTimes = {};
+// Cosmo Coins are the game's own currency: a flat reward per cleared stage,
+// kept inside `progress` so it saves through the same call as everything else.
+const COINS_PER_CLEAR = 10;
+let progress = {score:0, cleared:0, coins:0};
+let settings = {sound:true, vibrate:true, pattern:false, placeMode:false};
+let isDailyMode = false;
+
+const els = {
+  title: document.getElementById('title-screen'),
+  game: document.getElementById('game-screen'),
+  gridWrap: document.getElementById('grid-wrap'),
+  hearts: document.getElementById('stat-hearts'),
+  hintCount: document.getElementById('hint-count'),
+  placeCount: document.getElementById('place-count'),
+  clearModal: document.getElementById('clear-modal'),
+  overModal: document.getElementById('over-modal'),
+  settingsModal: document.getElementById('settings-modal'),
+  clearTime: document.getElementById('clear-time'),
+  clearBest: document.getElementById('clear-best'),
+  statLevel: document.getElementById('stat-level'),
+  statScore: document.getElementById('stat-score'),
+  progressCur: document.getElementById('progress-cur'),
+  progressMax: document.getElementById('progress-max'),
+  toast: document.getElementById('toast'),
+  coach: document.getElementById('coach'),
+  coachTip: document.getElementById('coach-tip'),
+  coachNext: document.getElementById('coach-next'),
+  coachSkip: document.getElementById('coach-skip'),
+};
+
+function updateBgmPlayback(){
+  if(!bgm) return;
+  if(settings.sound && (document.getElementById('title-screen').classList.contains('active') || document.getElementById('game-screen').classList.contains('active'))){
+    bgm.volume = 0.35;
+    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
+  } else {
+    bgm.pause();
+  }
+}
+
+function showScreen(el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  if(el.id === 'title-screen'){ resetPromoScroll(); }
+  updateBgmPlayback();
+}
+function fmtTime(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
+function showToast(msg){
+  els.toast.textContent = msg;
+  els.toast.classList.add('show');
+  setTimeout(()=>els.toast.classList.remove('show'), 1600);
+}
+
+function heartsHtml(cur, max){
+  let html='';
+  for(let i=0;i<max;i++){
+    const filled = i<cur;
+    const opacity = filled ? 1 : 0.2;
+    html += `<img class="lifepip" src="assets/images/Meteor.PNG" alt="heart" style="opacity:${opacity};">`;
+  }
+  return html;
+}
+
+function updateHeaderStats(){
+  els.statLevel.textContent = progress.cleared + 1;
+  els.statScore.textContent = progress.score;
+}
+
+function buildGrid(){
+  const n = state.n;
+  els.gridWrap.innerHTML='';
+  els.gridWrap.classList.toggle('pattern-on', settings.pattern);
+
+  const viewportWidth = Math.max(280, (window.visualViewport?.width || window.innerWidth) - 32);
+  const viewportHeight = Math.max(280, (window.visualViewport?.height || window.innerHeight) - 220);
+  const maxBoardWidth = Math.min(420, viewportWidth);
+  const maxBoardHeight = Math.min(420, viewportHeight * (coach.active ? 0.72 : 0.58));
+  const size = Math.min(440, maxBoardWidth, maxBoardHeight);
+  const padding = 10;
+  const gap = 2 * (n - 1);
+  const cellSize = Math.max(44, Math.floor((size - padding - gap) / n));
+  const boardSize = cellSize * n + gap + padding;
+
+  els.gridWrap.style.width = `${boardSize}px`;
+  els.gridWrap.style.height = `${boardSize}px`;
+  els.gridWrap.style.maxWidth = '100%';
+  els.gridWrap.style.gridTemplateColumns = `repeat(${n}, ${cellSize}px)`;
+  els.gridWrap.style.gridTemplateRows = `repeat(${n}, ${cellSize}px)`;
+
+  for(let r=0;r<n;r++){
+    for(let c=0;c<n;c++){
+      const cell = document.createElement('div');
+      cell.className='cell';
+      cell.dataset.r=r; cell.dataset.c=c;
+      const reg = state.regionOf[r][c];
+      cell.style.background = COLORS[state.colorOf[reg]];
+
+      const patt = document.createElement('span');
+      patt.className='pattern-mark';
+      patt.textContent = SHAPE_GLYPHS[state.colorOf[reg]];
+      cell.appendChild(patt);
+
+      const piece = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      piece.setAttribute('viewBox','0 0 100 100');
+      piece.setAttribute('class','piece');
+      piece.innerHTML = `
+        <ellipse cx="50" cy="56" rx="38" ry="34" fill="#EAF6FA"/>
+        <path d="M50 10 L54 21 L65 17 L58 27 Z" fill="#E8963C"/>
+        <circle cx="36" cy="53" r="10" fill="#2b2320"/>
+        <circle cx="64" cy="53" r="10" fill="#2b2320"/>
+        <circle cx="39" cy="50" r="3.2" fill="#fff"/>
+        <circle cx="67" cy="50" r="3.2" fill="#fff"/>
+        <path d="M42 69 Q50 75 58 69" stroke="#2b2320" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;
+      cell.appendChild(piece);
+
+      const characterImg = document.createElement('img');
+      characterImg.className = 'character-img';
+      characterImg.alt = 'Cosmii';
+      characterImg.style.display = 'none';
+      cell.appendChild(characterImg);
+
+      const cross = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      cross.setAttribute('viewBox','0 0 100 100');
+      cross.setAttribute('class','cross-svg');
+      cross.innerHTML =
+        `<path class="halo" d="M25 25 L75 75 M75 25 L25 75" stroke-linecap="round"/>` +
+        `<path class="mark" d="M25 25 L75 75 M75 25 L25 75" stroke-linecap="round"/>`;
+      cell.appendChild(cross);
+
+      els.gridWrap.appendChild(cell);
+    }
+  }
+}
+
+function cellEl(r,c){ return els.gridWrap.querySelector(`.cell[data-r="${r}"][data-c="${c}"]`); }
+
+/* ---- input ---------------------------------------------------------------
+   single tap        = toggle one X
+   double tap        = place a Cosmii
+   press and drag    = sweep X across every cell the finger passes through
+Marking a whole row or column one careful tap at a time is the most repetitive
+part of solving, so a drag paints continuously. The stroke's direction is set
+by the cell it starts on: begin on an empty cell and the whole stroke adds Xs,
+begin on an existing X and the whole stroke erases. Locking the mode up front
+means a sweep never flickers marks on and off as it crosses mixed cells.
+--------------------------------------------------------------------------- */
+const pendingClicks = new Map();
+const DOUBLE_TAP_WINDOW = 320;
+const DRAG_THRESHOLD = 10;          // px before a press counts as a drag
+
+let drag = null;
+let lastPaintSound = 0;
+
+function cellAtPoint(x, y){
+  const el = document.elementFromPoint(x, y);
+  if(!el) return null;
+  const cell = el.closest ? el.closest('.cell') : null;
+  return (cell && els.gridWrap.contains(cell)) ? cell : null;
+}
+
+function paintCell(r, c){
+  const key = r+'_'+c;
+  if(drag.painted.has(key)) return;
+  drag.painted.add(key);
+  if(state.board[r][c]===1 || state.board[r][c]===3) return;   // sealed cells
+  if(coach.active){
+    // During the tutorial only the highlighted cells respond, so a stray
+    // sweep can't scribble over the rest of the board.
+    if(!coach.remaining || !coach.remaining.has(key)) return;
+    if(coach.act!=='cross') return;
+  }
+  const want = (drag.mode==='draw') ? 2 : 0;
+  if(state.board[r][c]===want) return;
+  state.board[r][c] = want;
+  renderCell(r,c);
+  const now = Date.now();
+  if(now - lastPaintSound > 45){                    // throttle: a fast sweep
+    lastPaintSound = now;                           // shouldn't machine-gun
+    beep(drag.mode==='draw' ? 420 : 330, 0.04, 'triangle');
+    vibrate(8);
+  }
+  if(coach.active && want===2) coachCellDone(r,c);
+}
+
+function onGridPointerDown(e){
+  if(!state || state.finished) return;
+  if(e.pointerType==='mouse' && e.button!==0) return;
+  const cell = e.target.closest ? e.target.closest('.cell') : null;
+  if(!cell || !els.gridWrap.contains(cell)) return;
+  drag = {
+    r:+cell.dataset.r, c:+cell.dataset.c,
+    x:e.clientX, y:e.clientY,
+    mode:null, moved:false, painted:new Set(),
+  };
+  try{ els.gridWrap.setPointerCapture(e.pointerId); }catch(err){}
+}
+
+function onGridPointerMove(e){
+  if(!drag) return;
+  if(!drag.moved){
+    if(Math.hypot(e.clientX-drag.x, e.clientY-drag.y) < DRAG_THRESHOLD) return;
+    // Starting a sweep on a Cosmii or a sealed red X would be ambiguous.
+    const v0 = state.board[drag.r][drag.c];
+    if(v0===1 || v0===3){ drag=null; return; }
+    drag.moved = true;
+    drag.mode = (state.board[drag.r][drag.c]===2) ? 'erase' : 'draw';
+    // A tap already queued for this cell would fire mid-sweep and undo it.
+    const key = drag.r+'_'+drag.c;
+    if(pendingClicks.has(key)){ clearTimeout(pendingClicks.get(key)); pendingClicks.delete(key); }
+    paintCell(drag.r, drag.c);
+  }
+  const cell = cellAtPoint(e.clientX, e.clientY);
+  if(cell) paintCell(+cell.dataset.r, +cell.dataset.c);
+}
+
+function onGridPointerUp(e){
+  if(!drag) return;
+  const d = drag; drag = null;
+  try{ els.gridWrap.releasePointerCapture(e.pointerId); }catch(err){}
+  if(d.moved) return;                               // it was a sweep, not a tap
+  handleCellTap(d.r, d.c);
+}
+
+function handleCellTap(r, c){
+  if(state.finished) return;
+  if(coach.active && !coachAllowsCell(r,c)) return;
+  // Place mode turns a single tap into a placement, which is far less fiddly
+  // than double-tapping every cell. It also fires immediately instead of
+  // waiting out the double-tap window, so the board feels sharper.
+  // The tutorial always teaches the double tap, so it opts out.
+  if(settings.placeMode && !coach.active){
+    // Tapping a cell you already crossed off clears the mark instead of
+    // placing. Otherwise undoing a stray X in this mode would cost a life.
+    if(state.board[r][c]===2){ handleSingleTap(r,c); return; }
+    handleDoubleTap(r,c);
+    return;
+  }
+  const key = r+'_'+c;
+  if(pendingClicks.has(key)){
+    clearTimeout(pendingClicks.get(key));
+    pendingClicks.delete(key);
+    handleDoubleTap(r,c);
+  } else {
+    const timer = setTimeout(()=>{ pendingClicks.delete(key); handleSingleTap(r,c); }, DOUBLE_TAP_WINDOW);
+    pendingClicks.set(key, timer);
+  }
+}
+function handleSingleTap(r,c){
+  if(coach.active && coach.act && coach.act!=='cross'){ coachNudge(); return; }
+  const cur = state.board[r][c];
+  if(cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }   // sealed
+  state.board[r][c] = (cur===0) ? 2 : 0;
+  renderCell(r,c);
+  beep(420,0.05,'triangle');
+  if(coach.active && coach.act==='cross' && state.board[r][c]===2) coachCellDone(r,c);
+}
+function handleDoubleTap(r,c){
+  if(coach.active && coach.act && coach.act!=='place'){ coachNudge(); return; }
+  const cur = state.board[r][c];
+  // A placed Cosmii is always part of the one true solution (isValidPlacement
+  // rejects anything else), so there is never a reason to take one back — and
+  // a stray double tap undoing hard-won progress just feels like a bug.
+  if(cur===1 || cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }
+  if(isValidPlacement(r,c)){
+    state.board[r][c]=1;
+    if(!state.character) state.character = Array.from({length:state.n},()=>Array(state.n).fill(''));
+    state.character[r][c] = charNames[Math.floor(Math.random()*charNames.length)];
+    renderCell(r,c);
+    onCorrectPlacement(r,c);
+    if(settings.placeMode){
+      state.placeUses = Math.max(0, state.placeUses - 1);
+      updatePlaceUsesUI();
+      if(state.placeUses === 0){
+        settings.placeMode = false;
+        renderPlaceMode();
+      }
+    }
+    if(coach.active && coach.act==='place'){ coachCellDone(r,c); return; }
+    checkWin();
+  } else {
+    // Seal the cell with a red X rather than clearing it. The guess is now
+    // proven wrong, so leaving it blank would invite the same mistake twice
+    // and throw away information the player paid a life for.
+    state.board[r][c]=3;
+    renderCell(r,c);
+    cellEl(r,c).classList.add('shake');
+    beep(180,0.25,'square'); vibrate(80);
+    setTimeout(()=>{ cellEl(r,c).classList.remove('shake'); },350);
+    state.hearts--;
+    updateHearts();
+    if(state.hearts<=0){ state.finished=true; stopTimer(); showOverModal(); }
+  }
+}
+function isValidPlacement(r,c){
+  // Each puzzle has exactly one valid full solution. Checking only against
+  // currently-placed pieces would let a player commit a move that looks fine
+  // locally but strands a region with no legal cell many moves later.
+  return state.solution[r] === c;
+}
+// A tiny bounce, so tapping a settled Cosmii reads as "this one is done"
+// rather than as the tap having been swallowed.
+function pulseLocked(r,c){
+  const el = cellEl(r,c);
+  if(!el) return;
+  el.classList.remove('locked-pulse');
+  void el.offsetWidth;
+  el.classList.add('locked-pulse');
+  setTimeout(()=>el.classList.remove('locked-pulse'), 400);
+}
+function renderCell(r,c){
+  const el = cellEl(r,c); const v = state.board[r][c];
+  el.classList.toggle('filled', v===1);
+  el.classList.toggle('crossed', v===2);
+  el.classList.toggle('wrong', v===3);
+  el.classList.toggle('character-filled', !!(state.character && state.character[r] && state.character[r][c]));
+  const img = el.querySelector('.character-img');
+  if(img){
+    if(v===1 && state.character && state.character[r] && state.character[r][c]){
+      img.src = `assets/images/${state.character[r][c]}.PNG`;
+      img.style.display = 'block';
+    } else {
+      img.src = '';
+      img.style.display = 'none';
+    }
+  }
+  if(v!==1) el.classList.remove('hinted');
+}
+function updateHearts(){ els.hearts.innerHTML = heartsHtml(state.hearts, state.maxHearts); }
+
+function placedCount(){
+  let p=0;
+  for(let i=0;i<state.n;i++) for(let j=0;j<state.n;j++) if(state.board[i][j]===1) p++;
+  return p;
+}
+
+async function onCorrectPlacement(r,c){
+  beep(660,0.15,'sine'); vibrate(15);
+  const pts = 60 + Math.floor(Math.random()*120);
+  progress.score += pts;
+  updateHeaderStats();
+  await saveJSON('progress', progress);
+  const el = cellEl(r,c);
+  const fp = document.createElement('div');
+  fp.className='floatpts'; fp.textContent='+'+pts;
+  el.appendChild(fp);
+  setTimeout(()=>fp.remove(), 850);
+
+  const placed = placedCount();
+  els.progressCur.textContent = placed;
+  if(!coach.active && placed>1 && Math.random()<0.35 && placed<state.n){
+    const banner = document.createElement('div');
+    banner.className='banner-great';
+    banner.textContent = Math.random()<0.5 ? 'Great' : 'Nice!';
+    els.gridWrap.appendChild(banner);
+    setTimeout(()=>banner.remove(), 1000);
+  }
+}
+
+const DAILY_UNLOCK_LEVEL = 20;
+let streakData = {lastDate:null, streak:0};
+async function updateStreak(){
+  const today = todayStr();
+  if(streakData.lastDate === today) return;
+  const d = new Date(); d.setDate(d.getDate()-1);
+  const yesterday = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  if(streakData.lastDate === yesterday) streakData.streak += 1;
+  else streakData.streak = 1;
+  streakData.lastDate = today;
+  await saveJSON('streak', streakData);
+}
+function renderCoins(bump){
+  const el = document.getElementById('coin-balance');
+  if(!el) return;
+  el.textContent = progress.coins;
+  if(bump){
+    const chip = document.getElementById('coin-chip');
+    chip.classList.remove('bump');
+    void chip.offsetWidth;
+    chip.classList.add('bump');
+  }
+}
+
+function renderTitleScreen(){
+  renderCoins(false);
+  const level = progress.cleared + 1;
+  const unlocked = level >= DAILY_UNLOCK_LEVEL;
+  const dailyCard = document.getElementById('card-daily');
+  dailyCard.classList.toggle('locked', !unlocked);
+  document.getElementById('daily-unlock-label').textContent = unlocked ? t('daily_play') : t('daily_locked', DAILY_UNLOCK_LEVEL);
+  document.getElementById('streak-count').textContent = streakData.streak || 0;
+  document.getElementById('streak-check').style.display = (streakData.lastDate===todayStr()) ? 'flex' : 'none';
+}
+
+function checkWin(){
+  if(placedCount()===state.n){ state.finished=true; stopTimer(); onWin(); }
+}
+
+function startTimer(){
+  stopTimer();
+  timerHandle = setInterval(()=>{ state.elapsed++; }, 1000);
+}
+function stopTimer(){ clearInterval(timerHandle); }
+
+async function onWin(){
+  beep(880,0.18,'sine'); setTimeout(()=>beep(1100,0.22,'sine'),150);
+  const diffKey = isDailyMode ? 'daily' : String(state.n);
+  const prevBest = bestTimes[diffKey];
+  let isRecord=false;
+  if(prevBest===undefined || state.elapsed < prevBest){ bestTimes[diffKey]=state.elapsed; isRecord=true; await saveJSON('best-times', bestTimes); }
+  progress.cleared += 1;
+  progress.score += 300;
+  progress.coins += COINS_PER_CLEAR;
+  updateHeaderStats();
+  renderCoins(true);
+  await saveJSON('progress', progress);
+  await updateStreak();
+  if(isDailyMode){ await saveJSON('daily-progress', {date: todayStr(), cleared:true, time: state.elapsed}); }
+  els.clearTime.textContent = fmtTime(state.elapsed);
+  els.clearBest.innerHTML = isRecord ? `<span class="record">${t('record')}</span>` : t('best', fmtTime(bestTimes[diffKey]));
+  document.querySelector('#coin-reward .coin-gain').textContent = '+' + COINS_PER_CLEAR;
+  document.getElementById('coin-total').textContent = t('coin_total', progress.coins);
+  els.clearModal.classList.add('active');
+}
+function showOverModal(){ document.getElementById('over-modal').classList.add('active'); }
+
+function useHint(){
+  // Hint now marks a cell that CANNOT contain a Cosmii with an X (cross)
+  if(state.finished || state.hintsLeft<=0 || coach.active) return;
+  const n = state.n;
+  // pick a random row that still needs a placement
+  const rows = [];
+  for(let r=0;r<n;r++) if(state.board[r][state.solution[r]]!==1) rows.push(r);
+  if(rows.length===0) return;
+  const r = rows[(Math.random()*rows.length)|0];
+  // collect candidate columns in that row which are empty and NOT the solution
+  const cands = [];
+  for(let c=0;c<n;c++){
+    if(c===state.solution[r]) continue;
+    if(state.board[r][c]===0) cands.push(c);
+  }
+  if(cands.length===0){
+    // fallback: try other rows for any invalid empty cell
+    for(let rr=0; rr<n; rr++){
+      for(let cc=0; cc<n; cc++){
+        if(state.board[rr][cc]===0 && state.solution[rr]!==cc){ cands.push({r:rr,c:cc}); }
+      }
+    }
+    if(cands.length===0) return;
+    const pick = cands[(Math.random()*cands.length)|0];
+    state.board[pick.r][pick.c] = 2; renderCell(pick.r,pick.c);
+  } else {
+    const c = cands[(Math.random()*cands.length)|0];
+    state.board[r][c] = 2; renderCell(r,c);
+  }
+  state.hintsLeft--; els.hintCount.textContent = state.hintsLeft;
+}
+
+/* ---------------- Flow control ---------------- */
+function resetBoard(){
+  const n = state.n;
+  state.board = Array.from({length:n},()=>new Array(n).fill(0));
+  state.hearts = state.maxHearts;
+  state.finished=false;
+  state.placeUses = 3;
+  state.hintsLeft = state.maxHints;
+  state.elapsed = 0;
+  for(const r of state.prefillRows){ state.board[r][state.solution[r]] = 1; }
+  els.hintCount.textContent = state.hintsLeft;
+  updateHearts();
+  updatePlaceUsesUI();
+  buildGrid();
+  for(const r of state.prefillRows){
+    renderCell(r, state.solution[r]);
+    cellEl(r, state.solution[r]).classList.add('hinted');
+  }
+  els.progressCur.textContent = state.prefillRows.length;
+  els.progressMax.textContent = n;
+  if(!coach.active) startTimer();
+}
+
+const charNames = ['CosmiiBlue','CosmiiRed','CosmiiPink','CosmiiPurple','CosmiiGreen'];
+
+function startGame(config, seedRng){
+  const rng = seedRng || Math.random;
+  const puzzle = generatePuzzleRobust(config, rng);
+  if(!puzzle){ showToast(t('toast_genfail')); return; }
+  let prefillRows = [];
+  if(Math.random() < (config.prefillChance||0)){
+    const count = randInt(1, config.prefillMax||1);
+    const rows = Array.from({length:puzzle.n},(_,i)=>i);
+    for(let i=rows.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
+    prefillRows = rows.slice(0, Math.min(count, puzzle.n-1));
+  }
+  state = {
+    n: puzzle.n, solution: puzzle.solution, regionOf: puzzle.regionOf,
+    colorOf: assignColors(puzzle.n, puzzle.regionOf, rng),
+    maxHearts: config.hearts, maxHints: config.hints, prefillRows, elapsed:0,
+    placeUses: 3,
+    character: Array.from({length:puzzle.n},()=>Array(puzzle.n).fill('')),
+  };
+  resetBoard();
+  showScreen(els.game);
+  maybeStartCoach();
+}
+
+/* ---------------- Coach: hands-on tutorial ----------------
+   The player performs each gesture for real on the live board. Only the
+   highlighted cell accepts taps, and the required cell is always part of the
+   true solution, so nobody loses a heart while learning.
+----------------------------------------------------------- */
+// Step order and behaviour live here; the wording lives in I18N[lang].coach,
+// so switching language re-renders the same flow in the other language.
+const COACH_STEPS = [
+  {act:null},
+  {act:'place', pick:'solo'},
+  {act:'cross', pick:'rowcol'},
+  {act:'cross', pick:'diag'},
+  {act:null, last:true},
+];
+
+let coach = {active:false, idx:0, act:null, targets:[], remaining:null, lastPlaced:null};
+
+// The tutorial is a one-time, level-1-only event. It used to depend purely on
+// the stored `seen-tutorial` flag, which meant any environment where the write
+// didn't stick replayed it on every board. This in-memory latch plus a hard
+// level gate makes that impossible regardless of storage behaviour.
+let coachDone = false;
+
+function coachKey(r,c){ return r+'_'+c; }
+function coachAllowsCell(r,c){
+  if(coach.remaining && coach.remaining.has(coachKey(r,c))) return true;
+  coachNudge();
+  return false;
+}
+function coachNudge(){
+  els.coachTip.classList.remove('nudge');
+  void els.coachTip.offsetWidth;
+  els.coachTip.classList.add('nudge');
+}
+
+// Prefer the cell of a 1-cell region: it is the easiest rule to explain and is
+// guaranteed to be part of the solution, so the learner can't lose a heart.
+// Among equals, favour a cell with more diagonal neighbours so the adjacency
+// step later has something real to mark.
+function pickSoloCell(){
+  const n = state.n;
+  const sizes = new Array(n).fill(0);
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) sizes[state.regionOf[r][c]]++;
+  let bestRow=-1, bestScore=Infinity;
+  for(let r=0;r<n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c]===1) continue;              // skip anything already given
+    let diag=0;
+    for(const dr of [-1,1]) for(const dc of [-1,1]){
+      const nr=r+dr, nc=c+dc;
+      if(nr>=0 && nr<n && nc>=0 && nc<n) diag++;
+    }
+    const score = sizes[state.regionOf[r][c]]*10 - diag;
+    if(score < bestScore){ bestScore=score; bestRow=r; }
+  }
+  if(bestRow<0) bestRow = 0;
+  return [bestRow, state.solution[bestRow]];
+}
+// Every other cell in the placed Cosmii's row and column: all genuinely
+// unplaceable, which is exactly the memo pass a real player makes.
+function rowColCells(){
+  const n = state.n;
+  const q = coach.lastPlaced || [0, state.solution[0]];
+  const out=[];
+  for(let c=0;c<n;c++) if(c!==q[1] && state.board[q[0]][c]===0) out.push([q[0],c]);
+  for(let r=0;r<n;r++) if(r!==q[0] && state.board[r][q[1]]===0) out.push([r,q[1]]);
+  return out;
+}
+// The diagonal neighbours: blocked by the adjacency rule, and not already
+// covered by the row/column pass.
+function diagCells(){
+  const n = state.n;
+  const q = coach.lastPlaced || [0, state.solution[0]];
+  const out=[];
+  for(const dr of [-1,1]) for(const dc of [-1,1]){
+    const r=q[0]+dr, c=q[1]+dc;
+    if(r>=0 && r<n && c>=0 && c<n && state.board[r][c]===0) out.push([r,c]);
+  }
+  return out;
+}
+function pickCoachCells(kind){
+  if(kind==='solo') return [pickSoloCell()];
+  if(kind==='rowcol') return rowColCells();
+  return diagCells();
+}
+
+function clearCoachTarget(){
+  els.gridWrap.classList.remove('coach-focus');
+  els.gridWrap.querySelectorAll('.coach-target,.coach-done')
+    .forEach(el=>{ el.classList.remove('coach-target'); el.classList.remove('coach-done'); });
+  coach.targets=[]; coach.remaining=null; coach.act=null;
+}
+function updateCoachCount(){
+  const el = document.getElementById('coach-count');
+  if(!el) return;
+  const left = coach.remaining ? coach.remaining.size : 0;
+  el.textContent = left>0 ? t('coach_left', left) : t('coach_alldone');
+}
+
+// The tip sheet is anchored to the bottom of the screen and its height varies
+// with the wording, so rather than guessing a safe board size up front, we
+// measure both after layout and scale the board down only if they would
+// actually collide. Without this the last row of a board can end up behind
+// the sheet, where its cells are visible but untappable.
+function fitBoardForCoach(){
+  const grid = els.gridWrap;
+  if(!coach.active){ grid.style.transform=''; return; }
+  grid.style.transform='';
+  requestAnimationFrame(()=>{
+    if(!coach.active) return;
+    const g = grid.getBoundingClientRect();
+    const sheet = els.coach.getBoundingClientRect();
+    const room = sheet.top - g.top - 14;              // 14px breathing space
+    if(g.height > room && room > 0){
+      grid.style.transform = `scale(${Math.max(0.55, room/g.height)})`;
+    }
+  });
+}
+
+function renderCoachStep(){
+  const step = COACH_STEPS[coach.idx];
+  clearCoachTarget();
+  els.coachTip.innerHTML = t('coach')[coach.idx];
+  if(step.act){
+    coach.act = step.act;
+    coach.targets = pickCoachCells(step.pick);
+    if(!coach.targets.length){ coach.act=null; coachAdvance(); return; }
+    coach.remaining = new Set(coach.targets.map(p=>coachKey(p[0],p[1])));
+    for(const t of coach.targets){ const el=cellEl(t[0],t[1]); if(el) el.classList.add('coach-target'); }
+    els.gridWrap.classList.add('coach-focus');
+    els.coachNext.style.display='none';
+    updateCoachCount();
+  } else {
+    els.coachNext.style.display='';
+    els.coachNext.textContent = step.last ? t('coach_start') : t('coach_next');
+  }
+  fitBoardForCoach();
+}
+
+function coachCellDone(r,c){
+  if(coach.act==='place') coach.lastPlaced = [r,c];
+  const el = cellEl(r,c);
+  if(el){ el.classList.remove('coach-target'); el.classList.add('coach-done'); }
+  if(coach.remaining) coach.remaining.delete(coachKey(r,c));
+  updateCoachCount();
+  if(!coach.remaining || coach.remaining.size===0){
+    coach.act=null; coach.remaining=null;
+    setTimeout(coachAdvance, 480);
+  }
+}
+function coachAdvance(){
+  coach.idx++;
+  if(coach.idx >= COACH_STEPS.length){ endCoach(); return; }
+  renderCoachStep();
+}
+function startCoach(){
+  coachDone = true;                      // latch before anything can re-enter
+  coach.active = true; coach.idx = 0; coach.lastPlaced = null;
+  document.body.classList.add('coaching');
+  els.coach.classList.add('active');
+  stopTimer(); state.elapsed = 0;
+  renderCoachStep();
+}
+function endCoach(){
+  coach.active = false;
+  coachDone = true;
+  clearCoachTarget();
+  document.body.classList.remove('coaching');
+  els.coach.classList.remove('active');
+  els.gridWrap.style.transform='';
+  saveJSON('seen-tutorial', true);
+  state.elapsed = 0;
+  startTimer();
+  checkWin();
+}
+function maybeStartCoach(){
+  if(coachDone || coach.active) return;
+  if(isDailyMode) return;
+  if(progress.cleared > 0){ coachDone = true; return; }   // Lv2 以降には出さない
+  loadJSON('seen-tutorial', false).then(seen=>{
+    if(seen || coachDone || coach.active){ coachDone = true; return; }
+    startCoach();
+  });
+}
+
+/* ---------------- Event bindings ---------------- */
+document.getElementById('btn-splash-start').addEventListener('click', () => {
+  showScreen(els.title);
+});
+const bgm = document.getElementById('bgm');
+
+const btnPlay = document.getElementById('btn-play');
+let startPlayPending = false;
+async function startPlayLevel(){
+  if(settings.sound){
+    bgm.volume = 0.35;
+    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
+  }
+
+  const loading = document.getElementById('loading-overlay');
+  if(loading) loading.classList.add('active');
+  await new Promise(requestAnimationFrame);
+  await new Promise(requestAnimationFrame);
+
+  isDailyMode = false;
+  startGame(levelToConfig(progress.cleared + 1));
+  if(loading) loading.classList.remove('active');
+}
+function handleStartButton(e){
+  e.preventDefault();
+  if(startPlayPending) return;
+  startPlayPending = true;
+  btnPlay.disabled = true;
+  startPlayLevel().finally(()=>{ setTimeout(()=>{ startPlayPending = false; btnPlay.disabled = false; }, 250); });
+}
+btnPlay.addEventListener('click', handleStartButton);
+btnPlay.style.pointerEvents = 'auto';
+
+const promoTrack = document.getElementById('promo-track');
+const promoStrip = document.querySelector('.promo-strip');
+let promoIndex = 0;
+let promoStartX = 0;
+let promoCurrentX = 0;
+let promoBaseX = 0;
+let promoDragging = false;
+let promoClickPrevent = false;
+function setPromoWidth(){
+  if(!promoTrack || !promoStrip) return;
+  const width = promoStrip.clientWidth;
+  const cards = Array.from(promoTrack.children).filter(el=>el instanceof HTMLElement);
+  cards.forEach(card=>{ card.style.width = `${width}px`; });
+  promoTrack.style.width = `${width * cards.length}px`;
+}
+function resetPromoScroll(){
+  promoIndex = 0;
+  promoBaseX = 0;
+  setPromoWidth();
+  if(promoTrack) promoTrack.style.transform = 'translateX(0)';
+}
+function setPromoPosition(index, animate=true){
+  if(!promoTrack || !promoStrip) return;
+  setPromoWidth();
+  promoIndex = Math.max(0, Math.min(index, promoTrack.children.length - 1));
+  promoBaseX = -promoIndex * promoStrip.clientWidth;
+  promoTrack.style.transition = animate ? 'transform .35s ease' : 'none';
+  promoTrack.style.transform = `translateX(${promoBaseX}px)`;
+}
+function advancePromoScroll(){
+  if(!promoTrack || !promoStrip) return;
+  setPromoWidth();
+  setPromoPosition((promoIndex + 1) % promoTrack.children.length);
+}
+setInterval(()=>{
+  if(document.getElementById('title-screen').classList.contains('active') && !promoDragging){
+    advancePromoScroll();
+  }
+}, 4500);
+window.addEventListener('resize', ()=>{ if(promoStrip) { resetPromoScroll(); }});
+if(promoStrip){
+  promoStrip.addEventListener('pointerdown', e=>{
+    promoDragging = true;
+    promoClickPrevent = false;
+    promoStartX = e.clientX;
+    promoCurrentX = promoStartX;
+    promoTrack.style.transition = 'none';
+    promoStrip.setPointerCapture(e.pointerId);
+  });
+  promoStrip.addEventListener('pointermove', e=>{
+    if(!promoDragging) return;
+    const delta = e.clientX - promoStartX;
+    if(Math.abs(delta) > 10) promoClickPrevent = true;
+    promoCurrentX = e.clientX;
+    if(promoTrack) promoTrack.style.transform = `translateX(${promoBaseX + delta}px)`;
+  });
+  promoStrip.addEventListener('pointerup', e=>{
+    if(!promoDragging) return;
+    promoDragging = false;
+    const delta = e.clientX - promoStartX;
+    if(delta < -40 && promoIndex < promoTrack.children.length - 1){
+      setPromoPosition(promoIndex + 1);
+    } else if(delta > 40 && promoIndex > 0){
+      setPromoPosition(promoIndex - 1);
+    } else {
+      setPromoPosition(promoIndex);
+    }
+  });
+  promoStrip.addEventListener('pointercancel', ()=>{
+    if(!promoDragging) return;
+    promoDragging = false;
+    setPromoPosition(promoIndex);
+  });
+  promoTrack.addEventListener('click', e=>{
+    if(promoClickPrevent){
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }, true);
+}
+
+document.getElementById('card-daily').addEventListener('click', ()=>{
+  const level = progress.cleared+1;
+  if(level < DAILY_UNLOCK_LEVEL){ showToast(t('toast_daily_locked', DAILY_UNLOCK_LEVEL)); return; }
+  isDailyMode=true;
+  const seed = hashStr('cosmii-daily-'+todayStr());
+  startGame({n:7, smalls:[1,2], compact:0.35, hearts:3, hints:3, prefillChance:0}, mulberry32(seed));
+});
+document.getElementById('card-streak').addEventListener('click', ()=>{
+  showToast(t('toast_streak', streakData.streak||0));
+});
+document.getElementById('coin-chip').addEventListener('click', ()=>{
+  showToast(t('toast_coins', progress.coins));
+});
+// Profile selection screen disabled during development.
+// document.getElementById('btn-avatar').addEventListener('click', ()=>{ openProfileModal(); });
+document.getElementById('btn-settings-title').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
+
+document.getElementById('btn-profile-close').addEventListener('click', ()=>{ document.getElementById('profile-modal').classList.remove('active'); });
+document.getElementById('btn-back').addEventListener('click', ()=>{ stopTimer(); renderTitleScreen(); showScreen(els.title); });
+function updatePlaceUsesUI(){
+  const el = els.placeCount;
+  if(!el) return;
+  const remaining = state ? Math.max(0, state.placeUses) : 0;
+  el.textContent = remaining;
+  el.style.display = 'flex';
+}
+
+const PROFILE_AVATARS = [
+  {id:'CosmiiGreen', label:'Cosmii Green', src:'assets/images/CosmiiGreen.PNG', price:0},
+  {id:'CosmiiBlue', label:'Cosmii Blue', src:'assets/images/CosmiiBlue.PNG', price:1000},
+  {id:'CosmiiPink', label:'Cosmii Pink', src:'assets/images/CosmiiPink.PNG', price:1000},
+  {id:'CosmiiRed', label:'Cosmii Red', src:'assets/images/CosmiiRed.PNG', price:1000},
+  {id:'CosmiiPurple', label:'Cosmii Purple', src:'assets/images/CosmiiPurple.PNG', price:1000},
+];
+let profileState = {current:'CosmiiGreen', owned:['CosmiiGreen']};
+
+function updateAvatarButton(){
+  const currentAvatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
+  const avatarImg = document.getElementById('btn-avatar-img');
+  if(avatarImg){ avatarImg.src = currentAvatar.src; }
+}
+
+function renderProfileModal(){
+  const modal = document.getElementById('profile-modal');
+  if(!modal) return;
+  const preview = document.getElementById('profile-preview');
+  const profileId = document.getElementById('profile-id');
+  const coinCount = document.getElementById('profile-coin-count');
+  const grid = document.getElementById('profile-grid');
+  if(!preview || !profileId || !coinCount || !grid) return;
+
+  profileId.textContent = `ID ${progress.cleared ? ('5DHX' + String(progress.cleared + 80)) : '000000'}`;
+  coinCount.textContent = progress.coins;
+  const currentAvatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
+  preview.innerHTML = `<img src="${currentAvatar.src}" alt="Profile">`;
+  updateAvatarButton();
+
+  grid.innerHTML = '';
+  PROFILE_AVATARS.forEach(avatar => {
+    const card = document.createElement('button');
+    card.type='button';
+    card.className='profile-card';
+    if(profileState.current===avatar.id) card.classList.add('selected');
+    if(!profileState.owned.includes(avatar.id)) card.classList.add('disabled');
+    const owned = profileState.owned.includes(avatar.id);
+    const priceText = avatar.price === 0 ? '初期選択' : `${avatar.price} Cosmo`;
+    card.innerHTML = `
+      <img src="${avatar.src}" alt="${avatar.label}">
+      <div class="profile-name">${avatar.label}</div>
+      <div class="profile-price">${owned ? (avatar.price === 0 ? '所持済' : '選択済') : priceText}</div>
+    `;
+    card.addEventListener('click', ()=>{
+      if(profileState.owned.includes(avatar.id)){
+        profileState.current = avatar.id;
+        saveProfileState();
+        renderProfileModal();
+        showToast('プロフィールを変更しました');
+      } else if(avatar.price === 0){
+        profileState.owned.push(avatar.id);
+        profileState.current = avatar.id;
+        saveProfileState();
+        renderProfileModal();
+        showToast('プロフィールを選択しました');
+      } else if(progress.coins >= avatar.price){
+        progress.coins -= avatar.price;
+        profileState.owned.push(avatar.id);
+        profileState.current = avatar.id;
+        saveJSON('progress', progress);
+        saveProfileState();
+        renderProfileModal();
+        showToast(`${avatar.label} を購入しました`);
+      } else {
+        showToast('コインが足りません');
+      }
+    });
+    grid.appendChild(card);
+  });
+}
+
+function openProfileModal(){
+  const modal = document.getElementById('profile-modal');
+  if(!modal) return;
+  renderProfileModal();
+  modal.classList.add('active');
+}
+
+function loadProfileState(){
+  return loadJSON('profile-state', {current:'CosmiiBlue', owned:['CosmiiBlue']});
+}
+
+function saveProfileState(){
+  saveJSON('profile-state', profileState);
+}
+
+function renderPlaceMode(){
+  const btn = document.getElementById('btn-place-mode');
+  if(!btn) return;
+  const canUse = !!state && state.placeUses > 0;
+  btn.classList.toggle('on', !!settings.placeMode);
+  btn.classList.toggle('disabled', !canUse && !settings.placeMode);
+  updatePlaceUsesUI();
+}
+document.getElementById('btn-place-mode').addEventListener('click', ()=>{
+  if(coach.active) return;
+  if(!state || state.placeUses <= 0){
+    showToast('Cosmii配置はもう使えません');
+    return;
+  }
+  settings.placeMode = !settings.placeMode;
+  renderPlaceMode();
+  beep(settings.placeMode ? 620 : 460, 0.06, 'sine');
+  vibrate(12);
+  saveJSON('settings', settings);
+});
+document.getElementById('btn-hint').addEventListener('click', useHint);
+document.getElementById('btn-next').addEventListener('click', ()=>{
+  els.clearModal.classList.remove('active');
+  isDailyMode=false;
+  startGame(levelToConfig(progress.cleared+1));
+});
+document.getElementById('btn-menu-1').addEventListener('click', ()=>{ els.clearModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
+document.getElementById('btn-retry').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); resetBoard(); });
+document.getElementById('btn-menu-2').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
+
+document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
+document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); });
+document.getElementById('btn-restart').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); if(!coach.active) resetBoard(); });
+document.getElementById('btn-feedback').addEventListener('click', ()=>{ showToast(t('toast_feedback')); });
+document.querySelectorAll('#lang-toggle button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(lang === b.dataset.lang) return;
+    lang = b.dataset.lang;
+    saveJSON('lang', lang);
+    applyLang();
+  });
+});
+els.gridWrap.addEventListener('pointerdown', onGridPointerDown);
+els.gridWrap.addEventListener('pointermove', onGridPointerMove);
+els.gridWrap.addEventListener('pointerup', onGridPointerUp);
+els.gridWrap.addEventListener('pointercancel', ()=>{ drag=null; });
+// A sweep that leaves the board mid-stroke should just end, not keep painting
+// when the finger comes back at a different spot.
+els.gridWrap.addEventListener('lostpointercapture', ()=>{ drag=null; });
+
+window.addEventListener('resize', ()=>{ if(coach.active) fitBoardForCoach(); });
+els.coachNext.addEventListener('click', coachAdvance);
+els.coachSkip.addEventListener('click', endCoach);
+
+document.getElementById('toggle-sound').addEventListener('change', e=>{
+  settings.sound=e.target.checked;
+  saveJSON('settings', settings);
+  if(settings.sound){
+    bgm.volume = 0.35;
+    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
+  } else {
+    bgm.pause();
+  }
+});
+document.getElementById('toggle-vibrate').addEventListener('change', e=>{ settings.vibrate=e.target.checked; saveJSON('settings', settings); });
+document.getElementById('toggle-pattern').addEventListener('change', e=>{
+  settings.pattern=e.target.checked; saveJSON('settings', settings);
+  els.gridWrap.classList.toggle('pattern-on', settings.pattern);
+});
+
+/* ---------------- Init ---------------- */
+(async function init(){
+  bestTimes = await loadJSON('best-times', {});
+  progress = await loadJSON('progress', {score:0, cleared:0, coins:0});
+  // Saves written before coins existed have no such field.
+  if(typeof progress.coins !== 'number') progress.coins = 0;
+  profileState = await loadProfileState();
+  settings = await loadJSON('settings', {sound:true, vibrate:true, pattern:false, placeMode:false});
+  streakData = await loadJSON('streak', {lastDate:null, streak:0});
+  lang = await loadJSON('lang', 'ja');
+  document.getElementById('toggle-sound').checked = settings.sound;
+  document.getElementById('toggle-vibrate').checked = settings.vibrate;
+  document.getElementById('toggle-pattern').checked = settings.pattern;
+  updateAvatarButton();
+  renderPlaceMode();
+  if(progress.cleared > 0) coachDone = true;
+  updateHeaderStats();
+  applyLang();          // also runs renderTitleScreen()
+})();
+</script>
+</body>
+</html>
