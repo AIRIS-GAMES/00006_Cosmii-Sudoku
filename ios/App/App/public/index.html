@@ -109,13 +109,15 @@
     padding-top:10px;
   }
   .avatar-btn{
-    width:60px; height:60px; border-radius:18px; border:3px solid var(--accent-2);
-    background:linear-gradient(160deg,#EAF6EE,#D9EEE0); display:flex; align-items:center; justify-content:center;
-    padding:8px; cursor:pointer;
+    width:60px; height:60px; border-radius:18px;
+    border:4px solid var(--accent);            /* recoloured by the chosen frame */
+    background:#fff; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    padding:0; cursor:pointer;
   }
   .avatar-btn:active{transform:scale(0.95);}
   .avatar-btn svg, .avatar-btn img{width:100%; height:100%; display:block;}
-  .avatar-btn img{object-fit:contain; border-radius:12px;}
+  .avatar-btn img{object-fit:cover;}
   .title-cards{
     width:100%; max-width:420px; display:flex; gap:12px;
     margin:auto 0 0;                 /* pushes the group down off the header */
@@ -153,6 +155,12 @@
     display:block;
     object-fit:contain;
   }
+  /* ---- Other games strip -------------------------------------------------
+     A single-card-wide window that loops forever. The track holds a clone of
+     the last card in front and the first card behind the real ones, so a
+     wrap-around is just a normal slide followed by a silent jump back to the
+     matching real card — no rewind animation, no dead end at either edge.
+  ------------------------------------------------------------------------ */
   .promo-strip{
     width:100%; max-width:420px;
     margin:18px auto 0;
@@ -161,20 +169,18 @@
     background:rgba(255,255,255,.92);
     box-shadow:0 18px 40px rgba(49,25,11,.12);
     border:1px solid rgba(255,255,255,.55);
-    touch-action: pan-y;
+    touch-action:pan-y;
     -webkit-user-select:none;
     user-select:none;
+    position:relative;
   }
   .promo-track{
     display:flex;
-    width:auto;
-    transition:transform .5s ease;
     will-change:transform;
-    touch-action: none;
+    touch-action:none;
   }
   .promo-card{
-    min-width:100%;
-    flex:0 0 100%;
+    flex:0 0 auto;
     display:flex;
     align-items:center;
     gap:14px;
@@ -185,38 +191,39 @@
     font-size:14px;
     line-height:1.3;
     transition:background .2s ease;
-    scroll-snap-align:start;
+    box-sizing:border-box;
   }
-  .promo-strip{scroll-snap-type:x mandatory;}
-  .promo-card:hover{
-    background:rgba(240,163,62,.08);
-  }
+  .promo-card:hover{background:rgba(240,163,62,.08);}
+  .promo-card:active{background:rgba(240,163,62,.14);}
   .promo-icon{
-    width:44px;
-    height:44px;
-    min-width:44px;
-    border-radius:16px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    width:44px; height:44px; min-width:44px;
+    border-radius:11px;                     /* iOS icon corner ratio at 44px */
+    overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
     background:linear-gradient(135deg,var(--accent),var(--accent-dark));
-    color:#fff;
-    font-size:22px;
+    color:#fff; font-family:'Baloo 2'; font-weight:800; font-size:20px;
+    box-shadow:0 1px 3px rgba(49,25,11,.22);
   }
-  .promo-icon.apple-store{
-    background:#000;
-  }
-  .promo-icon.apple-store svg{
-    width:24px;
-    height:24px;
-  }
+  .promo-icon img{width:100%; height:100%; object-fit:cover; display:block;}
+  /* Fallback tints, visible only while an icon file is missing. */
+  .promo-card[data-tint="1"] .promo-icon{background:linear-gradient(135deg,#6B8AFF,#3E8BFF);}
+  .promo-card[data-tint="2"] .promo-icon{background:linear-gradient(135deg,#D24BFF,#9C5CFF);}
+  .promo-card[data-tint="3"] .promo-icon{background:linear-gradient(135deg,#FF7E3F,#FF4D66);}
+  .promo-text{display:flex; flex-direction:column; gap:2px; min-width:0;}
   .promo-title{
-    display:block;
-    max-width:calc(100% - 56px);
+    display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .promo-track .promo-card:nth-child(2) .promo-icon{background:linear-gradient(135deg,#6B8AFF,#3E8BFF);}
-  .promo-track .promo-card:nth-child(3) .promo-icon{background:linear-gradient(135deg,#D24BFF,#9C5CFF);}
-  .promo-track .promo-card:nth-child(4) .promo-icon{background:linear-gradient(135deg,#FF7E3F,#FF4D66);}
+  .promo-sub{font-size:11px; font-weight:800; color:var(--text-muted);}
+  .promo-chevron{margin-left:auto; color:var(--text-muted); font-size:18px; flex-shrink:0;}
+  .promo-dots{
+    display:flex; justify-content:center; gap:5px;
+    padding:0 0 9px;
+  }
+  .promo-dots span{
+    width:5px; height:5px; border-radius:50%;
+    background:rgba(107,74,62,.22); transition:.25s;
+  }
+  .promo-dots span.on{background:var(--accent); width:14px; border-radius:3px;}
   .cosmii-logo{display:flex; align-items:center; gap:2px;}
   .cosmii-sub{
     margin-top:2px; font-weight:700; font-size:17px;
@@ -232,6 +239,7 @@
     position:relative;
     z-index:1;
     touch-action:manipulation;
+    user-select:none;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;
     width:280px; max-width:78vw; padding:16px 18px; border:none; border-radius:24px;
@@ -250,7 +258,7 @@
     padding-bottom:calc(16px + env(safe-area-inset-bottom));
   }
   .topbar{
-    width:100%; max-width:420px;
+    width:100%; max-width:min(92vw,940px);
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom:8px;
   }
@@ -267,7 +275,7 @@
   .header-stat .value{font-size:20px; font-weight:800; font-family:'Baloo 2'; color:var(--text); line-height:1.1;}
 
   .pillrow{
-    width:100%; max-width:420px;
+    width:100%; max-width:min(92vw,940px);
     display:flex; gap:10px; justify-content:center; margin-bottom:8px;
   }
   .pill{
@@ -286,7 +294,7 @@
   .lifepip{width:15px; height:15px;}
 
   .rulecards{
-    width:100%; max-width:420px;
+    width:100%; max-width:min(92vw,940px);
     display:flex; gap:8px; margin-bottom:8px;
   }
   .rulecard{
@@ -310,7 +318,7 @@
     position:relative; display:grid; background:var(--card);
     border-radius:16px; padding:5px; gap:2px;
     box-shadow:0 4px 0 rgba(107,74,62,0.08);
-    width:min(100%, 420px);
+    width:min(92vw, 940px);
     max-width:100%;
     overflow:hidden;
   }
@@ -382,12 +390,11 @@
     100%{transform:translate(-50%,-50%) translateY(-4px);}
   }
 
-  /* Constrain grid during coach/tutorial so characters never overflow */
+  /* The board is scaled to fit by fitBoardForCoach(), never cropped: a target
+     the player cannot reach is a dead end, not a layout detail. */
   body.coaching #grid-wrap{
-    max-width:88vw;
-    max-height:48vh;
+    max-width:92vw;
     margin-left:auto; margin-right:auto;
-    overflow:hidden;
   }
   #grid-wrap.pattern-on .pattern-mark{display:block;}
   .cell.locked-pulse .piece,
@@ -432,12 +439,43 @@
     width:56px; height:56px; border-radius:50%; background:var(--card);
     display:flex; align-items:center; justify-content:center; font-size:24px;
     box-shadow:0 3px 0 rgba(107,74,62,0.1);
+    transition:background .18s ease, border-color .18s ease, box-shadow .18s ease;
   }
   .badge-btn:active .badge-circle{transform:translateY(2px); box-shadow:none;}
-  .badge-count{
-    position:absolute; top:-2px; right:-2px; background:var(--danger); color:#fff;
-    font-size:11px; font-weight:900; border-radius:50%; min-width:19px; height:19px;
-    display:flex; align-items:center; justify-content:center; border:2px solid var(--bg);
+  #btn-place-mode:not(.disabled) .badge-circle{
+    border-color:var(--accent);
+    background:#FFF4E2;
+    box-shadow:0 3px 0 rgba(224,134,47,.35);
+  }
+  #btn-place-mode.disabled .badge-circle{
+    border-color:transparent;
+    background:#E7E2DA;
+    box-shadow:none;
+  }
+  .badge-btn.disabled .badge-count{
+    opacity:.6;
+  }
+  .mode-cosmii{width:34px; height:34px; display:block;}
+  #btn-place-mode:not(.disabled) .mode-cosmii{opacity:1; filter:none;}
+  #btn-place-mode.disabled .mode-cosmii{opacity:.45; filter:grayscale(1);}
+  #btn-place-mode:not(.disabled) .badge-label{color:var(--accent-dark);}
+  #btn-place-mode.disabled .badge-label{color:#A59F95;}
+  #btn-hint.disabled .badge-circle{
+    border-color:transparent;
+    background:#E7E2DA;
+    box-shadow:none;
+  }
+  #btn-hint.disabled .badge-label,
+  #btn-hint.disabled .badge-count{
+    color:#A59F95;
+    opacity:.6;
+  }
+  /* Off state is deliberately muted so the mode is readable at a glance. */
+  #btn-place-mode .badge-circle{border:3px solid transparent; transition:.18s;}
+  #btn-place-mode .mode-cosmii{opacity:.45; filter:grayscale(1); transition:.18s;}
+  #btn-place-mode.on .badge-circle{
+    border-color:var(--accent); background:#FFF4E2;
+    box-shadow:0 3px 0 rgba(224,134,47,.35);
   }
   .badge-label{font-size:11px; font-weight:800; color:var(--text-muted);}
   .mode-cosmii{width:34px; height:34px; display:block;}
@@ -451,6 +489,87 @@
   #btn-place-mode.on .mode-cosmii{opacity:1; filter:none;}
   #btn-place-mode.on .badge-label{color:var(--accent-dark);}
   .badge-btn.disabled{opacity:.4; pointer-events:none;}
+
+  /* ---------- Profile ---------- */
+  .profile-card-wrap{width:320px; max-width:92vw; padding:0; overflow:hidden;}
+  .profile-head{
+    display:flex; align-items:center; justify-content:center; position:relative;
+    background:var(--card-soft); padding:16px;
+  }
+  .profile-head h2{margin:0; font-size:22px;}
+  .profile-head .settings-close{position:absolute; right:14px; top:50%; transform:translateY(-50%);}
+  .profile-body{padding:18px 16px 20px;}
+  .profile-idrow{display:flex; align-items:center; gap:12px; margin-bottom:16px;}
+  /* The avatar sits inside its frame, so the frame colour is the wrapper's
+     border and the image is inset — same construction as the picker tiles. */
+  .profile-avatar{
+    width:66px; height:66px; min-width:66px; border-radius:18px;
+    border:4px solid var(--accent-2); overflow:hidden; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .profile-avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profile-namebox{
+    flex:1; display:flex; align-items:stretch; min-width:0;
+    background:var(--card-soft); border-radius:14px; overflow:hidden;
+  }
+  #profile-name{
+    flex:1; min-width:0; border:none; background:none; outline:none;
+    font-family:'Baloo 2'; font-weight:700; font-size:19px; color:var(--text);
+    text-align:center; padding:12px 6px;
+  }
+  #profile-name:disabled{color:var(--text); -webkit-text-fill-color:var(--text);}
+  #btn-name-edit{
+    border:none; cursor:pointer; width:52px; flex-shrink:0;
+    background:#F7C97A; color:#fff; font-size:17px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  #btn-name-edit.editing{background:var(--accent);}
+  .profile-tabs{display:flex; gap:6px;}
+  .profile-tab{
+    flex:1; border:none; cursor:pointer; padding:12px 0;
+    border-radius:14px 14px 0 0;
+    background:var(--card-soft); color:var(--text-muted);
+    font-weight:800; font-size:14px; font-family:'Nunito',sans-serif;
+  }
+  .profile-tab.on{background:#A97B58; color:#fff;}
+  .profile-panel{
+    background:var(--card-soft); border-radius:0 0 16px 16px;
+    padding:14px 12px; display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+  }
+  .profile-tile{
+    position:relative; aspect-ratio:1; border-radius:14px; cursor:pointer;
+    border:4px solid transparent; overflow:hidden; background:#fff;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .12s ease;
+  }
+  .profile-tile:active{transform:scale(.94);}
+  .profile-tile img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profile-tile.frame-tile{background:#F3E6D2;}
+  .profile-tile.frame-tile::before{
+    content:''; width:42%; height:42%; border-radius:50%;
+    background:rgba(107,74,62,.10);
+  }
+  .profile-tile .tick{
+    position:absolute; right:-2px; bottom:-2px; width:26px; height:26px;
+    border-radius:50%; background:#25C26E; color:#fff;
+    display:none; align-items:center; justify-content:center;
+    font-size:14px; font-weight:900; border:2px solid #fff;
+  }
+  .profile-tile.selected .tick{display:flex;}
+  .profile-tile .lock{
+    position:absolute; inset:0; background:rgba(60,40,30,.55); color:#fff;
+    display:none; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px; font-family:'Baloo 2'; font-weight:700; font-size:11px;
+  }
+  .profile-tile.locked .lock{display:flex;}
+  .profile-tile .lock img{width:14px; height:14px;}
+  .profile-confirm{
+    width:100%; margin-top:18px; padding:15px; border:none; border-radius:26px;
+    background:var(--accent); color:#fff;
+    font-family:'Baloo 2'; font-weight:700; font-size:18px; cursor:pointer;
+    box-shadow:0 4px 0 rgba(200,110,20,.35);
+  }
+  .profile-confirm:active{transform:translateY(3px); box-shadow:none;}
 
   /* ---------- Modal ---------- */
   .modal-overlay{
@@ -551,11 +670,27 @@
     display:block; font-family:'Baloo 2'; font-size:11px; letter-spacing:1px;
     color:var(--text-muted); margin-bottom:4px;
   }
+  .coach-tip .count.done{
+    color:#25C26E; font-size:15px;
+    animation:coachDone .45s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes coachDone{
+    0%{transform:scale(.7); opacity:0;}
+    60%{transform:scale(1.12); opacity:1;}
+    100%{transform:scale(1); opacity:1;}
+  }
   .coach-tip .count{
     display:block; margin-top:8px; font-family:'Baloo 2'; font-weight:700;
     font-size:14px; color:var(--accent-dark);
   }
   .coach-tip.nudge{animation:tipNudge .4s;}
+  .coach-tip.step-clear{
+    animation:tipClear .6s ease;
+    box-shadow:0 8px 24px rgba(37,194,110,.28);
+  }
+  @keyframes tipClear{
+    0%,100%{transform:scale(1);} 40%{transform:scale(1.035);}
+  }
   @keyframes tipNudge{
     0%,100%{transform:translateX(0);} 25%{transform:translateX(-6px);} 75%{transform:translateX(6px);}
   }
@@ -566,7 +701,15 @@
   }
   .coach-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;}
   .coach-btn.ghost{background:rgba(255,255,255,.85); color:var(--text-muted); font-size:13px; padding:11px 18px;}
-  body.coaching .bottombar{visibility:hidden;}
+  /* The "next" button on an interactive step is an escape hatch, not the
+     intended action, so it recedes until the step is actually done. */
+  .coach-btn.primary.ghost{
+    background:rgba(255,255,255,.85); color:var(--text-muted);
+    font-size:13px; padding:11px 18px; box-shadow:none;
+  }
+  body.coaching .bottombar,
+  body.coach-pending .bottombar{visibility:hidden;}
+  body.coach-pending .rulecards{visibility:hidden;}
   body.coaching .topbar .circle-btn{opacity:.35; pointer-events:none;}
   /* The rule cards restate exactly what the tutorial is teaching, so hiding
      them during coaching buys back a whole row of vertical space. */
@@ -670,31 +813,9 @@
 
     <button class="level-btn" id="btn-play" type="button" data-i18n="start_button"></button>
 
-    <div class="promo-strip">
-      <div class="promo-track" id="promo-track">
-        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-3-matchpuzzle-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%91%E3%82%BA%E3%83%AB/id6784988703" target="_blank" rel="noopener">
-          <span class="promo-icon apple-store" aria-hidden="true">
-            <svg viewBox="0 0 96 96" width="24" height="24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M34 20L62 60" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M62 20L34 60" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M42 26L54 26L40 70" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </span>
-          <span class="promo-title">Cosmii 3 Match Puzzle</span>
-        </a>
-        <a class="promo-card" href="https://apps.apple.com/jp/app/%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-mogu-mogu-panic/id6789935783" target="_blank" rel="noopener">
-          <span class="promo-icon"></span>
-          <span class="promo-title">コスミー MoguMogu Panic</span>
-        </a>
-        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-arcade-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%82%A2%E3%83%BC%E3%82%B1%E3%83%BC%E3%83%88/id6790154239" target="_blank" rel="noopener">
-          <span class="promo-icon"></span>
-          <span class="promo-title">Cosmii Arcade</span>
-        </a>
-        <a class="promo-card" href="https://apps.apple.com/jp/app/cosmii-beat-dash-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5/id6792287027" target="_blank" rel="noopener">
-          <span class="promo-icon"></span>
-          <span class="promo-title">Cosmii Beat Dash</span>
-        </a>
-      </div>
+    <div class="promo-strip" id="promo-strip">
+      <div class="promo-track" id="promo-track"></div>
+      <div class="promo-dots" id="promo-dots"></div>
     </div>
   </div>
 
@@ -794,20 +915,27 @@
 
   <!-- SETTINGS MODAL -->
   <div class="modal-overlay" id="profile-modal">
-    <div class="modal-card settings-card">
-      <div class="settings-head">
-        <h2 class="display">プロフィール</h2>
+    <div class="modal-card profile-card-wrap">
+      <div class="profile-head">
+        <h2 class="display" data-i18n="profile_title"></h2>
         <button class="settings-close" id="btn-profile-close">✕</button>
       </div>
-      <div class="profile-selected-row">
-        <div class="profile-preview" id="profile-preview"></div>
-        <div>
-          <div class="profile-id" id="profile-id">ID 000000</div>
-          <div class="profile-coins"><img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin"> <span id="profile-coin-count">0</span></div>
+      <div class="profile-body">
+        <div class="profile-idrow">
+          <div class="profile-avatar" id="profile-avatar"><img id="profile-avatar-img" alt=""></div>
+          <div class="profile-namebox">
+            <input id="profile-name" type="text" maxlength="12" disabled
+                   autocomplete="off" autocapitalize="characters" spellcheck="false">
+            <button id="btn-name-edit" type="button" aria-label="edit name">✎</button>
+          </div>
         </div>
+        <div class="profile-tabs">
+          <button class="profile-tab on" data-tab="avatar" data-i18n="tab_avatar"></button>
+          <button class="profile-tab" data-tab="frame" data-i18n="tab_frame"></button>
+        </div>
+        <div class="profile-panel" id="profile-panel"></div>
+        <button class="profile-confirm" id="btn-profile-confirm" data-i18n="confirm"></button>
       </div>
-        <div class="profile-grid" id="profile-grid"></div>
-      <div class="profile-note">他のプロフィールは今後追加予定です。</div>
     </div>
   </div>
 
@@ -1323,9 +1451,9 @@ function levelToConfig(level){
   // arrangements on a 4x4 at all, so the colours vary but the answer pattern
   // does not — which is fine for a first board and deliberate.
   if(level<=1) return {n:4, smalls:[1,1],   compact:0.80, hearts:3, hints:3, prefillChance:0,    prefillMax:1, minSolo:2, maxHard:0};
-  if(level<=2) return {n:5, smalls:[1,1,2], compact:0.80, hearts:3, hints:5, prefillChance:0.35, prefillMax:1, minSolo:2, maxHard:0};
-  if(level<=3) return {n:6, smalls:[1,1,2], compact:0.80, hearts:3, hints:5, prefillChance:0.45, prefillMax:1, minSolo:2, maxHard:1};
-  if(level<=5) return {n:6, smalls:[1,2],   compact:0.70, hearts:3, hints:4, prefillChance:0.30, prefillMax:1, minSolo:1};
+  if(level<=2) return {n:5, smalls:[1,1,2], compact:0.80, hearts:3, hints:3, prefillChance:0.35, prefillMax:1, minSolo:2, maxHard:0};
+  if(level<=3) return {n:6, smalls:[1,1,2], compact:0.80, hearts:3, hints:3, prefillChance:0.45, prefillMax:1, minSolo:2, maxHard:1};
+  if(level<=5) return {n:6, smalls:[1,2],   compact:0.70, hearts:3, hints:3, prefillChance:0.30, prefillMax:1, minSolo:1};
   // From Lv6 the board size is drawn at random each time, with 11x11 in the
   // mix and the pool shifting larger as levels climb. Bigger boards get an
   // extra life and extra hints, since a single slip costs far more there.
@@ -1409,6 +1537,13 @@ const I18N = {
     coin_name:'コスモコイン',
     coin_total:v=>`所持 ${v}`,
     toast_coins:v=>`コスモコイン：${v} 枚`,
+    profile_title:'プロフィール',
+    tab_avatar:'アバター',
+    tab_frame:'フレーム',
+    confirm:'確定',
+    toast_profile_saved:'プロフィールを保存しました',
+    toast_need_coins:'コスモコインが足りません',
+    toast_unlocked:'解放しました！',
     toast_collection:'Cosmiiコレクション（準備中）',
     toast_streak:d=>`現在のストリーク：${d}日`,
     toast_daily_locked:lv=>`Lv.${lv} で解放されます`,
@@ -1457,6 +1592,13 @@ const I18N = {
     coin_name:'Cosmo Coin',
     coin_total:v=>`Total ${v}`,
     toast_coins:v=>`Cosmo Coins: ${v}`,
+    profile_title:'Profile',
+    tab_avatar:'Avatar',
+    tab_frame:'Frame',
+    confirm:'Confirm',
+    toast_profile_saved:'Profile saved',
+    toast_need_coins:'Not enough Cosmo Coins',
+    toast_unlocked:'Unlocked!',
     toast_collection:'Cosmii collection (coming soon)',
     toast_streak:d=>`Current streak: ${d} day${d===1?'':'s'}`,
     toast_daily_locked:lv=>`Unlocks at Level ${lv}`,
@@ -1646,10 +1788,12 @@ function buildGrid(){
   els.gridWrap.classList.toggle('pattern-on', settings.pattern);
 
   const viewportWidth = Math.max(280, (window.visualViewport?.width || window.innerWidth) - 32);
-  const viewportHeight = Math.max(280, (window.visualViewport?.height || window.innerHeight) - 220);
-  const maxBoardWidth = Math.min(420, viewportWidth);
-  const maxBoardHeight = Math.min(420, viewportHeight * (coach.active ? 0.72 : 0.58));
-  const size = Math.min(440, maxBoardWidth, maxBoardHeight);
+  const heightPadding = ((window.visualViewport?.height || window.innerHeight) > 900) ? 140 : 220;
+  const viewportHeight = Math.max(280, (window.visualViewport?.height || window.innerHeight) - heightPadding);
+  const boardFactor = coach.active ? 0.72 : 0.75;
+  const maxBoardWidth = Math.min(980, viewportWidth);
+  const maxBoardHeight = Math.min(980, viewportHeight * boardFactor);
+  const size = Math.min(980, maxBoardWidth, maxBoardHeight);
   const padding = 10;
   const gap = 2 * (n - 1);
   const cellSize = Math.max(44, Math.floor((size - padding - gap) / n));
@@ -1726,7 +1870,8 @@ let drag = null;
 let lastPaintSound = 0;
 
 function cellAtPoint(x, y){
-  const el = document.elementFromPoint(x, y);
+  let el = null;
+  try{ el = document.elementFromPoint(x, y); }catch(err){ return null; }
   if(!el) return null;
   const cell = el.closest ? el.closest('.cell') : null;
   return (cell && els.gridWrap.contains(cell)) ? cell : null;
@@ -1787,17 +1932,29 @@ function onGridPointerMove(e){
   if(cell) paintCell(+cell.dataset.r, +cell.dataset.c);
 }
 
-function onGridPointerUp(e){
+function finishGridPointer(e, cancelled){
   if(!drag) return;
   const d = drag; drag = null;
-  try{ els.gridWrap.releasePointerCapture(e.pointerId); }catch(err){}
+  if(e && e.pointerId !== undefined){
+    try{ els.gridWrap.releasePointerCapture(e.pointerId); }catch(err){}
+  }
   if(d.moved) return;                               // it was a sweep, not a tap
   handleCellTap(d.r, d.c);
 }
+function onGridPointerUp(e){ finishGridPointer(e, false); }
+// pointercancel fires when the system takes the gesture over. Dropping it
+// silently loses legitimate taps, which is the difference between a tutorial
+// that advances and one that appears frozen.
+function onGridPointerCancel(e){ finishGridPointer(e, true); }
 
 function handleCellTap(r, c){
   if(state.finished) return;
   if(coach.active && !coachAllowsCell(r,c)) return;
+  // The tutorial uses single tap for crosses, so bypass the double-tap timer.
+  if(coach.active && coach.act==='cross'){
+    handleSingleTap(r,c);
+    return;
+  }
   // Place mode turns a single tap into a placement, which is far less fiddly
   // than double-tapping every cell. It also fires immediately instead of
   // waiting out the double-tap window, so the board feels sharper.
@@ -1837,8 +1994,7 @@ function handleDoubleTap(r,c){
   if(cur===1 || cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }
   if(isValidPlacement(r,c)){
     state.board[r][c]=1;
-    if(!state.character) state.character = Array.from({length:state.n},()=>Array(state.n).fill(''));
-    state.character[r][c] = charNames[Math.floor(Math.random()*charNames.length)];
+    assignRandomCharacter(r,c);
     renderCell(r,c);
     onCorrectPlacement(r,c);
     if(settings.placeMode){
@@ -1886,14 +2042,19 @@ function renderCell(r,c){
   el.classList.toggle('filled', v===1);
   el.classList.toggle('crossed', v===2);
   el.classList.toggle('wrong', v===3);
-  el.classList.toggle('character-filled', !!(state.character && state.character[r] && state.character[r][c]));
+  const charName = (v===1 && state.character && state.character[r]) ? state.character[r][c] : '';
+  el.classList.toggle('character-filled', !!charName);
   const img = el.querySelector('.character-img');
   if(img){
-    if(v===1 && state.character && state.character[r] && state.character[r][c]){
-      img.src = `assets/images/${state.character[r][c]}.PNG`;
+    if(charName){
+      // If the PNG is missing, drop back to the built-in SVG Cosmii rather
+      // than leaving an empty square where a piece should be.
+      img.onerror = ()=>{ img.style.display='none'; el.classList.remove('character-filled'); };
+      img.src = `assets/images/${charName}.PNG`;
       img.style.display = 'block';
     } else {
-      img.src = '';
+      img.onerror = null;
+      img.removeAttribute('src');
       img.style.display = 'none';
     }
   }
@@ -2027,6 +2188,7 @@ function useHint(){
     state.board[r][c] = 2; renderCell(r,c);
   }
   state.hintsLeft--; els.hintCount.textContent = state.hintsLeft;
+  renderHintState();
 }
 
 /* ---------------- Flow control ---------------- */
@@ -2036,12 +2198,18 @@ function resetBoard(){
   state.hearts = state.maxHearts;
   state.finished=false;
   state.placeUses = 3;
+  settings.placeMode = false;
   state.hintsLeft = state.maxHints;
   state.elapsed = 0;
-  for(const r of state.prefillRows){ state.board[r][state.solution[r]] = 1; }
+  state.character = Array.from({length:n},()=>new Array(n).fill(''));
+  for(const r of state.prefillRows){
+    state.board[r][state.solution[r]] = 1;
+    assignRandomCharacter(r, state.solution[r]);
+  }
   els.hintCount.textContent = state.hintsLeft;
   updateHearts();
-  updatePlaceUsesUI();
+  renderPlaceMode();     // refreshes the counter *and* clears 'disabled'
+  renderHintState();
   buildGrid();
   for(const r of state.prefillRows){
     renderCell(r, state.solution[r]);
@@ -2053,6 +2221,29 @@ function resetBoard(){
 }
 
 const charNames = ['CosmiiBlue','CosmiiRed','CosmiiPink','CosmiiPurple','CosmiiGreen'];
+
+function ensureCharacterGrid(){
+  if(!state.character || state.character.length !== state.n){
+    state.character = Array.from({length:state.n},()=>new Array(state.n).fill(''));
+  }
+  return state.character;
+}
+// Picks one of the five Cosmii at random. Avoids repeating the colour of an
+// orthogonally adjacent Cosmii when there's a free choice, so a finished board
+// looks varied rather than accidentally showing three blues in a row.
+function assignRandomCharacter(r,c){
+  const grid = ensureCharacterGrid();
+  const taken = new Set();
+  for(const [dr,dc] of [[-1,0],[1,0],[0,-1],[0,1],[-1,-1],[-1,1],[1,-1],[1,1]]){
+    const nr=r+dr, nc=c+dc;
+    if(nr<0||nr>=state.n||nc<0||nc>=state.n) continue;
+    if(grid[nr][nc]) taken.add(grid[nr][nc]);
+  }
+  let pool = charNames.filter(name=>!taken.has(name));
+  if(!pool.length) pool = charNames;
+  grid[r][c] = pool[Math.floor(Math.random()*pool.length)];
+  return grid[r][c];
+}
 
 function startGame(config, seedRng){
   const rng = seedRng || Math.random;
@@ -2073,6 +2264,13 @@ function startGame(config, seedRng){
     character: Array.from({length:puzzle.n},()=>Array(puzzle.n).fill('')),
   };
   resetBoard();
+  // Decide before the first paint of the game screen whether the tutorial
+  // might run. The bottom bar is hidden on that assumption and revealed again
+  // in maybeStartCoach() if no tutorial is due — the reverse order let the
+  // bar (and its blue Cosmii icon) show for one frame.
+  if(!coachDone && !coach.active && !isDailyMode && progress.cleared === 0){
+    document.body.classList.add('coach-pending');
+  }
   showScreen(els.game);
   maybeStartCoach();
 }
@@ -2157,9 +2355,20 @@ function diagCells(){
   }
   return out;
 }
+function remainingCrossCells(){
+  const n = state.n;
+  const out = [];
+  for(let r=0;r<n;r++){
+    for(let c=0;c<n;c++){
+      if(state.board[r][c]===0 && state.solution[r]!==c) out.push([r,c]);
+    }
+  }
+  return out;
+}
 function pickCoachCells(kind){
   if(kind==='solo') return [pickSoloCell()];
   if(kind==='rowcol') return rowColCells();
+  if(kind==='remaining') return remainingCrossCells();
   return diagCells();
 }
 
@@ -2173,7 +2382,9 @@ function updateCoachCount(){
   const el = document.getElementById('coach-count');
   if(!el) return;
   const left = coach.remaining ? coach.remaining.size : 0;
-  el.textContent = left>0 ? t('coach_left', left) : t('coach_alldone');
+  const finished = left === 0;
+  el.textContent = finished ? t('coach_alldone') : t('coach_left', left);
+  el.classList.toggle('done', finished);
 }
 
 // The tip sheet is anchored to the bottom of the screen and its height varies
@@ -2207,10 +2418,15 @@ function renderCoachStep(){
     coach.remaining = new Set(coach.targets.map(p=>coachKey(p[0],p[1])));
     for(const t of coach.targets){ const el=cellEl(t[0],t[1]); if(el) el.classList.add('coach-target'); }
     els.gridWrap.classList.add('coach-focus');
-    els.coachNext.style.display='none';
+    // Kept available, just de-emphasised: if a tap goes astray the player can
+    // still move on instead of being forced to abandon the tutorial.
+    els.coachNext.style.display='';
+    els.coachNext.textContent = t('coach_next');
+    els.coachNext.classList.add('ghost');
     updateCoachCount();
   } else {
     els.coachNext.style.display='';
+    els.coachNext.classList.remove('ghost');
     els.coachNext.textContent = step.last ? t('coach_start') : t('coach_next');
   }
   fitBoardForCoach();
@@ -2224,8 +2440,34 @@ function coachCellDone(r,c){
   updateCoachCount();
   if(!coach.remaining || coach.remaining.size===0){
     coach.act=null; coach.remaining=null;
-    setTimeout(coachAdvance, 480);
+    updateCoachCount();
+    beep(880,0.12,'sine'); setTimeout(()=>beep(1180,0.16,'sine'),110);
+    vibrate(18);
+    els.coachTip.classList.add('step-clear');
+    setTimeout(()=>els.coachTip.classList.remove('step-clear'), 620);
+    setTimeout(coachAdvance, 700);
+    return;
   }
+  // A cell can leave the board's "still empty" set without the player having
+  // touched it. If that strands the step with no visible target, rebuild the
+  // highlights rather than waiting for a tap that can never come.
+  if(!els.gridWrap.querySelector('.cell.coach-target')) refreshCoachTargets();
+}
+
+function refreshCoachTargets(){
+  const step = COACH_STEPS[coach.idx];
+  if(!step || !step.act) return;
+  const fresh = pickCoachCells(step.pick)
+    .filter(([r,c]) => state.board[r][c] === 0);
+  if(!fresh.length){
+    coach.act=null; coach.remaining=null;
+    setTimeout(coachAdvance, 300);
+    return;
+  }
+  coach.targets = fresh;
+  coach.remaining = new Set(fresh.map(p=>coachKey(p[0],p[1])));
+  for(const cell of fresh){ const el=cellEl(cell[0],cell[1]); if(el) el.classList.add('coach-target'); }
+  updateCoachCount();
 }
 function coachAdvance(){
   coach.idx++;
@@ -2235,6 +2477,7 @@ function coachAdvance(){
 function startCoach(){
   coachDone = true;                      // latch before anything can re-enter
   coach.active = true; coach.idx = 0; coach.lastPlaced = null;
+  document.body.classList.remove('coach-pending');
   document.body.classList.add('coaching');
   els.coach.classList.add('active');
   stopTimer(); state.elapsed = 0;
@@ -2245,6 +2488,7 @@ function endCoach(){
   coachDone = true;
   clearCoachTarget();
   document.body.classList.remove('coaching');
+  document.body.classList.remove('coach-pending');
   els.coach.classList.remove('active');
   els.gridWrap.style.transform='';
   saveJSON('seen-tutorial', true);
@@ -2253,13 +2497,24 @@ function endCoach(){
   checkWin();
 }
 function maybeStartCoach(){
-  if(coachDone || coach.active) return;
-  if(isDailyMode) return;
-  if(progress.cleared > 0){ coachDone = true; return; }   // Lv2 以降には出さない
+  if(coachDone || coach.active){ document.body.classList.remove('coach-pending'); return; }
+  if(isDailyMode){ document.body.classList.remove('coach-pending'); return; }
+  if(progress.cleared > 0){
+    coachDone = true;
+    document.body.classList.remove('coach-pending');
+    return;                                              // Lv2 以降には出さない
+  }
+  // The storage read is async, so assume the tutorial is coming and keep the
+  // bottom bar hidden until we know otherwise. Revealing it and hiding it a
+  // frame later is what produced the blue Cosmii flash.
   loadJSON('seen-tutorial', false).then(seen=>{
-    if(seen || coachDone || coach.active){ coachDone = true; return; }
+    if(seen || coachDone || coach.active){
+      coachDone = true;
+      document.body.classList.remove('coach-pending');
+      return;
+    }
     startCoach();
-  });
+  }).catch(()=>{ document.body.classList.remove('coach-pending'); });
 }
 
 /* ---------------- Event bindings ---------------- */
@@ -2295,84 +2550,153 @@ function handleStartButton(e){
 btnPlay.addEventListener('click', handleStartButton);
 btnPlay.style.pointerEvents = 'auto';
 
+/* ---- Other games strip ----------------------------------------------------
+   Titles are the App Store listings verbatim. Icons are local files so the
+   strip works offline and needs no network permission; if a file is missing
+   the card still renders with a tinted initial instead of a broken image.
+--------------------------------------------------------------------------- */
+const PROMO_APPS = [
+  {
+    title:'Cosmii : 3 Match Puzzle',
+    sub:'コスミー パズル',
+    icon:'assets/images/promo/Cosmii3MatchPuzzle.PNG',
+    url:'https://apps.apple.com/jp/app/cosmii-3-matchpuzzle-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%91%E3%82%BA%E3%83%AB/id6784988703',
+  },
+  {
+    title:'コスミー MOGU MOGU PANIC',
+    sub:'吸い込んでゲーム世界を救おう',
+    icon:'assets/images/promo/CosmiiMoguMoguPanic.PNG',
+    url:'https://apps.apple.com/jp/app/%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-mogu-mogu-panic/id6789935783',
+  },
+  {
+    title:'Cosmii Arcade',
+    sub:'コスミー アーケード',
+    icon:'assets/images/promo/CosmiiArcade.PNG',
+    url:'https://apps.apple.com/jp/app/cosmii-arcade-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%82%A2%E3%83%BC%E3%82%B1%E3%83%BC%E3%83%88/id6790154239',
+  },
+  {
+    title:'Cosmii Beat Dash',
+    sub:'コスミー ダッシュ',
+    icon:'assets/images/promo/CosmiiBeatDash.PNG',
+    url:'https://apps.apple.com/jp/app/cosmii-beat-dash-%E3%82%B3%E3%82%B9%E3%83%9F%E3%83%BC-%E3%83%80%E3%83%83%E3%82%B7%E3%83%A5/id6792287027',
+  },
+];
+
+const promoStrip = document.getElementById('promo-strip');
 const promoTrack = document.getElementById('promo-track');
-const promoStrip = document.querySelector('.promo-strip');
-let promoIndex = 0;
-let promoStartX = 0;
-let promoCurrentX = 0;
-let promoBaseX = 0;
+const promoDots  = document.getElementById('promo-dots');
+
+// Real cards occupy slots 1..n; slot 0 is a clone of the last and slot n+1 a
+// clone of the first, which is what makes the wrap seamless in both directions.
+let promoSlot = 1;
+let promoCardW = 0;
 let promoDragging = false;
-let promoClickPrevent = false;
-function setPromoWidth(){
+let promoStartX = 0;
+let promoBaseX = 0;
+let promoMoved = false;
+let promoTimer = null;
+
+// Called when an icon file is missing: swap the broken image for a tinted
+// initial. Order matters — read the parent before removing the node, because
+// removing it is what sets parentNode to null.
+function promoIconFallback(img, initial){
+  const holder = img.parentNode;
+  img.onerror = null;                       // don't re-fire on the same node
+  img.remove();
+  if(holder) holder.textContent = initial;
+}
+
+function promoCardHTML(app, index){
+  const initial = app.title.replace(/[^A-Za-z0-9]/g,'').charAt(0) || 'C';
+  return `<a class="promo-card" data-tint="${index}" href="${app.url}" target="_blank" rel="noopener">
+      <span class="promo-icon">
+        <img src="${app.icon}" alt="" loading="lazy"
+             onerror="promoIconFallback(this, '${initial}')">
+      </span>
+      <span class="promo-text">
+        <span class="promo-title">${app.title}</span>
+        <span class="promo-sub">${app.sub}</span>
+      </span>
+      <span class="promo-chevron" aria-hidden="true">›</span>
+    </a>`;
+}
+
+function buildPromo(){
+  if(!promoTrack) return;
+  const n = PROMO_APPS.length;
+  const order = [n-1, ...PROMO_APPS.map((_,i)=>i), 0];
+  promoTrack.innerHTML = order.map(i=>promoCardHTML(PROMO_APPS[i], i)).join('');
+  promoDots.innerHTML = PROMO_APPS.map(()=>'<span></span>').join('');
+  promoSlot = 1;
+  layoutPromo(false);
+}
+
+function layoutPromo(animate){
   if(!promoTrack || !promoStrip) return;
-  const width = promoStrip.clientWidth;
-  const cards = Array.from(promoTrack.children).filter(el=>el instanceof HTMLElement);
-  cards.forEach(card=>{ card.style.width = `${width}px`; });
-  promoTrack.style.width = `${width * cards.length}px`;
+  promoCardW = promoStrip.clientWidth;
+  if(!promoCardW) return;
+  for(const card of promoTrack.children) card.style.width = promoCardW+'px';
+  promoTrack.style.transition = animate ? 'transform .38s ease' : 'none';
+  promoTrack.style.transform = `translateX(${-promoSlot*promoCardW}px)`;
+  const real = (promoSlot - 1 + PROMO_APPS.length) % PROMO_APPS.length;
+  Array.from(promoDots.children).forEach((d,i)=>d.classList.toggle('on', i===real));
 }
-function resetPromoScroll(){
-  promoIndex = 0;
-  promoBaseX = 0;
-  setPromoWidth();
-  if(promoTrack) promoTrack.style.transform = 'translateX(0)';
+
+// After sliding onto a clone, jump to the matching real card with animation
+// off. The two look identical, so the swap is invisible.
+function normalisePromo(){
+  const n = PROMO_APPS.length;
+  if(promoSlot === 0){ promoSlot = n; layoutPromo(false); }
+  else if(promoSlot === n+1){ promoSlot = 1; layoutPromo(false); }
 }
-function setPromoPosition(index, animate=true){
-  if(!promoTrack || !promoStrip) return;
-  setPromoWidth();
-  promoIndex = Math.max(0, Math.min(index, promoTrack.children.length - 1));
-  promoBaseX = -promoIndex * promoStrip.clientWidth;
-  promoTrack.style.transition = animate ? 'transform .35s ease' : 'none';
-  promoTrack.style.transform = `translateX(${promoBaseX}px)`;
+
+function promoGo(delta){
+  promoSlot += delta;
+  layoutPromo(true);
+  setTimeout(normalisePromo, 400);
 }
-function advancePromoScroll(){
-  if(!promoTrack || !promoStrip) return;
-  setPromoWidth();
-  setPromoPosition((promoIndex + 1) % promoTrack.children.length);
+
+function restartPromoTimer(){
+  clearInterval(promoTimer);
+  promoTimer = setInterval(()=>{
+    if(promoDragging) return;
+    if(!document.getElementById('title-screen').classList.contains('active')) return;
+    promoGo(1);
+  }, 4000);
 }
-setInterval(()=>{
-  if(document.getElementById('title-screen').classList.contains('active') && !promoDragging){
-    advancePromoScroll();
-  }
-}, 4500);
-window.addEventListener('resize', ()=>{ if(promoStrip) { resetPromoScroll(); }});
+
 if(promoStrip){
+  buildPromo();
+  restartPromoTimer();
+  window.addEventListener('resize', ()=>layoutPromo(false));
+
   promoStrip.addEventListener('pointerdown', e=>{
-    promoDragging = true;
-    promoClickPrevent = false;
+    promoDragging = true; promoMoved = false;
     promoStartX = e.clientX;
-    promoCurrentX = promoStartX;
+    promoBaseX = -promoSlot * promoCardW;
     promoTrack.style.transition = 'none';
-    promoStrip.setPointerCapture(e.pointerId);
+    try{ promoStrip.setPointerCapture(e.pointerId); }catch(err){}
   });
   promoStrip.addEventListener('pointermove', e=>{
     if(!promoDragging) return;
-    const delta = e.clientX - promoStartX;
-    if(Math.abs(delta) > 10) promoClickPrevent = true;
-    promoCurrentX = e.clientX;
-    if(promoTrack) promoTrack.style.transform = `translateX(${promoBaseX + delta}px)`;
+    const dx = e.clientX - promoStartX;
+    if(Math.abs(dx) > 8) promoMoved = true;
+    promoTrack.style.transform = `translateX(${promoBaseX + dx}px)`;
   });
-  promoStrip.addEventListener('pointerup', e=>{
+  function endPromoDrag(e){
     if(!promoDragging) return;
     promoDragging = false;
-    const delta = e.clientX - promoStartX;
-    if(delta < -40 && promoIndex < promoTrack.children.length - 1){
-      setPromoPosition(promoIndex + 1);
-    } else if(delta > 40 && promoIndex > 0){
-      setPromoPosition(promoIndex - 1);
-    } else {
-      setPromoPosition(promoIndex);
-    }
-  });
-  promoStrip.addEventListener('pointercancel', ()=>{
-    if(!promoDragging) return;
-    promoDragging = false;
-    setPromoPosition(promoIndex);
-  });
+    const dx = (e && typeof e.clientX === 'number') ? e.clientX - promoStartX : 0;
+    if(dx < -40) promoGo(1);
+    else if(dx > 40) promoGo(-1);
+    else layoutPromo(true);
+    restartPromoTimer();
+  }
+  promoStrip.addEventListener('pointerup', endPromoDrag);
+  promoStrip.addEventListener('pointercancel', endPromoDrag);
+  // A swipe must not also count as tapping the link underneath.
   promoTrack.addEventListener('click', e=>{
-    if(promoClickPrevent){
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if(promoMoved){ e.preventDefault(); e.stopPropagation(); }
   }, true);
 }
 
@@ -2389,8 +2713,28 @@ document.getElementById('card-streak').addEventListener('click', ()=>{
 document.getElementById('coin-chip').addEventListener('click', ()=>{
   showToast(t('toast_coins', progress.coins));
 });
-// Profile selection screen disabled during development.
-// document.getElementById('btn-avatar').addEventListener('click', ()=>{ openProfileModal(); });
+document.getElementById('btn-avatar').addEventListener('click', ()=>{ openProfileModal(); });
+document.getElementById('btn-name-edit').addEventListener('click', ()=>{
+  const input = document.getElementById('profile-name');
+  setNameEditing(input.disabled);
+});
+document.getElementById('profile-name').addEventListener('keydown', e=>{
+  if(e.key === 'Enter'){ e.preventDefault(); setNameEditing(false); e.target.blur(); }
+});
+document.getElementById('profile-name').addEventListener('blur', ()=>{
+  const btn = document.getElementById('btn-name-edit');
+  if(btn.classList.contains('editing')) setNameEditing(false);
+});
+document.querySelectorAll('.profile-tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{ profileTab = btn.dataset.tab; renderProfilePanel(); });
+});
+document.getElementById('btn-profile-confirm').addEventListener('click', ()=>{
+  setNameEditing(false);
+  saveProfileState();
+  updateAvatarButton();
+  document.getElementById('profile-modal').classList.remove('active');
+  showToast(t('toast_profile_saved'));
+});
 document.getElementById('btn-settings-title').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
 
 document.getElementById('btn-profile-close').addEventListener('click', ()=>{ document.getElementById('profile-modal').classList.remove('active'); });
@@ -2403,87 +2747,166 @@ function updatePlaceUsesUI(){
   el.style.display = 'flex';
 }
 
+function placeRandomCosmii(){
+  if(!state) return false;
+  const candidates = [];
+  for(let r=0;r<state.n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c]===0) candidates.push({r,c});
+  }
+  if(!candidates.length) return false;
+  const target = candidates[Math.floor(Math.random()*candidates.length)];
+  handleDoubleTap(target.r, target.c);
+  return true;
+}
+
 const PROFILE_AVATARS = [
-  {id:'CosmiiGreen', label:'Cosmii Green', src:'assets/images/CosmiiGreen.PNG', price:0},
-  {id:'CosmiiBlue', label:'Cosmii Blue', src:'assets/images/CosmiiBlue.PNG', price:1000},
-  {id:'CosmiiPink', label:'Cosmii Pink', src:'assets/images/CosmiiPink.PNG', price:1000},
-  {id:'CosmiiRed', label:'Cosmii Red', src:'assets/images/CosmiiRed.PNG', price:1000},
+  {id:'CosmiiGreen',  label:'Cosmii Green',  src:'assets/images/CosmiiGreen.PNG',  price:1000},
+  {id:'CosmiiBlue',   label:'Cosmii Blue',   src:'assets/images/CosmiiBlue.PNG',   price:1000},
+  {id:'CosmiiPink',   label:'Cosmii Pink',   src:'assets/images/CosmiiPink.PNG',   price:1000},
+  {id:'CosmiiRed',    label:'Cosmii Red',    src:'assets/images/CosmiiRed.PNG',    price:1000},
   {id:'CosmiiPurple', label:'Cosmii Purple', src:'assets/images/CosmiiPurple.PNG', price:1000},
 ];
-let profileState = {current:'CosmiiGreen', owned:['CosmiiGreen']};
+
+// Frames are pure CSS colours rather than image files: they need no assets,
+// scale to any tile size, and stay crisp on every screen.
+const PROFILE_FRAMES = [
+  {id:'orange', color:'#F0A33E', price:0},
+  {id:'red',    color:'#E04236', price:0},
+  {id:'yellow', color:'#E8C21E', price:500},
+  {id:'blue',   color:'#4FA6C7', price:500},
+  {id:'green',  color:'#7BC96F', price:500},
+  {id:'mint',   color:'#4FC7B0', price:500},
+  {id:'indigo', color:'#7F86D6', price:500},
+  {id:'purple', color:'#A97BE0', price:500},
+];
+
+const DEFAULT_PROFILE = {
+  current:'CosmiiGreen',
+  owned:['CosmiiGreen'],
+  frame:'orange',
+  framesOwned:['orange','red'],
+  name:'',
+};
+let profileState = {...DEFAULT_PROFILE};
+let profileTab = 'avatar';
+
+function frameColor(id){
+  const f = PROFILE_FRAMES.find(x=>x.id===id);
+  return f ? f.color : PROFILE_FRAMES[0].color;
+}
+// A short readable handle, like the codes other Cosmii games hand out.
+// No vowels, so it can never spell anything unfortunate.
+function randomPlayerName(){
+  const chars='23456789ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let out='';
+  for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
 
 function updateAvatarButton(){
-  const currentAvatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
-  const avatarImg = document.getElementById('btn-avatar-img');
-  if(avatarImg){ avatarImg.src = currentAvatar.src; }
+  const avatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
+  const img = document.getElementById('btn-avatar-img');
+  if(img) img.src = avatar.src;
+  const btn = document.getElementById('btn-avatar');
+  if(btn) btn.style.borderColor = frameColor(profileState.frame);
+}
+
+function renderProfileHeader(){
+  const avatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
+  const wrap = document.getElementById('profile-avatar');
+  const img  = document.getElementById('profile-avatar-img');
+  const name = document.getElementById('profile-name');
+  if(img) img.src = avatar.src;
+  if(wrap) wrap.style.borderColor = frameColor(profileState.frame);
+  if(name && document.activeElement !== name) name.value = profileState.name;
+}
+
+function renderProfilePanel(){
+  const panel = document.getElementById('profile-panel');
+  if(!panel) return;
+  panel.innerHTML = '';
+  document.querySelectorAll('.profile-tab').forEach(b=>{
+    b.classList.toggle('on', b.dataset.tab === profileTab);
+  });
+
+  const items = profileTab === 'avatar' ? PROFILE_AVATARS : PROFILE_FRAMES;
+  for(const item of items){
+    const isAvatar = profileTab === 'avatar';
+    const ownedList = isAvatar ? profileState.owned : profileState.framesOwned;
+    const owned = ownedList.includes(item.id);
+    const selected = isAvatar ? (profileState.current===item.id) : (profileState.frame===item.id);
+
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'profile-tile' + (isAvatar ? '' : ' frame-tile');
+    if(selected) tile.classList.add('selected');
+    if(!owned) tile.classList.add('locked');
+    // An avatar tile wears the player's current frame so the pairing is
+    // visible before committing; a frame tile shows the frame itself.
+    tile.style.borderColor = isAvatar ? frameColor(profileState.frame) : item.color;
+    tile.innerHTML =
+      (isAvatar ? `<img src="${item.src}" alt="${item.label}">` : '') +
+      `<span class="tick">✓</span>` +
+      `<span class="lock"><img src="assets/images/CosmoCoin.PNG" alt="">${item.price}</span>`;
+
+    tile.addEventListener('click', ()=>{
+      if(!owned){
+        if(progress.coins < item.price){ showToast(t('toast_need_coins')); return; }
+        progress.coins -= item.price;
+        ownedList.push(item.id);
+        saveJSON('progress', progress);
+        renderCoins(true);
+        showToast(t('toast_unlocked'));
+      }
+      if(isAvatar) profileState.current = item.id;
+      else profileState.frame = item.id;
+      saveProfileState();
+      renderProfileHeader();
+      renderProfilePanel();
+    });
+    panel.appendChild(tile);
+  }
 }
 
 function renderProfileModal(){
-  const modal = document.getElementById('profile-modal');
-  if(!modal) return;
-  const preview = document.getElementById('profile-preview');
-  const profileId = document.getElementById('profile-id');
-  const coinCount = document.getElementById('profile-coin-count');
-  const grid = document.getElementById('profile-grid');
-  if(!preview || !profileId || !coinCount || !grid) return;
-
-  profileId.textContent = `ID ${progress.cleared ? ('5DHX' + String(progress.cleared + 80)) : '000000'}`;
-  coinCount.textContent = progress.coins;
-  const currentAvatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
-  preview.innerHTML = `<img src="${currentAvatar.src}" alt="Profile">`;
+  renderProfileHeader();
+  renderProfilePanel();
   updateAvatarButton();
+}
 
-  grid.innerHTML = '';
-  PROFILE_AVATARS.forEach(avatar => {
-    const card = document.createElement('button');
-    card.type='button';
-    card.className='profile-card';
-    if(profileState.current===avatar.id) card.classList.add('selected');
-    if(!profileState.owned.includes(avatar.id)) card.classList.add('disabled');
-    const owned = profileState.owned.includes(avatar.id);
-    const priceText = avatar.price === 0 ? '初期選択' : `${avatar.price} Cosmo`;
-    card.innerHTML = `
-      <img src="${avatar.src}" alt="${avatar.label}">
-      <div class="profile-name">${avatar.label}</div>
-      <div class="profile-price">${owned ? (avatar.price === 0 ? '所持済' : '選択済') : priceText}</div>
-    `;
-    card.addEventListener('click', ()=>{
-      if(profileState.owned.includes(avatar.id)){
-        profileState.current = avatar.id;
-        saveProfileState();
-        renderProfileModal();
-        showToast('プロフィールを変更しました');
-      } else if(avatar.price === 0){
-        profileState.owned.push(avatar.id);
-        profileState.current = avatar.id;
-        saveProfileState();
-        renderProfileModal();
-        showToast('プロフィールを選択しました');
-      } else if(progress.coins >= avatar.price){
-        progress.coins -= avatar.price;
-        profileState.owned.push(avatar.id);
-        profileState.current = avatar.id;
-        saveJSON('progress', progress);
-        saveProfileState();
-        renderProfileModal();
-        showToast(`${avatar.label} を購入しました`);
-      } else {
-        showToast('コインが足りません');
-      }
-    });
-    grid.appendChild(card);
-  });
+function setNameEditing(on){
+  const input = document.getElementById('profile-name');
+  const btn = document.getElementById('btn-name-edit');
+  if(!input || !btn) return;
+  input.disabled = !on;
+  btn.classList.toggle('editing', on);
+  btn.textContent = on ? '✓' : '✎';
+  if(on){ input.focus(); input.select(); }
+  else commitName();
+}
+function commitName(){
+  const input = document.getElementById('profile-name');
+  if(!input) return;
+  // Never leave the player nameless: an empty field falls back to what was
+  // there before, and failing that to a fresh generated handle.
+  const cleaned = input.value.trim().slice(0,12);
+  profileState.name = cleaned || profileState.name || randomPlayerName();
+  input.value = profileState.name;
+  saveProfileState();
 }
 
 function openProfileModal(){
   const modal = document.getElementById('profile-modal');
   if(!modal) return;
+  profileTab = 'avatar';
+  setNameEditing(false);
   renderProfileModal();
   modal.classList.add('active');
 }
 
 function loadProfileState(){
-  return loadJSON('profile-state', {current:'CosmiiBlue', owned:['CosmiiBlue']});
+  return loadJSON('profile-state', {...DEFAULT_PROFILE});
 }
 
 function saveProfileState(){
@@ -2498,17 +2921,33 @@ function renderPlaceMode(){
   btn.classList.toggle('disabled', !canUse && !settings.placeMode);
   updatePlaceUsesUI();
 }
+
+function renderHintState(){
+  const btn = document.getElementById('btn-hint');
+  if(!btn || !state) return;
+  const canUse = !state.finished && state.hintsLeft > 0 && !coach.active;
+  btn.classList.toggle('disabled', !canUse);
+}
+
 document.getElementById('btn-place-mode').addEventListener('click', ()=>{
   if(coach.active) return;
-  if(!state || state.placeUses <= 0){
+  if(!state) return;
+  if(state.placeUses <= 0){
     showToast('Cosmii配置はもう使えません');
     return;
   }
-  settings.placeMode = !settings.placeMode;
-  renderPlaceMode();
-  beep(settings.placeMode ? 620 : 460, 0.06, 'sine');
+  if(!placeRandomCosmii()){
+    showToast('配置できる Cosmii がありません');
+    return;
+  }
+  state.placeUses = Math.max(0, state.placeUses - 1);
+  updatePlaceUsesUI();
+  if(state.placeUses === 0){
+    settings.placeMode = false;
+    renderPlaceMode();
+  }
+  beep(620, 0.06, 'sine');
   vibrate(12);
-  saveJSON('settings', settings);
 });
 document.getElementById('btn-hint').addEventListener('click', useHint);
 document.getElementById('btn-next').addEventListener('click', ()=>{
@@ -2535,10 +2974,10 @@ document.querySelectorAll('#lang-toggle button').forEach(b=>{
 els.gridWrap.addEventListener('pointerdown', onGridPointerDown);
 els.gridWrap.addEventListener('pointermove', onGridPointerMove);
 els.gridWrap.addEventListener('pointerup', onGridPointerUp);
-els.gridWrap.addEventListener('pointercancel', ()=>{ drag=null; });
+els.gridWrap.addEventListener('pointercancel', onGridPointerCancel);
 // A sweep that leaves the board mid-stroke should just end, not keep painting
 // when the finger comes back at a different spot.
-els.gridWrap.addEventListener('lostpointercapture', ()=>{ drag=null; });
+els.gridWrap.addEventListener('lostpointercapture', ()=>{ if(drag && drag.moved) drag=null; });
 
 window.addEventListener('resize', ()=>{ if(coach.active) fitBoardForCoach(); });
 els.coachNext.addEventListener('click', coachAdvance);
@@ -2567,6 +3006,13 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
   // Saves written before coins existed have no such field.
   if(typeof progress.coins !== 'number') progress.coins = 0;
   profileState = await loadProfileState();
+  // Saves made before frames and names existed lack those fields.
+  profileState = {...DEFAULT_PROFILE, ...profileState};
+  if(!Array.isArray(profileState.framesOwned) || !profileState.framesOwned.length){
+    profileState.framesOwned = [...DEFAULT_PROFILE.framesOwned];
+  }
+  if(!profileState.owned.includes(profileState.current)) profileState.owned.push(profileState.current);
+  if(!profileState.name){ profileState.name = randomPlayerName(); saveProfileState(); }
   settings = await loadJSON('settings', {sound:true, vibrate:true, pattern:false, placeMode:false});
   streakData = await loadJSON('streak', {lastDate:null, streak:0});
   lang = await loadJSON('lang', 'ja');
