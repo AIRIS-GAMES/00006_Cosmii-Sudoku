@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node --check scratch_chk.js)",
+      "Bash(mkdir -p www/assets/images/promo)",
+      "Bash(cd \"c:/MyWork/startup/00006_Cosmii-Sudoku\" && mkdir -p ios/App/App/public/assets/images/promo && cp www/assets/images/promo/*.PNG ios/App/App/public/assets/images/promo/ && diff -r www/assets ios/App/App/public/assets && echo \"www と ios/public のアセット同期OK\" && du -sh www/assets/images/promo && git status --short)",
+      "Bash(rm -f preview_chara*.png)",
+      "Bash(cp www/assets/images/chara*_sub.PNG ios/App/App/public/assets/images/)",
+      "Bash(cp www/index.html ios/App/App/public/index.html)",
+      "Bash(node --check c.js)",
+      "Bash(rm -f preview_row.png)",
+      "Bash(rm c.js)",
+      "Bash(mkdir -p C:/Users/ramur/AppData/Local/Temp/claude/c--MyWork-startup-00006-Cosmii-Sudoku/fb546e7c-f0d9-413a-984a-c168ed564bea/scratchpad/original-assets)",
+      "Bash(cp www/assets/images/chara*_sub.PNG C:/Users/ramur/AppData/Local/Temp/claude/c--MyWork-startup-00006-Cosmii-Sudoku/fb546e7c-f0d9-413a-984a-c168ed564bea/scratchpad/original-assets/)",
+      "Bash(npm install *)",
+      "Bash(npx cap *)",
+      "Bash(mkdir -p www/assets/fonts)",
+      "Bash(grep -n \"^<script>\\\\|^function mulberry32\\\\|^function hashStr\\\\|^function todayStr\\\\|^function randInt\\\\|^/\\\\* ---------------- Puzzle generation\\\\|^function generatePuzzleRobust\\\\|^function levelToConfig\\\\|^/\\\\* ---------------- Level ladder\\\\|^/\\\\* ---------------- Storage\" www/index.html)",
+      "Bash(sed -i \"s/src:'assets\\\\/images\\\\/chara\\\\\\([0-9]\\\\\\)_sub.PNG', price:1000/src:'assets\\\\/images\\\\/chara\\\\1_sub.PNG', price:350/\" www/index.html)",
+      "Bash(sed -i \"s/color:'#E8C21E', price:500/color:'#E8C21E', price:150/; s/color:'#4FA6C7', price:500/color:'#4FA6C7', price:150/; s/color:'#7BC96F', price:500/color:'#7BC96F', price:150/; s/color:'#4FC7B0', price:500/color:'#4FC7B0', price:150/; s/color:'#7F86D6', price:500/color:'#7F86D6', price:150/; s/color:'#A97BE0', price:500/color:'#A97BE0', price:150/\" www/index.html)",
+      "Bash(node --check c0.js)",
+      "Bash(node --check c1.js)",
+      "Bash(rm -f c0.js c1.js)"
+    ],
+    "additionalDirectories": [
+      "C:\\MyWork\\startup\\00006_Cosmii-Sudoku\\www\\assets\\images\\promo"
+    ]
+  }
+}

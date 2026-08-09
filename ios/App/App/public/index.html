@@ -4,9 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Cosmii Sudoku</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>
+  /* Self-hosted. Pulling these from Google's CDN meant the very first launch,
+     and every offline launch, fell back to the system font — and it made a
+     native app depend on the network to look right. Both families ship as
+     variable fonts, so one file each covers every weight the UI uses. */
+  @font-face{
+    font-family:'Baloo 2';
+    font-style:normal;
+    font-weight:400 800;
+    font-display:swap;
+    src:url('assets/fonts/Baloo2.woff2') format('woff2');
+  }
+  @font-face{
+    font-family:'Nunito';
+    font-style:normal;
+    font-weight:200 1000;
+    font-display:swap;
+    src:url('assets/fonts/Nunito.woff2') format('woff2');
+  }
   :root{
     --bg: #F4ECDF;
     --card: #FFFFFF;
@@ -86,6 +102,17 @@
     font-family:'Baloo 2'; font-weight:800; font-size:19px; color:#B07A17;
   }
   .coin-reward .coin-total{font-size:12px; font-weight:800; color:var(--text-muted);}
+  .coin-breakdown{
+    display:flex; flex-direction:column; gap:2px;
+    margin:0 0 10px; padding:0 4px;
+  }
+  .coin-breakdown:empty{display:none;}
+  .coin-breakdown .brow{
+    display:flex; justify-content:space-between;
+    font-size:11px; font-weight:800; color:var(--text-muted);
+  }
+  .coin-breakdown .brow .amt{color:#B07A17;}
+  .coin-breakdown .note{font-size:11px; font-weight:800; color:var(--text-muted); text-align:center;}
   .modal-overlay.active .coin-reward .coin-gain{
     display:inline-block; animation:coinPop .5s .15s backwards cubic-bezier(.34,1.56,.64,1);
   }
@@ -117,7 +144,10 @@
   }
   .avatar-btn:active{transform:scale(0.95);}
   .avatar-btn svg, .avatar-btn img{width:100%; height:100%; display:block;}
-  .avatar-btn img{object-fit:cover;}
+  /* contain, not cover: the Cosmii cut-outs have side ears and wings that run
+     to the edge of their canvas, and cover shaves them off. The box size comes
+     per character from CHARACTER_FIT so faces match across the picker. */
+  .avatar-btn img{object-fit:contain;}
   .title-cards{
     width:100%; max-width:420px; display:flex; gap:12px;
     margin:auto 0 0;                 /* pushes the group down off the header */
@@ -133,6 +163,9 @@
   .title-card.streak{background:linear-gradient(160deg,#FFC94F,#F0A020);}
   .card-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center;}
   .lock-icon{width:38px; height:46px; opacity:0.95;}
+  .daily-icon{width:56px; height:56px;}
+  .title-card.daily.locked .daily-icon{display:none;}
+  .title-card.daily:not(.locked) .lock-icon{display:none;}
   .sun-icon{width:66px; height:66px;}
   .card-sub{font-size:12px; font-weight:800; opacity:0.9; text-align:center;}
   .card-count-pill{
@@ -269,7 +302,7 @@
     box-shadow:0 2px 0 rgba(107,74,62,0.08);
   }
   .circle-btn:active{transform:scale(0.94);}
-  .header-stats{display:flex; gap:26px;}
+  .header-stats{display:flex; gap:clamp(12px, 4.5vw, 24px);}
   .header-stat{text-align:center;}
   .header-stat .label{font-size:11px; color:var(--text-muted); font-weight:800;}
   .header-stat .value{font-size:20px; font-weight:800; font-family:'Baloo 2'; color:var(--text); line-height:1.1;}
@@ -321,7 +354,12 @@
     width:min(92vw, 940px);
     max-width:100%;
     overflow:hidden;
+    /* The rows inside are fixed pixels, so letting the flex column squeeze this
+       box does not shrink the board — it just hides the bottom rows behind
+       overflow:hidden. fitBoardHeight() resizes it properly instead. */
+    flex-shrink:0;
   }
+  .bottombar{flex-shrink:0;}
   .cell{
     position:relative; display:flex; align-items:center; justify-content:center;
     border-radius:8px; cursor:pointer; margin:0;
@@ -359,10 +397,16 @@
     position:absolute; top:3px; right:4px; font-size:9px; color:rgba(255,255,255,0.85);
     display:none; font-weight:900;
   }
+  /* `contain`, never `cover`: the five cut-outs have very different silhouettes
+     — the red one's side ears and the purple one's wings run right to the edge
+     of their canvas — and cropping to fill the square lopped those off.
+     The box size is not set here: it comes per character from CHARACTER_FIT,
+     because sizing every image identically renders the same face at wildly
+     different sizes. See that table for the derivation. */
   .cell .character-img{
     position:absolute;
-    width:84%;
-    height:84%;
+    width:100%;
+    height:100%;
     top:50%;
     left:50%;
     transform:translate(-50%,-50%) scale(0.95);
@@ -380,14 +424,21 @@
     transform:translate(-50%,-50%) scale(1);
     animation:characterPop .35s ease forwards, characterFloat 3.5s ease-in-out .35s infinite alternate;
   }
+  /* Both animations peak at CHARACTER_PEAK_SCALE (1.035) and never above it —
+     the per-character box sizes are computed against exactly that number, so
+     raising either overshoot here would push the widest cut-outs past the edge
+     of their tile. */
   @keyframes characterPop{
     0%{opacity:0; transform:translate(-50%,-50%) scale(0.8);}
-    60%{opacity:1; transform:translate(-50%,-50%) scale(1.05);}
+    60%{opacity:1; transform:translate(-50%,-50%) scale(1.035);}
     100%{opacity:1; transform:translate(-50%,-50%) scale(1);}
   }
+  /* The art is sized to the tile now, so drifting it upwards would expose a
+     strip of bare tile along the bottom and lap over the cell above; the idle
+     motion breathes in place instead of translating. */
   @keyframes characterFloat{
-    0%{transform:translate(-50%,-50%) translateY(0);}    
-    100%{transform:translate(-50%,-50%) translateY(-4px);}
+    0%{transform:translate(-50%,-50%) scale(1);}
+    100%{transform:translate(-50%,-50%) scale(1.035);}
   }
 
   /* The board is scaled to fit by fitBoardForCoach(), never cropped: a target
@@ -455,7 +506,7 @@
   .badge-btn.disabled .badge-count{
     opacity:.6;
   }
-  .mode-cosmii{width:34px; height:34px; display:block;}
+  .mode-cosmii{width:34px; height:34px; display:block; object-fit:contain;}
   #btn-place-mode:not(.disabled) .mode-cosmii{opacity:1; filter:none;}
   #btn-place-mode.disabled .mode-cosmii{opacity:.45; filter:grayscale(1);}
   #btn-place-mode:not(.disabled) .badge-label{color:var(--accent-dark);}
@@ -478,7 +529,7 @@
     box-shadow:0 3px 0 rgba(224,134,47,.35);
   }
   .badge-label{font-size:11px; font-weight:800; color:var(--text-muted);}
-  .mode-cosmii{width:34px; height:34px; display:block;}
+  .mode-cosmii{width:34px; height:34px; display:block; object-fit:contain;}
   /* Off state is deliberately muted so the mode is readable at a glance. */
   #btn-place-mode .badge-circle{border:3px solid transparent; transition:.18s;}
   #btn-place-mode .mode-cosmii{opacity:.45; filter:grayscale(1); transition:.18s;}
@@ -507,7 +558,7 @@
     border:4px solid var(--accent-2); overflow:hidden; background:#fff;
     display:flex; align-items:center; justify-content:center;
   }
-  .profile-avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profile-avatar img{width:100%; height:100%; object-fit:contain; display:block;}
   .profile-namebox{
     flex:1; display:flex; align-items:stretch; min-width:0;
     background:var(--card-soft); border-radius:14px; overflow:hidden;
@@ -543,7 +594,7 @@
     transition:transform .12s ease;
   }
   .profile-tile:active{transform:scale(.94);}
-  .profile-tile img{width:100%; height:100%; object-fit:cover; display:block;}
+  .profile-tile img{width:100%; height:100%; object-fit:contain; display:block;}
   .profile-tile.frame-tile{background:#F3E6D2;}
   .profile-tile.frame-tile::before{
     content:''; width:42%; height:42%; border-radius:50%;
@@ -762,16 +813,14 @@
        alt="AIRIS GAMES"
        class="splash-logo">
 
-  <button id="btn-splash-start" class="splash-start">
-    タップしてはじめる
-  </button>
+  <button id="btn-splash-start" class="splash-start" data-i18n="splash_start"></button>
 </div>
 
   <!-- TITLE -->
   <div class="screen" id="title-screen">
     <div class="title-topbar">
       <div class="avatar-btn" id="btn-avatar">
-        <img id="btn-avatar-img" src="assets/images/CosmiiGreen.PNG" alt="Cosmii Collection">
+        <img id="btn-avatar-img" src="assets/images/chara3_sub.PNG" alt="Cosmii Collection">
       </div>
       <div class="coin-chip" id="coin-chip">
         <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
@@ -791,8 +840,12 @@
         <h3 data-i18n="daily_title"></h3>
         <div class="card-icon-wrap">
           <svg class="lock-icon" viewBox="0 0 24 30" fill="none"><rect x="2" y="12" width="20" height="16" rx="4" fill="#fff"/><path d="M6 12V8a6 6 0 0 1 12 0v4" stroke="#fff" stroke-width="3" fill="none"/></svg>
+          <!-- Shown once the mode is unlocked; the padlock stayed up before, so
+               an available mode still read as locked. -->
+          <svg class="daily-icon" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fff" opacity=".95"/><path d="M25 20 L42 30 L25 40 Z" fill="#5B62B8"/></svg>
         </div>
         <div class="card-sub" id="daily-unlock-label"></div>
+        <div class="card-check" id="daily-check" style="display:none;">✓</div>
       </div>
       <div class="title-card streak" id="card-streak">
         <h3 data-i18n="streak_title"></h3>
@@ -811,7 +864,10 @@
       <img src="assets/images/CosmiiSudoku.PNG" alt="Cosmii Sudoku" class="cosmii-wordmark-image">
     </div>
 
-    <button class="level-btn" id="btn-play" type="button" data-i18n="start_button"></button>
+    <!-- Label is set by renderTitleScreen(), which needs the cleared count to
+         choose between START and the next-stage wording; no data-i18n here or
+         applyLang would overwrite it with the plain START string. -->
+    <button class="level-btn" id="btn-play" type="button"></button>
 
     <div class="promo-strip" id="promo-strip">
       <div class="promo-track" id="promo-track"></div>
@@ -833,12 +889,15 @@
       <div class="header-stats">
         <div class="header-stat"><div class="label" data-i18n="level_word"></div><div class="value" id="stat-level">1</div></div>
         <div class="header-stat"><div class="label" data-i18n="score_word"></div><div class="value" id="stat-score">0</div></div>
+        <!-- The clear screen rates you on time and tracks a best, so the clock
+             has to be visible while you are actually racing it. -->
+        <div class="header-stat"><div class="label" data-i18n="time_word"></div><div class="value" id="stat-time">00:00</div></div>
       </div>
       <button class="circle-btn" id="btn-settings">⚙</button>
     </div>
 
     <div class="pillrow">
-      <div class="pill"><img class="fortune-icon" src="assets/images/CosmiiRed.PNG" alt="占い"> <span><span class="frac-cur" id="progress-cur">0</span>/<span id="progress-max">6</span></span></div>
+      <div class="pill"><img class="fortune-icon" src="assets/images/chara4_sub.PNG" alt="占い"> <span><span class="frac-cur" id="progress-cur">0</span>/<span id="progress-max">6</span></span></div>
       <div class="pill" id="stat-hearts"></div>
     </div>
 
@@ -874,7 +933,7 @@
     <div class="bottombar">
       <div class="badge-btn" id="btn-place-mode">
         <div class="badge-circle">
-          <img class="mode-cosmii" src="assets/images/CosmiiBlue.PNG" alt="Cosmii Place Mode">
+          <img class="mode-cosmii" src="assets/images/chara2_sub.PNG" alt="Cosmii Place Mode">
         </div>
         <div class="badge-count" id="place-count">3</div>
         <div class="badge-label" data-i18n="place_mode"></div>
@@ -892,12 +951,15 @@
     <div class="modal-card">
       <h2 class="display" data-i18n="clear_title"></h2>
       <div class="time-big" id="clear-time">00:00</div>
-      <div class="best-line" id="clear-best">ベスト 00:00</div>
+      <div class="best-line" id="clear-best"></div>
       <div class="coin-reward" id="coin-reward">
         <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
-        <span class="coin-gain">+10</span>
+        <span class="coin-gain">+0</span>
         <span class="coin-total" id="coin-total"></span>
       </div>
+      <!-- Where the coins came from. A flat, unexplained "+10" gave the player
+           no reason to care about board size, streaks or their best time. -->
+      <div class="coin-breakdown" id="coin-breakdown"></div>
       <button class="modal-btn primary" id="btn-next" data-i18n="next_puzzle"></button>
       <button class="modal-btn secondary" id="btn-menu-1" data-i18n="back_menu"></button>
     </div>
@@ -979,7 +1041,13 @@
   <source src="assets/audio/bgm.mp3" type="audio/mpeg">
 </audio>
 
-<script>
+<!-- Puzzle generation lives in its own inline script so it exists twice over,
+     from a single copy of the source: it runs here on the main thread (which
+     is the fallback path, and keeps these helpers available to the rest of the
+     app), and its textContent is also read back to build a Web Worker. Carving
+     an 11x11 board can occupy a core for a couple of seconds, and doing that on
+     the main thread froze the loading spinner solid. -->
+<script id="puzzle-src">
 /* ---------------- Utility / RNG ---------------- */
 function mulberry32(seed){
   return function(){
@@ -1437,6 +1505,74 @@ function generatePuzzleRobust(cfg, rng){
   return null;
 }
 
+/* Worker entry point. Guarded so it is inert when this same source runs on
+   the main thread, where `importScripts` (and `onmessage`) do not exist. */
+if(typeof importScripts === 'function'){
+  self.onmessage = function(e){
+    const {id, cfg, seed} = e.data;
+    try{
+      self.postMessage({id, puzzle: generatePuzzleRobust(cfg, mulberry32(seed))});
+    }catch(err){
+      self.postMessage({id, puzzle: null, error: String(err && err.message || err)});
+    }
+  };
+}
+</script>
+
+<script>
+/* ---------------- Puzzle generation, off the main thread ----------------
+   The worker is built from the generation script's own text, so there is one
+   copy of the algorithm and no second file to keep in sync. If a Worker cannot
+   be created — blocked by a policy, or the source element is missing — we fall
+   straight back to running the very same function synchronously, which is only
+   what the game did before.
+------------------------------------------------------------------------- */
+let _puzzleWorker = null, _puzzleWorkerDead = false, _puzzleReqId = 0;
+function puzzleWorker(){
+  if(_puzzleWorker || _puzzleWorkerDead) return _puzzleWorker;
+  try{
+    const src = document.getElementById('puzzle-src').textContent;
+    const url = URL.createObjectURL(new Blob([src], {type:'text/javascript'}));
+    _puzzleWorker = new Worker(url);
+    URL.revokeObjectURL(url);
+    _puzzleWorker.onerror = ()=>{ _puzzleWorkerDead = true; _puzzleWorker = null; };
+  }catch(e){
+    console.warn('puzzle worker unavailable, generating inline:', e);
+    _puzzleWorkerDead = true;
+  }
+  return _puzzleWorker;
+}
+// Warm the worker up while the player is still on the title screen, so the
+// first board does not pay for spawning it.
+function warmPuzzleWorker(){ try{ puzzleWorker(); }catch(e){} }
+
+function generatePuzzleAsync(cfg, seed){
+  const w = puzzleWorker();
+  if(!w) return Promise.resolve(generatePuzzleRobust(cfg, mulberry32(seed)));
+  return new Promise(resolve=>{
+    const id = ++_puzzleReqId;
+    let settled = false;
+    const done = (puzzle)=>{
+      if(settled) return;
+      settled = true;
+      clearTimeout(timer);
+      w.removeEventListener('message', onMessage);
+      resolve(puzzle);
+    };
+    const onMessage = (e)=>{ if(e.data && e.data.id === id) done(e.data.puzzle); };
+    // A wedged worker must not strand the player on a spinner. The generator's
+    // own budget is 2.5s, so anything past 10s means the worker is gone.
+    const timer = setTimeout(()=>{
+      console.warn('puzzle worker timed out, generating inline');
+      _puzzleWorkerDead = true; _puzzleWorker = null;
+      try{ w.terminate(); }catch(e){}
+      done(generatePuzzleRobust(cfg, mulberry32(seed)));
+    }, 10000);
+    w.addEventListener('message', onMessage);
+    w.postMessage({id, cfg, seed});
+  });
+}
+
 /* ---------------- Level ladder ----------------
    smalls  = target sizes of the deliberately tiny regions (free footholds)
    compact = how blobby/readable the regions are (high = easier to scan)
@@ -1474,13 +1610,52 @@ function levelToConfig(level){
           prefillChance:0, prefillMax:1};
 }
 
-/* ---------------- Storage ---------------- */
+/* ---------------- Storage ----------------
+   Everything persistent goes through whichever backend the host actually
+   provides: Capacitor Preferences when that plugin is installed, then any
+   injected window.storage, then localStorage (which WKWebView keeps across
+   launches for a Capacitor app, and which is what a plain browser gets).
+   The backend is resolved on first use rather than at parse time, so a native
+   bridge that lands late is still picked up.
+------------------------------------------- */
+const STORAGE_PREFIX = 'cosmii-sudoku:';
+let _storageBackend = null;
+function storageBackend(){
+  if(_storageBackend) return _storageBackend;
+  const prefs = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Preferences;
+  if(prefs){
+    _storageBackend = {
+      async get(k){ const r = await prefs.get({key:STORAGE_PREFIX+k}); return r ? r.value : null; },
+      async set(k,v){ await prefs.set({key:STORAGE_PREFIX+k, value:v}); },
+    };
+  } else if(window.storage && typeof window.storage.get === 'function'){
+    _storageBackend = {
+      async get(k){ const r = await window.storage.get(k, false); return r ? r.value : null; },
+      async set(k,v){ await window.storage.set(k, v, false); },
+    };
+  } else {
+    _storageBackend = {
+      async get(k){ return localStorage.getItem(STORAGE_PREFIX+k); },
+      async set(k,v){ localStorage.setItem(STORAGE_PREFIX+k, v); },
+    };
+  }
+  return _storageBackend;
+}
 async function loadJSON(key, fallback){
-  try{ const r = await window.storage.get(key, false); return r ? JSON.parse(r.value) : fallback; }
-  catch(e){ return fallback; }
+  try{
+    const raw = await storageBackend().get(key);
+    if(raw === null || raw === undefined) return fallback;
+    return JSON.parse(raw);
+  }catch(e){
+    // A failed read must never be silent: it used to hide the fact that the
+    // storage object did not exist at all, so nothing was ever saved.
+    console.warn('storage read failed:', key, e);
+    return fallback;
+  }
 }
 async function saveJSON(key, obj){
-  try{ await window.storage.set(key, JSON.stringify(obj), false); }catch(e){}
+  try{ await storageBackend().set(key, JSON.stringify(obj)); }
+  catch(e){ console.warn('storage write failed:', key, e); }
 }
 
 /* ---------------- Sound / haptics ---------------- */
@@ -1497,7 +1672,36 @@ function beep(freq, dur, type){
     o.start(); o.stop(audioCtx.currentTime+dur);
   }catch(e){}
 }
-function vibrate(ms){ if(settings.vibrate && navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} } }
+/* Haptics. `navigator.vibrate` does not exist in WKWebView at all, so on iOS —
+   the platform this ships on — the vibration setting used to be a no-op with a
+   switch in front of it. Route through @capacitor/haptics when the native
+   bridge is there, keep navigator.vibrate for the browser build, and report
+   whether anything is actually available so the settings row can hide itself
+   rather than lie. */
+function hapticsPlugin(){
+  return (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Haptics) || null;
+}
+function hapticsAvailable(){ return !!(hapticsPlugin() || navigator.vibrate); }
+function vibrate(ms){
+  if(!settings.vibrate) return;
+  const h = hapticsPlugin();
+  if(h){
+    // The native API is a style, not a duration; map the three intensities the
+    // game actually uses (light paint tick, medium confirm, heavy mistake).
+    const style = ms >= 60 ? 'HEAVY' : (ms >= 15 ? 'MEDIUM' : 'LIGHT');
+    try{ h.impact({style}); }catch(e){}
+    return;
+  }
+  if(navigator.vibrate){ try{ navigator.vibrate(ms); }catch(e){} }
+}
+/* External links. A plain target="_blank" is swallowed by WKWebView, so the
+   App Store cards in the promo strip did nothing when tapped on device. */
+function openExternal(url){
+  const b = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser;
+  if(b){ try{ b.open({url}); return true; }catch(e){} }
+  try{ window.open(url, '_blank', 'noopener'); return true; }catch(e){}
+  return false;
+}
 
 /* ---------------- Localisation ----------------
    One term to rename the coloured areas per language; everything else keys
@@ -1508,11 +1712,22 @@ const AREA_EN = 'star zone';
 
 const I18N = {
   ja:{
+    splash_start:'タップしてはじめる',
     daily_title:'デイリー<br>チャレンジ',
     daily_play:'プレイする',
+    daily_cleared:'クリア済み',
     daily_locked:lv=>`Lv.${lv} で解放`,
+    time_word:'タイム',
+    reward_clear:'クリア',
+    reward_streak:'ストリーク',
+    reward_record:'新記録',
+    reward_daily_done:'本日のデイリー報酬は獲得済みです',
+    toast_place_used:'Cosmii配置はもう使えません',
+    toast_place_none:'配置できる Cosmii がありません',
+    toast_hint_none:'これ以上ヒントを出せません',
     streak_title:'ストリーク',
     start_button:'START',
+    continue_button:lv=>`次のステージ ${lv}`,
     level_word:'レベル',
     score_word:'スコア',
     rule_area:`${AREA_JA}ごとに1体`,
@@ -1563,11 +1778,22 @@ const I18N = {
     ],
   },
   en:{
+    splash_start:'Tap to start',
     daily_title:'Daily<br>Challenge',
     daily_play:'Play',
+    daily_cleared:'Cleared',
     daily_locked:lv=>`Unlocks at Lv.${lv}`,
+    time_word:'Time',
+    reward_clear:'Clear',
+    reward_streak:'Streak',
+    reward_record:'New record',
+    reward_daily_done:"Today's daily reward is already claimed",
+    toast_place_used:'No Cosmii placements left',
+    toast_place_none:'No Cosmii left to place',
+    toast_hint_none:'No more hints available here',
     streak_title:'Streak',
     start_button:'START',
+    continue_button:lv=>`Next stage ${lv}`,
     level_word:'Level',
     score_word:'Score',
     rule_area:`One per ${AREA_EN}`,
@@ -1714,12 +1940,43 @@ function assignColors(n, regionOf, rng){
 let state = null;
 let timerHandle = null;
 let bestTimes = {};
-// Cosmo Coins are the game's own currency: a flat reward per cleared stage,
-// kept inside `progress` so it saves through the same call as everything else.
-const COINS_PER_CLEAR = 10;
+/* ---------------- Cosmo Coin economy ----------------
+   A flat 10 per clear against 1000-coin avatars meant 700 clears to own
+   everything, which made the whole unlock system decorative. The reward now
+   scales with the board you actually solved and pays out for the things worth
+   encouraging — coming back daily, and beating your own time.
+
+   Rough pacing at these numbers: a 6x6 clear pays 32, an 11x11 pays 52, and a
+   week-long streak adds 35 on top. First frame at ~5 clears, first avatar at
+   ~12, the full set (2300) somewhere around 40-60.
+------------------------------------------------------ */
+const COIN_BASE          = 8;    // flat part of a clear
+const COIN_PER_ROW       = 4;    // ...plus this much per board row
+const COIN_DAILY_MULT    = 2;    // the daily challenge is worth double
+const COIN_RECORD_BONUS  = 15;   // beat your own best time for this size
+const COIN_STREAK_PER_DAY= 5;
+const COIN_STREAK_CAP    = 7;    // streak bonus stops growing after a week
+
+// Returns the total and an itemised list, so the clear screen can show the
+// player why they earned what they earned.
+function clearReward({n, isDaily, isRecord, streak}){
+  const parts = [];
+  let base = COIN_BASE + COIN_PER_ROW * n;
+  if(isDaily) base *= COIN_DAILY_MULT;
+  parts.push({key:'reward_clear', amount:base});
+  const bonus = Math.min(streak||0, COIN_STREAK_CAP) * COIN_STREAK_PER_DAY;
+  if(bonus > 0) parts.push({key:'reward_streak', amount:bonus});
+  if(isRecord) parts.push({key:'reward_record', amount:COIN_RECORD_BONUS});
+  return {total: parts.reduce((a,p)=>a+p.amount, 0), parts};
+}
+
 let progress = {score:0, cleared:0, coins:0};
 let settings = {sound:true, vibrate:true, pattern:false, placeMode:false};
 let isDailyMode = false;
+// Written on every daily clear but never read back, which let the daily be
+// farmed for coins any number of times a day. Now it gates the reward.
+let dailyProgress = {date:null, cleared:false, time:0};
+function dailyClearedToday(){ return dailyProgress.cleared && dailyProgress.date === todayStr(); }
 
 const els = {
   title: document.getElementById('title-screen'),
@@ -1782,28 +2039,77 @@ function updateHeaderStats(){
   els.statScore.textContent = progress.score;
 }
 
-function buildGrid(){
-  const n = state.n;
-  els.gridWrap.innerHTML='';
-  els.gridWrap.classList.toggle('pattern-on', settings.pattern);
-
-  const viewportWidth = Math.max(280, (window.visualViewport?.width || window.innerWidth) - 32);
-  const heightPadding = ((window.visualViewport?.height || window.innerHeight) > 900) ? 140 : 220;
-  const viewportHeight = Math.max(280, (window.visualViewport?.height || window.innerHeight) - heightPadding);
+// The grid columns are laid out in fixed pixels while #grid-wrap is clipped by
+// overflow:hidden, so the board MUST be sized to fit the viewport — anything
+// wider is not merely cramped, it is silently cut off and those cells can never
+// be tapped. There used to be a 44px floor on the cell size here, which meant
+// every board of 8x8 or larger lost its right-hand columns on a phone-width
+// screen. Small cells are the lesser evil, so the floor is only a last-resort
+// guard against a degenerate viewport measurement.
+const BOARD_PADDING = 10;               // #grid-wrap padding, both edges
+const BOARD_GAP = 2;                    // grid gap between cells
+const MIN_CELL = 18;
+function computeBoardMetrics(n){
+  const vw = window.visualViewport?.width  || window.innerWidth;
+  const vh = window.visualViewport?.height || window.innerHeight;
+  const chrome = (vh > 900) ? 140 : 220;               // top/bottom UI around the board
   const boardFactor = coach.active ? 0.72 : 0.75;
-  const maxBoardWidth = Math.min(980, viewportWidth);
-  const maxBoardHeight = Math.min(980, viewportHeight * boardFactor);
-  const size = Math.min(980, maxBoardWidth, maxBoardHeight);
-  const padding = 10;
-  const gap = 2 * (n - 1);
-  const cellSize = Math.max(44, Math.floor((size - padding - gap) / n));
-  const boardSize = cellSize * n + gap + padding;
-
+  const availWidth  = Math.max(200, vw - 32);          // #game-screen side padding
+  const availHeight = Math.max(200, vh - chrome) * boardFactor;
+  const size = Math.min(980, availWidth, availHeight);
+  const gap = BOARD_GAP * (n - 1);
+  const cellSize = Math.max(MIN_CELL, Math.floor((size - BOARD_PADDING - gap) / n));
+  return {cellSize, boardSize: cellSize * n + gap + BOARD_PADDING};
+}
+// Sizing is split out from building so a rotation or a viewport change can
+// re-fit the existing board without tearing down the cells and losing their
+// rendered state.
+function applyBoardSize(){
+  if(!state) return;
+  const n = state.n;
+  const {cellSize, boardSize} = computeBoardMetrics(n);
   els.gridWrap.style.width = `${boardSize}px`;
   els.gridWrap.style.height = `${boardSize}px`;
   els.gridWrap.style.maxWidth = '100%';
   els.gridWrap.style.gridTemplateColumns = `repeat(${n}, ${cellSize}px)`;
   els.gridWrap.style.gridTemplateRows = `repeat(${n}, ${cellSize}px)`;
+}
+
+/* computeBoardMetrics() budgets for the surrounding UI with a constant, but the
+   real height of the top bar, pills, rule cards and action bar shifts with
+   language, font metrics and safe-area insets. Measure the actual gap once the
+   screen is laid out and shrink the board if the estimate was too generous —
+   on a short phone the bottom row otherwise ended up under the action bar or
+   clipped away by #grid-wrap's overflow:hidden. */
+function fitBoardHeight(){
+  if(!state || coach.active) return;
+  const bar = document.querySelector('#game-screen .bottombar');
+  if(!bar) return;
+  requestAnimationFrame(()=>{
+    if(!state || coach.active) return;
+    const g = els.gridWrap.getBoundingClientRect();
+    const vh = window.visualViewport?.height || window.innerHeight;
+    // Derive the limit from the viewport rather than the bar's current top:
+    // when the column already overflows, the bar itself is pushed off-screen
+    // and its position would report far more room than exists.
+    const room = (vh - bar.getBoundingClientRect().height - 36) - g.top;
+    if(room < 80 || g.height <= room + 1) return;
+    const n = state.n;
+    const gap = BOARD_GAP * (n - 1);
+    const cell = Math.max(MIN_CELL, Math.floor((room - BOARD_PADDING - gap) / n));
+    const size = cell * n + gap + BOARD_PADDING;
+    els.gridWrap.style.width = `${size}px`;
+    els.gridWrap.style.height = `${size}px`;
+    els.gridWrap.style.gridTemplateColumns = `repeat(${n}, ${cell}px)`;
+    els.gridWrap.style.gridTemplateRows = `repeat(${n}, ${cell}px)`;
+  });
+}
+
+function buildGrid(){
+  const n = state.n;
+  els.gridWrap.innerHTML='';
+  els.gridWrap.classList.toggle('pattern-on', settings.pattern);
+  applyBoardSize();
 
   for(let r=0;r<n;r++){
     for(let c=0;c<n;c++){
@@ -2018,7 +2324,11 @@ function handleDoubleTap(r,c){
     setTimeout(()=>{ cellEl(r,c).classList.remove('shake'); },350);
     state.hearts--;
     updateHearts();
-    if(state.hearts<=0){ state.finished=true; stopTimer(); showOverModal(); }
+    if(state.hearts<=0){
+      state.finished=true; stopTimer();
+      renderHintState();          // the board is over; grey the hint button too
+      showOverModal();
+    }
   }
 }
 function isValidPlacement(r,c){
@@ -2050,7 +2360,7 @@ function renderCell(r,c){
       // If the PNG is missing, drop back to the built-in SVG Cosmii rather
       // than leaving an empty square where a piece should be.
       img.onerror = ()=>{ img.style.display='none'; el.classList.remove('character-filled'); };
-      img.src = `assets/images/${charName}.PNG`;
+      setCharacterImage(img, charName);
       img.style.display = 'block';
     } else {
       img.onerror = null;
@@ -2121,20 +2431,52 @@ function renderTitleScreen(){
   const unlocked = level >= DAILY_UNLOCK_LEVEL;
   const dailyCard = document.getElementById('card-daily');
   dailyCard.classList.toggle('locked', !unlocked);
-  document.getElementById('daily-unlock-label').textContent = unlocked ? t('daily_play') : t('daily_locked', DAILY_UNLOCK_LEVEL);
+  const dailyDone = unlocked && dailyClearedToday();
+  document.getElementById('daily-unlock-label').textContent =
+    !unlocked ? t('daily_locked', DAILY_UNLOCK_LEVEL) : (dailyDone ? t('daily_cleared') : t('daily_play'));
+  document.getElementById('daily-check').style.display = dailyDone ? 'flex' : 'none';
   document.getElementById('streak-count').textContent = streakData.streak || 0;
   document.getElementById('streak-check').style.display = (streakData.lastDate===todayStr()) ? 'flex' : 'none';
+  // A returning player is resuming a run, not starting one, so the button says
+  // which stage is next. Keyed off cleared stages rather than score: a session
+  // that earned points but never finished a board has no stage to return to.
+  const play = document.getElementById('btn-play');
+  if(play) play.textContent = progress.cleared > 0 ? t('continue_button', level) : t('start_button');
 }
 
 function checkWin(){
   if(placedCount()===state.n){ state.finished=true; stopTimer(); onWin(); }
 }
 
+function renderTime(){
+  const el = document.getElementById('stat-time');
+  if(el) el.textContent = fmtTime(state ? state.elapsed : 0);
+}
 function startTimer(){
   stopTimer();
-  timerHandle = setInterval(()=>{ state.elapsed++; }, 1000);
+  renderTime();
+  timerHandle = setInterval(()=>{ state.elapsed++; renderTime(); }, 1000);
 }
-function stopTimer(){ clearInterval(timerHandle); }
+function stopTimer(){ clearInterval(timerHandle); timerHandle = null; }
+function timerRunning(){ return timerHandle !== null; }
+
+/* The clock is a scored stat, so it must not keep ticking while the player
+   cannot play: backgrounded, or sitting behind a modal. setInterval is
+   throttled but not stopped in a backgrounded WebView, so leaving it running
+   inflated times by however long the app was away. */
+function anyModalOpen(){
+  return !!document.querySelector('.modal-overlay.active');
+}
+function suspendTimer(){ if(timerRunning()) stopTimer(); }
+function resumeTimerIfPlayable(){
+  if(!state || state.finished || coach.active) return;
+  if(document.hidden || anyModalOpen()) return;
+  if(!els.game.classList.contains('active')) return;
+  if(!timerRunning()) startTimer();
+}
+document.addEventListener('visibilitychange', ()=>{
+  if(document.hidden) suspendTimer(); else resumeTimerIfPlayable();
+});
 
 async function onWin(){
   beep(880,0.18,'sine'); setTimeout(()=>beep(1100,0.22,'sine'),150);
@@ -2142,53 +2484,128 @@ async function onWin(){
   const prevBest = bestTimes[diffKey];
   let isRecord=false;
   if(prevBest===undefined || state.elapsed < prevBest){ bestTimes[diffKey]=state.elapsed; isRecord=true; await saveJSON('best-times', bestTimes); }
-  progress.cleared += 1;
+
+  // The streak has to move before the reward is priced, otherwise the first
+  // clear of a new day pays yesterday's bonus.
+  await updateStreak();
+
+  // A second daily run on the same day still counts for the leaderboard time,
+  // but it does not pay again.
+  const alreadyClaimed = isDailyMode && dailyClearedToday();
+  const reward = alreadyClaimed
+    ? {total:0, parts:[]}
+    : clearReward({n:state.n, isDaily:isDailyMode, isRecord, streak:streakData.streak});
+
+  // The daily is a side mode; letting it advance the main ladder meant a
+  // player could skip stages by replaying it.
+  if(!isDailyMode) progress.cleared += 1;
   progress.score += 300;
-  progress.coins += COINS_PER_CLEAR;
+  progress.coins += reward.total;
   updateHeaderStats();
   renderCoins(true);
   await saveJSON('progress', progress);
-  await updateStreak();
-  if(isDailyMode){ await saveJSON('daily-progress', {date: todayStr(), cleared:true, time: state.elapsed}); }
+  if(isDailyMode && !alreadyClaimed){
+    dailyProgress = {date: todayStr(), cleared:true, time: state.elapsed};
+    await saveJSON('daily-progress', dailyProgress);
+  }
+
   els.clearTime.textContent = fmtTime(state.elapsed);
   els.clearBest.innerHTML = isRecord ? `<span class="record">${t('record')}</span>` : t('best', fmtTime(bestTimes[diffKey]));
-  document.querySelector('#coin-reward .coin-gain').textContent = '+' + COINS_PER_CLEAR;
+  document.querySelector('#coin-reward .coin-gain').textContent = '+' + reward.total;
   document.getElementById('coin-total').textContent = t('coin_total', progress.coins);
+  const bd = document.getElementById('coin-breakdown');
+  if(bd){
+    bd.innerHTML = alreadyClaimed
+      ? `<div class="note">${t('reward_daily_done')}</div>`
+      // A single line explains nothing the big number didn't; only itemise
+      // once a bonus actually stacked on top of the base reward.
+      : (reward.parts.length > 1
+          ? reward.parts.map(p=>`<div class="brow"><span>${t(p.key)}</span><span class="amt">+${p.amount}</span></div>`).join('')
+          : '');
+  }
   els.clearModal.classList.add('active');
 }
 function showOverModal(){ document.getElementById('over-modal').classList.add('active'); }
 
-function useHint(){
-  // Hint now marks a cell that CANNOT contain a Cosmii with an X (cross)
-  if(state.finished || state.hintsLeft<=0 || coach.active) return;
+/* ---------------- Hint ----------------
+   The old hint crossed off a random cell that happened not to be part of the
+   solution. That is information the player usually already had, and it taught
+   nothing — the whole board is mostly not-the-solution.
+
+   Instead, work out which Cosmii the player could deduce next from what is
+   already on the board, and place it. It is the move they were one inference
+   away from making, so it unsticks them and demonstrates the reasoning rather
+   than shaving a random square off the noise.
+------------------------------------------ */
+// Candidate cells for a given row, honouring the current board: already-placed
+// Cosmii own their row, column, region and neighbourhood; crossed and
+// wrongly-guessed cells are out.
+function liveCandidates(){
   const n = state.n;
-  // pick a random row that still needs a placement
-  const rows = [];
-  for(let r=0;r<n;r++) if(state.board[r][state.solution[r]]!==1) rows.push(r);
-  if(rows.length===0) return;
-  const r = rows[(Math.random()*rows.length)|0];
-  // collect candidate columns in that row which are empty and NOT the solution
-  const cands = [];
-  for(let c=0;c<n;c++){
-    if(c===state.solution[r]) continue;
-    if(state.board[r][c]===0) cands.push(c);
-  }
-  if(cands.length===0){
-    // fallback: try other rows for any invalid empty cell
-    for(let rr=0; rr<n; rr++){
-      for(let cc=0; cc<n; cc++){
-        if(state.board[rr][cc]===0 && state.solution[rr]!==cc){ cands.push({r:rr,c:cc}); }
-      }
+  const dead = Array.from({length:n},()=>new Array(n).fill(false));
+  const rowDone = new Array(n).fill(false);
+  const colDone = new Array(n).fill(false);
+  const regDone = new Array(n).fill(false);
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    if(state.board[r][c] !== 1) continue;
+    rowDone[r] = true; colDone[c] = true; regDone[state.regionOf[r][c]] = true;
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++)
+      if(state.regionOf[i][j] === state.regionOf[r][c]) dead[i][j] = true;
+    for(let di=-1;di<=1;di++) for(let dj=-1;dj<=1;dj++){
+      const ni=r+di, nj=c+dj;
+      if(ni>=0&&ni<n&&nj>=0&&nj<n) dead[ni][nj] = true;
     }
-    if(cands.length===0) return;
-    const pick = cands[(Math.random()*cands.length)|0];
-    state.board[pick.r][pick.c] = 2; renderCell(pick.r,pick.c);
-  } else {
-    const c = cands[(Math.random()*cands.length)|0];
-    state.board[r][c] = 2; renderCell(r,c);
   }
-  state.hintsLeft--; els.hintCount.textContent = state.hintsLeft;
+  // The player's own marks count as knowledge: a crossed or failed cell is one
+  // they have already ruled out, so the hint should not hand it back to them.
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++)
+    if(state.board[r][c] === 2 || state.board[r][c] === 3) dead[r][c] = true;
+  return {dead, rowDone, colDone, regDone,
+          alive:(r,c)=> !dead[r][c] && !rowDone[r] && !colDone[c] && !regDone[state.regionOf[r][c]]};
+}
+// The most satisfying hint is a forced cell — a row, column or region with
+// exactly one candidate left. Falling back to any unplaced solution cell keeps
+// the button useful even on a board the simple rules cannot crack yet.
+function findHintCell(){
+  const n = state.n;
+  const {alive} = liveCandidates();
+  const forced = [];
+  for(let r=0;r<n;r++){
+    const cs=[]; for(let c=0;c<n;c++) if(alive(r,c)) cs.push(c);
+    if(cs.length===1 && state.solution[r]===cs[0]) forced.push([r,cs[0]]);
+  }
+  for(let c=0;c<n;c++){
+    const rs=[]; for(let r=0;r<n;r++) if(alive(r,c)) rs.push(r);
+    if(rs.length===1 && state.solution[rs[0]]===c) forced.push([rs[0],c]);
+  }
+  for(let g=0;g<n;g++){
+    const cells=[];
+    for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(state.regionOf[r][c]===g && alive(r,c)) cells.push([r,c]);
+    if(cells.length===1 && state.solution[cells[0][0]]===cells[0][1]) forced.push(cells[0]);
+  }
+  if(forced.length) return forced[(Math.random()*forced.length)|0];
+  const rest = [];
+  for(let r=0;r<n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c] === 0) rest.push([r,c]);
+  }
+  return rest.length ? rest[(Math.random()*rest.length)|0] : null;
+}
+function useHint(){
+  if(!state || state.finished || coach.active) return;
+  if(state.hintsLeft<=0) return;
+  const cell = findHintCell();
+  if(!cell){ showToast(t('toast_hint_none')); return; }   // nothing left to reveal
+  const [r,c] = cell;
+  state.board[r][c] = 1;
+  assignRandomCharacter(r,c);
+  renderCell(r,c);
+  cellEl(r,c).classList.add('hinted');
+  state.hintsLeft--;
+  els.hintCount.textContent = state.hintsLeft;
   renderHintState();
+  onCorrectPlacement(r,c);
+  checkWin();
 }
 
 /* ---------------- Flow control ---------------- */
@@ -2217,10 +2634,50 @@ function resetBoard(){
   }
   els.progressCur.textContent = state.prefillRows.length;
   els.progressMax.textContent = n;
+  fitBoardHeight();
+  renderTime();
   if(!coach.active) startTimer();
 }
 
-const charNames = ['CosmiiBlue','CosmiiRed','CosmiiPink','CosmiiPurple','CosmiiGreen'];
+const charNames = ['chara1_sub','chara2_sub','chara3_sub','chara4_sub','chara5_sub'];
+
+/* How large each cut-out's box is, as a fraction of the tile.
+   The five PNGs are framed very differently — canvases run from 1:1 to 1.37:1,
+   and the silhouettes range from a compact head to one with side ears and one
+   with outstretched wings. Sizing them all identically therefore rendered the
+   same face at anywhere from 39% to 50% of the tile, so some Cosmii looked far
+   bigger than others.
+
+   These numbers come from measuring, in every PNG, the opaque bounding box and
+   the cream face oval, then solving for the one face size that is as large as
+   possible while every silhouette still fits its tile whole at the animations'
+   peak scale. The purple one (widest art, smallest face) sets the limit, which
+   is why it is nearly full size and the compact heads sit smaller.
+
+   Result: every face renders at 45.5% of the tile width, and nothing is ever
+   cropped. Re-derive these if the artwork changes. */
+const CHARACTER_PEAK_SCALE = 1.035;   // must match the keyframes above
+const CHARACTER_FIT = {
+  chara1_sub: 0.7906,
+  chara2_sub: 0.9616,
+  chara3_sub: 0.7714,
+  chara4_sub: 0.9420,
+  chara5_sub: 0.9662,
+};
+const CHARACTER_FIT_FALLBACK = 0.80;  // unknown art: stay clear of the edges
+
+// Point an <img> at a Cosmii and size it so its face matches every other
+// Cosmii's. Used everywhere a character appears — board tiles, the avatar
+// picker, the profile header, the title button — so the same Cosmii is never
+// noticeably larger in one place than another. The host box must be square.
+function setCharacterImage(img, id){
+  if(!img || !id) return;
+  img.src = `assets/images/${id}.PNG`;
+  const fit = ((CHARACTER_FIT[id] || CHARACTER_FIT_FALLBACK) * 100).toFixed(2) + '%';
+  img.style.width = fit;
+  img.style.height = fit;
+  img.style.margin = 'auto';          // keep it centred inside the larger box
+}
 
 function ensureCharacterGrid(){
   if(!state.character || state.character.length !== state.n){
@@ -2245,34 +2702,54 @@ function assignRandomCharacter(r,c){
   return grid[r][c];
 }
 
-function startGame(config, seedRng){
-  const rng = seedRng || Math.random;
-  const puzzle = generatePuzzleRobust(config, rng);
-  if(!puzzle){ showToast(t('toast_genfail')); return; }
-  let prefillRows = [];
-  if(Math.random() < (config.prefillChance||0)){
-    const count = randInt(1, config.prefillMax||1);
-    const rows = Array.from({length:puzzle.n},(_,i)=>i);
-    for(let i=rows.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
-    prefillRows = rows.slice(0, Math.min(count, puzzle.n-1));
+// Generation now happens in a worker, so this is async and owns the loading
+// overlay for every entry point — previously "next puzzle" showed no overlay at
+// all and simply froze. `seed` makes a board reproducible; the daily challenge
+// passes its date hash, everything else gets a fresh one.
+let startingGame = false;
+async function startGame(config, seed){
+  if(startingGame) return;
+  startingGame = true;
+  const loading = document.getElementById('loading-overlay');
+  if(loading) loading.classList.add('active');
+  try{
+    // Two frames so the overlay is actually painted before we hand off.
+    await new Promise(requestAnimationFrame);
+    await new Promise(requestAnimationFrame);
+    const s = (seed === undefined || seed === null) ? (Math.random()*0x7FFFFFFF)|0 : (seed|0);
+    const puzzle = await generatePuzzleAsync(config, s);
+    if(!puzzle){ showToast(t('toast_genfail')); return; }
+    // Colours and givens run off the same seed, so a daily board looks
+    // identical for everyone even though generation happened in the worker.
+    const rng = mulberry32(s ^ 0x5F356495);
+    let prefillRows = [];
+    if(rng() < (config.prefillChance||0)){
+      const count = 1 + Math.floor(rng() * (config.prefillMax||1));
+      const rows = Array.from({length:puzzle.n},(_,i)=>i);
+      for(let i=rows.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
+      prefillRows = rows.slice(0, Math.min(count, puzzle.n-1));
+    }
+    state = {
+      n: puzzle.n, solution: puzzle.solution, regionOf: puzzle.regionOf,
+      colorOf: assignColors(puzzle.n, puzzle.regionOf, rng),
+      maxHearts: config.hearts, maxHints: config.hints, prefillRows, elapsed:0,
+      placeUses: 3,
+      character: Array.from({length:puzzle.n},()=>Array(puzzle.n).fill('')),
+    };
+    resetBoard();
+    // Decide before the first paint of the game screen whether the tutorial
+    // might run. The bottom bar is hidden on that assumption and revealed again
+    // in maybeStartCoach() if no tutorial is due — the reverse order let the
+    // bar (and its blue Cosmii icon) show for one frame.
+    if(!coachDone && !coach.active && !isDailyMode && progress.cleared === 0){
+      document.body.classList.add('coach-pending');
+    }
+    showScreen(els.game);
+    maybeStartCoach();
+  } finally {
+    startingGame = false;
+    if(loading) loading.classList.remove('active');
   }
-  state = {
-    n: puzzle.n, solution: puzzle.solution, regionOf: puzzle.regionOf,
-    colorOf: assignColors(puzzle.n, puzzle.regionOf, rng),
-    maxHearts: config.hearts, maxHints: config.hints, prefillRows, elapsed:0,
-    placeUses: 3,
-    character: Array.from({length:puzzle.n},()=>Array(puzzle.n).fill('')),
-  };
-  resetBoard();
-  // Decide before the first paint of the game screen whether the tutorial
-  // might run. The bottom bar is hidden on that assumption and revealed again
-  // in maybeStartCoach() if no tutorial is due — the reverse order let the
-  // bar (and its blue Cosmii icon) show for one frame.
-  if(!coachDone && !coach.active && !isDailyMode && progress.cleared === 0){
-    document.body.classList.add('coach-pending');
-  }
-  showScreen(els.game);
-  maybeStartCoach();
 }
 
 /* ---------------- Coach: hands-on tutorial ----------------
@@ -2519,6 +2996,10 @@ function maybeStartCoach(){
 
 /* ---------------- Event bindings ---------------- */
 document.getElementById('btn-splash-start').addEventListener('click', () => {
+  // Render before revealing: init() is async, so a fast tap can reach the
+  // title before the stored progress has been read and the play button
+  // labelled. Every other route into the title already does this.
+  renderTitleScreen();
   showScreen(els.title);
 });
 const bgm = document.getElementById('bgm');
@@ -2530,15 +3011,8 @@ async function startPlayLevel(){
     bgm.volume = 0.35;
     bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
   }
-
-  const loading = document.getElementById('loading-overlay');
-  if(loading) loading.classList.add('active');
-  await new Promise(requestAnimationFrame);
-  await new Promise(requestAnimationFrame);
-
   isDailyMode = false;
-  startGame(levelToConfig(progress.cleared + 1));
-  if(loading) loading.classList.remove('active');
+  await startGame(levelToConfig(progress.cleared + 1));   // owns the overlay
 }
 function handleStartButton(e){
   e.preventDefault();
@@ -2656,6 +3130,18 @@ function promoGo(delta){
   setTimeout(normalisePromo, 400);
 }
 
+// Called by showScreen() whenever the title comes back into view. The strip is
+// re-measured because its width may have changed while the title was hidden,
+// and the autoplay clock restarts so the player gets a full interval on the
+// card they are looking at rather than an immediate jump.
+function resetPromoScroll(){
+  if(!promoTrack || !promoStrip) return;
+  promoDragging = false;
+  promoSlot = 1;
+  layoutPromo(false);
+  restartPromoTimer();
+}
+
 function restartPromoTimer(){
   clearInterval(promoTimer);
   promoTimer = setInterval(()=>{
@@ -2694,9 +3180,13 @@ if(promoStrip){
   }
   promoStrip.addEventListener('pointerup', endPromoDrag);
   promoStrip.addEventListener('pointercancel', endPromoDrag);
-  // A swipe must not also count as tapping the link underneath.
+  // A swipe must not also count as tapping the link underneath. A real tap is
+  // routed through the native browser: target="_blank" is simply ignored inside
+  // WKWebView, so on device these cards used to do nothing at all.
   promoTrack.addEventListener('click', e=>{
-    if(promoMoved){ e.preventDefault(); e.stopPropagation(); }
+    if(promoMoved){ e.preventDefault(); e.stopPropagation(); return; }
+    const card = e.target.closest && e.target.closest('.promo-card');
+    if(card && card.href){ e.preventDefault(); openExternal(card.href); }
   }, true);
 }
 
@@ -2704,8 +3194,8 @@ document.getElementById('card-daily').addEventListener('click', ()=>{
   const level = progress.cleared+1;
   if(level < DAILY_UNLOCK_LEVEL){ showToast(t('toast_daily_locked', DAILY_UNLOCK_LEVEL)); return; }
   isDailyMode=true;
-  const seed = hashStr('cosmii-daily-'+todayStr());
-  startGame({n:7, smalls:[1,2], compact:0.35, hearts:3, hints:3, prefillChance:0}, mulberry32(seed));
+  startGame({n:7, smalls:[1,2], compact:0.35, hearts:3, hints:3, prefillChance:0},
+            hashStr('cosmii-daily-'+todayStr()));
 });
 document.getElementById('card-streak').addEventListener('click', ()=>{
   showToast(t('toast_streak', streakData.streak||0));
@@ -2760,30 +3250,38 @@ function placeRandomCosmii(){
   return true;
 }
 
+// The id doubles as the asset basename, so it is also the CHARACTER_FIT key.
 const PROFILE_AVATARS = [
-  {id:'CosmiiGreen',  label:'Cosmii Green',  src:'assets/images/CosmiiGreen.PNG',  price:1000},
-  {id:'CosmiiBlue',   label:'Cosmii Blue',   src:'assets/images/CosmiiBlue.PNG',   price:1000},
-  {id:'CosmiiPink',   label:'Cosmii Pink',   src:'assets/images/CosmiiPink.PNG',   price:1000},
-  {id:'CosmiiRed',    label:'Cosmii Red',    src:'assets/images/CosmiiRed.PNG',    price:1000},
-  {id:'CosmiiPurple', label:'Cosmii Purple', src:'assets/images/CosmiiPurple.PNG', price:1000},
+  {id:'chara3_sub', label:'Cosmii Green',  src:'assets/images/chara3_sub.PNG', price:350},
+  {id:'chara2_sub', label:'Cosmii Blue',   src:'assets/images/chara2_sub.PNG', price:350},
+  {id:'chara1_sub', label:'Cosmii Pink',   src:'assets/images/chara1_sub.PNG', price:350},
+  {id:'chara4_sub', label:'Cosmii Red',    src:'assets/images/chara4_sub.PNG', price:350},
+  {id:'chara5_sub', label:'Cosmii Purple', src:'assets/images/chara5_sub.PNG', price:350},
 ];
+// Profiles saved under the previous artwork stored the old ids. Anything the
+// player already owned has to keep working, so translate on load rather than
+// silently dropping a purchase.
+const LEGACY_AVATAR_IDS = {
+  CosmiiGreen:'chara3_sub', CosmiiBlue:'chara2_sub', CosmiiPink:'chara1_sub',
+  CosmiiRed:'chara4_sub',   CosmiiPurple:'chara5_sub',
+};
 
 // Frames are pure CSS colours rather than image files: they need no assets,
 // scale to any tile size, and stay crisp on every screen.
 const PROFILE_FRAMES = [
   {id:'orange', color:'#F0A33E', price:0},
   {id:'red',    color:'#E04236', price:0},
-  {id:'yellow', color:'#E8C21E', price:500},
-  {id:'blue',   color:'#4FA6C7', price:500},
-  {id:'green',  color:'#7BC96F', price:500},
-  {id:'mint',   color:'#4FC7B0', price:500},
-  {id:'indigo', color:'#7F86D6', price:500},
-  {id:'purple', color:'#A97BE0', price:500},
+  {id:'yellow', color:'#E8C21E', price:150},
+  {id:'blue',   color:'#4FA6C7', price:150},
+  {id:'green',  color:'#7BC96F', price:150},
+  {id:'mint',   color:'#4FC7B0', price:150},
+  {id:'indigo', color:'#7F86D6', price:150},
+  {id:'purple', color:'#A97BE0', price:150},
 ];
 
 const DEFAULT_PROFILE = {
-  current:'CosmiiGreen',
-  owned:['CosmiiGreen'],
+  current:'chara3_sub',
+  owned:['chara3_sub'],
   frame:'orange',
   framesOwned:['orange','red'],
   name:'',
@@ -2807,7 +3305,7 @@ function randomPlayerName(){
 function updateAvatarButton(){
   const avatar = PROFILE_AVATARS.find(a=>a.id===profileState.current) || PROFILE_AVATARS[0];
   const img = document.getElementById('btn-avatar-img');
-  if(img) img.src = avatar.src;
+  if(img) setCharacterImage(img, avatar.id);
   const btn = document.getElementById('btn-avatar');
   if(btn) btn.style.borderColor = frameColor(profileState.frame);
 }
@@ -2817,7 +3315,7 @@ function renderProfileHeader(){
   const wrap = document.getElementById('profile-avatar');
   const img  = document.getElementById('profile-avatar-img');
   const name = document.getElementById('profile-name');
-  if(img) img.src = avatar.src;
+  if(img) setCharacterImage(img, avatar.id);
   if(wrap) wrap.style.borderColor = frameColor(profileState.frame);
   if(name && document.activeElement !== name) name.value = profileState.name;
 }
@@ -2846,9 +3344,12 @@ function renderProfilePanel(){
     // visible before committing; a frame tile shows the frame itself.
     tile.style.borderColor = isAvatar ? frameColor(profileState.frame) : item.color;
     tile.innerHTML =
-      (isAvatar ? `<img src="${item.src}" alt="${item.label}">` : '') +
+      (isAvatar ? `<img alt="${item.label}">` : '') +
       `<span class="tick">✓</span>` +
       `<span class="lock"><img src="assets/images/CosmoCoin.PNG" alt="">${item.price}</span>`;
+    // Sized through the shared helper so the five faces line up in the picker
+    // exactly as they do on the board.
+    if(isAvatar) setCharacterImage(tile.querySelector('img'), item.id);
 
     tile.addEventListener('click', ()=>{
       if(!owned){
@@ -2933,11 +3434,11 @@ document.getElementById('btn-place-mode').addEventListener('click', ()=>{
   if(coach.active) return;
   if(!state) return;
   if(state.placeUses <= 0){
-    showToast('Cosmii配置はもう使えません');
+    showToast(t('toast_place_used'));
     return;
   }
   if(!placeRandomCosmii()){
-    showToast('配置できる Cosmii がありません');
+    showToast(t('toast_place_none'));
     return;
   }
   state.placeUses = Math.max(0, state.placeUses - 1);
@@ -2959,8 +3460,9 @@ document.getElementById('btn-menu-1').addEventListener('click', ()=>{ els.clearM
 document.getElementById('btn-retry').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); resetBoard(); });
 document.getElementById('btn-menu-2').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
 
-document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
-document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); });
+// Opening settings mid-board is a pause, so the clock stops with it.
+document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); suspendTimer(); });
+document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); resumeTimerIfPlayable(); });
 document.getElementById('btn-restart').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); if(!coach.active) resetBoard(); });
 document.getElementById('btn-feedback').addEventListener('click', ()=>{ showToast(t('toast_feedback')); });
 document.querySelectorAll('#lang-toggle button').forEach(b=>{
@@ -2979,7 +3481,15 @@ els.gridWrap.addEventListener('pointercancel', onGridPointerCancel);
 // when the finger comes back at a different spot.
 els.gridWrap.addEventListener('lostpointercapture', ()=>{ if(drag && drag.moved) drag=null; });
 
-window.addEventListener('resize', ()=>{ if(coach.active) fitBoardForCoach(); });
+// A rotation or a viewport change leaves the board sized for the old screen,
+// which is exactly the state that clips cells out of reach — so re-fit it.
+function refitBoard(){
+  applyBoardSize();
+  if(coach.active) fitBoardForCoach(); else fitBoardHeight();
+}
+window.addEventListener('resize', refitBoard);
+window.addEventListener('orientationchange', refitBoard);
+if(window.visualViewport) window.visualViewport.addEventListener('resize', refitBoard);
 els.coachNext.addEventListener('click', coachAdvance);
 els.coachSkip.addEventListener('click', endCoach);
 
@@ -3001,8 +3511,14 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
 
 /* ---------------- Init ---------------- */
 (async function init(){
+  // Now that saves actually round-trip, every load has to survive a blob
+  // written by an older build: merge over the defaults and sanity-check the
+  // shapes rather than trusting whatever comes back.
   bestTimes = await loadJSON('best-times', {});
-  progress = await loadJSON('progress', {score:0, cleared:0, coins:0});
+  if(!bestTimes || typeof bestTimes !== 'object') bestTimes = {};
+  progress = {...{score:0, cleared:0, coins:0}, ...(await loadJSON('progress', {}))};
+  if(typeof progress.score !== 'number') progress.score = 0;
+  if(typeof progress.cleared !== 'number') progress.cleared = 0;
   // Saves written before coins existed have no such field.
   if(typeof progress.coins !== 'number') progress.coins = 0;
   profileState = await loadProfileState();
@@ -3011,14 +3527,35 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
   if(!Array.isArray(profileState.framesOwned) || !profileState.framesOwned.length){
     profileState.framesOwned = [...DEFAULT_PROFILE.framesOwned];
   }
+  if(!Array.isArray(profileState.owned) || !profileState.owned.length){
+    profileState.owned = [...DEFAULT_PROFILE.owned];
+  }
+  // Carry over avatars bought under the previous artwork's ids.
+  profileState.current = LEGACY_AVATAR_IDS[profileState.current] || profileState.current;
+  profileState.owned = [...new Set(profileState.owned.map(id => LEGACY_AVATAR_IDS[id] || id))]
+    .filter(id => PROFILE_AVATARS.some(a => a.id === id));
+  if(!profileState.owned.length) profileState.owned = [...DEFAULT_PROFILE.owned];
+  if(!PROFILE_AVATARS.some(a => a.id === profileState.current)){
+    profileState.current = profileState.owned[0];
+  }
   if(!profileState.owned.includes(profileState.current)) profileState.owned.push(profileState.current);
   if(!profileState.name){ profileState.name = randomPlayerName(); saveProfileState(); }
-  settings = await loadJSON('settings', {sound:true, vibrate:true, pattern:false, placeMode:false});
-  streakData = await loadJSON('streak', {lastDate:null, streak:0});
+  settings = {...{sound:true, vibrate:true, pattern:false, placeMode:false},
+              ...(await loadJSON('settings', {}))};
+  streakData = {...{lastDate:null, streak:0}, ...(await loadJSON('streak', {}))};
+  dailyProgress = {...{date:null, cleared:false, time:0}, ...(await loadJSON('daily-progress', {}))};
   lang = await loadJSON('lang', 'ja');
+  if(!I18N[lang]) lang = 'ja';
   document.getElementById('toggle-sound').checked = settings.sound;
   document.getElementById('toggle-vibrate').checked = settings.vibrate;
   document.getElementById('toggle-pattern').checked = settings.pattern;
+  // Don't show a switch that cannot do anything: WKWebView has no
+  // navigator.vibrate, so without the Haptics plugin this row is a lie.
+  if(!hapticsAvailable()){
+    const row = document.getElementById('toggle-vibrate').closest('.toggle-row');
+    if(row) row.style.display = 'none';
+  }
+  warmPuzzleWorker();     // spawn it now, not when the player taps play
   updateAvatarButton();
   renderPlaceMode();
   if(progress.cleared > 0) coachDone = true;
