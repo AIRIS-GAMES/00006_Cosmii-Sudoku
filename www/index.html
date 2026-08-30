@@ -1676,7 +1676,7 @@ async function saveJSON(key, obj){
 /* ---------------- Sound / haptics ---------------- */
 let audioCtx=null;
 function beep(freq, dur, type){
-  if(!settings.sound) return;
+  if(!settings.sound || document.hidden) return;
   try{
     if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
@@ -2100,12 +2100,26 @@ const els = {
 
 function updateBgmPlayback(){
   if(!bgm) return;
-  if(settings.sound && (document.getElementById('title-screen').classList.contains('active') || document.getElementById('game-screen').classList.contains('active'))){
+  const appVisible = document.visibilityState !== 'hidden' && !document.hidden;
+  const playableScreen =
+    document.getElementById('title-screen').classList.contains('active') ||
+    document.getElementById('game-screen').classList.contains('active');
+  if(settings.sound && appVisible && playableScreen){
     bgm.volume = 0.35;
     bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
   } else {
     bgm.pause();
   }
+}
+function pauseAllAudio(){
+  if(bgm) bgm.pause();
+  if(audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(()=>{});
+}
+function resumeAudioIfPlayable(){
+  if(audioCtx && audioCtx.state === 'suspended' && settings.sound && !document.hidden){
+    audioCtx.resume().catch(()=>{});
+  }
+  updateBgmPlayback();
 }
 
 function showScreen(el){
@@ -2612,15 +2626,19 @@ function resumeTimerIfPlayable(){
 }
 document.addEventListener('visibilitychange', ()=>{
   if(document.hidden){
+    pauseAllAudio();
     suspendTimer();
     // A backgrounded native app is never "unloaded", so the SDK's own
     // beforeunload hook never fires and the session would run on forever.
     ga('onStop');
   } else {
     ga('onResume');
+    resumeAudioIfPlayable();
     resumeTimerIfPlayable();
   }
 });
+window.addEventListener('pagehide', pauseAllAudio);
+window.addEventListener('pageshow', resumeAudioIfPlayable);
 
 async function onWin(){
   beep(880,0.18,'sine'); setTimeout(()=>beep(1100,0.22,'sine'),150);
@@ -3174,10 +3192,7 @@ const bgm = document.getElementById('bgm');
 const btnPlay = document.getElementById('btn-play');
 let startPlayPending = false;
 async function startPlayLevel(){
-  if(settings.sound){
-    bgm.volume = 0.35;
-    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
-  }
+  updateBgmPlayback();
   isDailyMode = false;
   await startGame(levelToConfig(progress.cleared + 1));   // owns the overlay
 }
@@ -3683,12 +3698,7 @@ els.coachSkip.addEventListener('click', endCoach);
 document.getElementById('toggle-sound').addEventListener('change', e=>{
   settings.sound=e.target.checked;
   saveJSON('settings', settings);
-  if(settings.sound){
-    bgm.volume = 0.35;
-    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
-  } else {
-    bgm.pause();
-  }
+  updateBgmPlayback();
 });
 document.getElementById('toggle-vibrate').addEventListener('change', e=>{ settings.vibrate=e.target.checked; saveJSON('settings', settings); });
 document.getElementById('toggle-pattern').addEventListener('change', e=>{
