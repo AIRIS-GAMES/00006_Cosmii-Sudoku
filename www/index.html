@@ -460,6 +460,8 @@
     0%,100%{transform:translateX(0);} 20%{transform:translateX(-4px);} 40%{transform:translateX(4px);}
     60%{transform:translateX(-3px);} 80%{transform:translateX(3px);}
   }
+  /* left/top are supplied inline by showFloatingPoints(); these are only a
+     harmless default if the element is ever created without them. */
   .floatpts{
     position:absolute; left:50%; top:20%; transform:translate(-50%,0);
     font-family:'Baloo 2'; font-weight:800; font-size:15px; color:var(--accent-dark);
@@ -470,6 +472,7 @@
     20%{opacity:1; transform:translate(-50%,0) scale(1);}
     100%{opacity:0; transform:translate(-50%,-38px) scale(1);}
   }
+  /* Positioned inline by showGreatBanner(), relative to the game screen. */
   .banner-great{
     position:absolute; top:-6px; left:50%; transform:translateX(-50%);
     font-family:'Baloo 2'; font-weight:800; font-size:22px; color:var(--accent-2);
@@ -1047,6 +1050,11 @@
      app), and its textContent is also read back to build a Web Worker. Carving
      an 11x11 board can occupy a core for a couple of seconds, and doing that on
      the main thread froze the loading spinner solid. -->
+<!-- GameAnalytics HTML5 SDK, vendored rather than pulled from their CDN so the
+     app keeps working with no network and adds no third-party request at boot.
+     Loaded before the game so the wrapper below can queue events immediately. -->
+<script src="assets/js/gameanalytics.min.js"></script>
+
 <script id="puzzle-src">
 /* ---------------- Utility / RNG ---------------- */
 function mulberry32(seed){
@@ -1527,6 +1535,11 @@ if(typeof importScripts === 'function'){
    straight back to running the very same function synchronously, which is only
    what the game did before.
 ------------------------------------------------------------------------- */
+// Defined further down, so bind late: this block runs before the analytics
+// module and must not depend on its load order.
+function reportWorkerIssue(msg){
+  if(typeof gaError === 'function') gaError(msg, 'Warning');
+}
 let _puzzleWorker = null, _puzzleWorkerDead = false, _puzzleReqId = 0;
 function puzzleWorker(){
   if(_puzzleWorker || _puzzleWorkerDead) return _puzzleWorker;
@@ -1539,6 +1552,7 @@ function puzzleWorker(){
   }catch(e){
     console.warn('puzzle worker unavailable, generating inline:', e);
     _puzzleWorkerDead = true;
+    reportWorkerIssue('worker unavailable: ' + (e && e.message || e));
   }
   return _puzzleWorker;
 }
@@ -1564,6 +1578,7 @@ function generatePuzzleAsync(cfg, seed){
     // own budget is 2.5s, so anything past 10s means the worker is gone.
     const timer = setTimeout(()=>{
       console.warn('puzzle worker timed out, generating inline');
+      reportWorkerIssue('worker timed out n=' + cfg.n);
       _puzzleWorkerDead = true; _puzzleWorker = null;
       try{ w.terminate(); }catch(e){}
       done(generatePuzzleRobust(cfg, mulberry32(seed)));
@@ -1701,6 +1716,88 @@ function openExternal(url){
   if(b){ try{ b.open({url}); return true; }catch(e){} }
   try{ window.open(url, '_blank', 'noopener'); return true; }catch(e){}
   return false;
+}
+
+/* ---------------- Analytics (GameAnalytics) ----------------
+   Both keys are meant to live in the client: the HTML5 SDK signs its payloads
+   with the secret, so it ships in the bundle by design. They are not server
+   credentials, but they do identify this game, so rotate them in the
+   GameAnalytics dashboard if the build ever leaks somewhere it shouldn't.
+
+   Everything goes through ga() rather than touching the SDK directly, so a
+   blocked script, an ad blocker or a stripped build degrades to a no-op
+   instead of throwing inside game logic.
+----------------------------------------------------------- */
+const GA_GAME_KEY   = '01afbf18bc0bba113deaadd793077d98';
+const GA_SECRET_KEY = '167da862638f21c89b5ac6edeee5d38f3ac33d59';
+const GA_BUILD      = '1.01';          // keep in step with MARKETING_VERSION
+// GA rejects currencies that are not pure letters, and item types outside a
+// small character set, so both lists are fixed up front and every call below
+// draws from them.
+const GA_CURRENCY   = 'CosmoCoin';
+const GA_ITEM_TYPES = ['StageClear','Streak','Record','Avatar','Frame'];
+
+let gaReady = false;
+function ga(){
+  if(!gaReady) return;
+  try{ window.GameAnalytics.apply(null, arguments); }
+  catch(e){ console.warn('analytics call failed:', e); }
+}
+function initAnalytics(){
+  if(typeof window.GameAnalytics !== 'function'){
+    console.warn('GameAnalytics SDK not loaded; analytics disabled');
+    return;
+  }
+  try{
+    // Configuration has to happen before initialize() — the SDK ignores it
+    // afterwards and then silently drops every event using those values.
+    window.GameAnalytics('configureBuild', GA_BUILD);
+    window.GameAnalytics('configureAvailableResourceCurrencies', [GA_CURRENCY]);
+    window.GameAnalytics('configureAvailableResourceItemTypes', GA_ITEM_TYPES);
+    window.GameAnalytics('setEnabledInfoLog', false);
+    window.GameAnalytics('initialize', GA_GAME_KEY, GA_SECRET_KEY);
+    gaReady = true;
+  }catch(e){
+    console.warn('analytics init failed:', e);
+  }
+}
+
+/* ---- Event helpers -------------------------------------------------------
+   Named so the call sites read as game vocabulary, and so the exact GA event
+   shapes live in one place instead of being spelled out across the file.
+------------------------------------------------------------------------- */
+// "Stage" / "Lv7" / "7x7" — three levels of progression, so the dashboard can
+// break a funnel down by ladder position and by board size.
+// The ids are pinned to `state` when the stage starts rather than recomputed
+// on the way out. onWin() increments progress.cleared before it reports, so a
+// recomputed Complete would be labelled one level above its own Start and the
+// two would never line up in a funnel.
+function gaStageStart(){
+  if(!state) return;
+  state.gaIds = ['Stage', 'Lv' + (isDailyMode ? 'Daily' : (progress.cleared + 1)),
+                 state.n + 'x' + state.n];
+  ga('addProgressionEvent', 'Start', state.gaIds[0], state.gaIds[1], state.gaIds[2]);
+}
+function gaStageEnd(status, score){
+  const ids = (state && state.gaIds) || ['Stage', 'LvUnknown', ''];
+  ga('addProgressionEvent', status, ids[0], ids[1], ids[2], score);
+}
+function gaStageComplete(score){ gaStageEnd('Complete', score); }
+function gaStageFail(score){ gaStageEnd('Fail', score); }
+function gaCoinsEarned(amount, itemType, itemId){
+  if(!(amount > 0)) return;
+  ga('addResourceEvent', 'Source', GA_CURRENCY, amount, itemType, itemId);
+}
+function gaCoinsSpent(amount, itemType, itemId){
+  if(!(amount > 0)) return;
+  ga('addResourceEvent', 'Sink', GA_CURRENCY, amount, itemType, itemId);
+}
+function gaDesign(eventId, value){
+  if(typeof value === 'number') ga('addDesignEvent', eventId, value);
+  else ga('addDesignEvent', eventId);
+}
+function gaError(message, severity){
+  ga('addErrorEvent', severity || 'Warning', String(message).slice(0, 512));
 }
 
 /* ---------------- Localisation ----------------
@@ -2285,7 +2382,13 @@ function handleCellTap(r, c){
 function handleSingleTap(r,c){
   if(coach.active && coach.act && coach.act!=='cross'){ coachNudge(); return; }
   const cur = state.board[r][c];
-  if(cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }   // sealed
+  // Settled cells are read-only: a red X is a spent life, and a placed Cosmii
+  // is part of the one true solution. This used to guard only the X, so a
+  // single tap on a Cosmii fell through to the "clear the mark" branch and
+  // removed it — and re-placing it paid the score bonus out all over again,
+  // which let one cell be tapped for points indefinitely. handleDoubleTap has
+  // always rejected both; the two paths now agree.
+  if(cur===1 || cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }
   state.board[r][c] = (cur===0) ? 2 : 0;
   renderCell(r,c);
   beep(420,0.05,'triangle');
@@ -2327,6 +2430,7 @@ function handleDoubleTap(r,c){
     if(state.hearts<=0){
       state.finished=true; stopTimer();
       renderHintState();          // the board is over; grey the hint button too
+      gaStageFail(progress.score);
       showOverModal();
     }
   }
@@ -2378,27 +2482,59 @@ function placedCount(){
   return p;
 }
 
+// Celebration overlays are parented to the game screen, not to the board.
+// #grid-wrap clips its own overflow so its fixed-pixel rows can never spill,
+// and that quietly swallowed both effects: the "Great!" banner sits above the
+// board's top edge, and the +score popup rises out of the cell it started in,
+// so on the top row it left the box entirely. The screen is inset:0 over the
+// whole viewport and the page never scrolls, so client coordinates map onto it
+// directly.
+function screenPoint(el){
+  const a = el.getBoundingClientRect();
+  const b = els.game.getBoundingClientRect();
+  return {x: a.left - b.left + a.width / 2, y: a.top - b.top, h: a.height};
+}
+function showFloatingPoints(cellElement, text){
+  const fp = document.createElement('div');
+  fp.className = 'floatpts';
+  fp.textContent = text;
+  const p = screenPoint(cellElement);
+  fp.style.left = p.x + 'px';
+  fp.style.top  = (p.y + p.h * 0.2) + 'px';
+  els.game.appendChild(fp);
+  setTimeout(()=>fp.remove(), 850);
+}
+function showGreatBanner(text){
+  const banner = document.createElement('div');
+  banner.className = 'banner-great';
+  banner.textContent = text;
+  const p = screenPoint(els.gridWrap);
+  banner.style.left = p.x + 'px';
+  banner.style.top  = (p.y - 6) + 'px';
+  els.game.appendChild(banner);
+  setTimeout(()=>banner.remove(), 1000);
+}
+
 async function onCorrectPlacement(r,c){
   beep(660,0.15,'sine'); vibrate(15);
   const pts = 60 + Math.floor(Math.random()*120);
   progress.score += pts;
   updateHeaderStats();
-  await saveJSON('progress', progress);
+
+  // Feedback first, persistence after. Awaiting the save before touching the
+  // DOM meant the score popup and the progress counter waited on a storage
+  // round-trip — which is a real bridge call once @capacitor/preferences is
+  // the backend, not the instant localStorage write it used to be.
   const el = cellEl(r,c);
-  const fp = document.createElement('div');
-  fp.className='floatpts'; fp.textContent='+'+pts;
-  el.appendChild(fp);
-  setTimeout(()=>fp.remove(), 850);
+  if(el) showFloatingPoints(el, '+' + pts);
 
   const placed = placedCount();
   els.progressCur.textContent = placed;
   if(!coach.active && placed>1 && Math.random()<0.35 && placed<state.n){
-    const banner = document.createElement('div');
-    banner.className='banner-great';
-    banner.textContent = Math.random()<0.5 ? 'Great' : 'Nice!';
-    els.gridWrap.appendChild(banner);
-    setTimeout(()=>banner.remove(), 1000);
+    showGreatBanner(Math.random()<0.5 ? 'Great' : 'Nice!');
   }
+
+  await saveJSON('progress', progress);
 }
 
 const DAILY_UNLOCK_LEVEL = 20;
@@ -2475,7 +2611,15 @@ function resumeTimerIfPlayable(){
   if(!timerRunning()) startTimer();
 }
 document.addEventListener('visibilitychange', ()=>{
-  if(document.hidden) suspendTimer(); else resumeTimerIfPlayable();
+  if(document.hidden){
+    suspendTimer();
+    // A backgrounded native app is never "unloaded", so the SDK's own
+    // beforeunload hook never fires and the session would run on forever.
+    ga('onStop');
+  } else {
+    ga('onResume');
+    resumeTimerIfPlayable();
+  }
 });
 
 async function onWin(){
@@ -2509,6 +2653,14 @@ async function onWin(){
     await saveJSON('daily-progress', dailyProgress);
   }
 
+  gaStageComplete(progress.score);
+  gaDesign(isDailyMode ? 'Clear:Daily' : 'Clear:Stage', state.elapsed);
+  // Itemised so the dashboard shows where the economy actually pays out.
+  for(const part of reward.parts){
+    gaCoinsEarned(part.amount,
+      part.key === 'reward_streak' ? 'Streak' : (part.key === 'reward_record' ? 'Record' : 'StageClear'),
+      isDailyMode ? 'Daily' : (state.n + 'x' + state.n));
+  }
   els.clearTime.textContent = fmtTime(state.elapsed);
   els.clearBest.innerHTML = isRecord ? `<span class="record">${t('record')}</span>` : t('best', fmtTime(bestTimes[diffKey]));
   document.querySelector('#coin-reward .coin-gain').textContent = '+' + reward.total;
@@ -2584,10 +2736,16 @@ function findHintCell(){
     if(cells.length===1 && state.solution[cells[0][0]]===cells[0][1]) forced.push(cells[0]);
   }
   if(forced.length) return forced[(Math.random()*forced.length)|0];
+  // Fall back to any unplaced Cosmii, including one standing on a cell the
+  // player crossed off by mistake — placing it clears the bad mark. Without
+  // this, sweeping an X over the last remaining solution cell left the board
+  // unwinnable and the hint button with nothing to offer. A red X (3) stays
+  // excluded: that cell was guessed, cost a life, and provably holds nothing.
   const rest = [];
   for(let r=0;r<n;r++){
     const c = state.solution[r];
-    if(state.board[r][c] === 0) rest.push([r,c]);
+    const v = state.board[r][c];
+    if(v === 0 || v === 2) rest.push([r,c]);
   }
   return rest.length ? rest[(Math.random()*rest.length)|0] : null;
 }
@@ -2604,6 +2762,7 @@ function useHint(){
   state.hintsLeft--;
   els.hintCount.textContent = state.hintsLeft;
   renderHintState();
+  gaDesign('Help:Hint:' + state.n + 'x' + state.n, state.maxHints - state.hintsLeft);
   onCorrectPlacement(r,c);
   checkWin();
 }
@@ -2718,7 +2877,10 @@ async function startGame(config, seed){
     await new Promise(requestAnimationFrame);
     const s = (seed === undefined || seed === null) ? (Math.random()*0x7FFFFFFF)|0 : (seed|0);
     const puzzle = await generatePuzzleAsync(config, s);
-    if(!puzzle){ showToast(t('toast_genfail')); return; }
+    if(!puzzle){
+      gaError('puzzle generation failed n=' + config.n, 'Error');
+      showToast(t('toast_genfail')); return;
+    }
     // Colours and givens run off the same seed, so a daily board looks
     // identical for everyone even though generation happened in the worker.
     const rng = mulberry32(s ^ 0x5F356495);
@@ -2746,6 +2908,7 @@ async function startGame(config, seed){
     }
     showScreen(els.game);
     maybeStartCoach();
+    gaStageStart();
   } finally {
     startingGame = false;
     if(loading) loading.classList.remove('active');
@@ -2952,6 +3115,7 @@ function coachAdvance(){
   renderCoachStep();
 }
 function startCoach(){
+  gaDesign('Tutorial:Start');
   coachDone = true;                      // latch before anything can re-enter
   coach.active = true; coach.idx = 0; coach.lastPlaced = null;
   document.body.classList.remove('coach-pending');
@@ -2961,6 +3125,9 @@ function startCoach(){
   renderCoachStep();
 }
 function endCoach(){
+  // Reached either by finishing the last step or by tapping skip; the step
+  // index separates the two and shows where people drop out.
+  if(coach.active) gaDesign('Tutorial:End', coach.idx);
   coach.active = false;
   coachDone = true;
   clearCoachTarget();
@@ -3186,7 +3353,12 @@ if(promoStrip){
   promoTrack.addEventListener('click', e=>{
     if(promoMoved){ e.preventDefault(); e.stopPropagation(); return; }
     const card = e.target.closest && e.target.closest('.promo-card');
-    if(card && card.href){ e.preventDefault(); openExternal(card.href); }
+    if(card && card.href){
+      e.preventDefault();
+      const title = card.querySelector('.promo-title');
+      gaDesign('Promo:Open:' + (title ? title.textContent.replace(/[^A-Za-z0-9]/g,'') : 'Unknown'));
+      openExternal(card.href);
+    }
   }, true);
 }
 
@@ -3194,6 +3366,7 @@ document.getElementById('card-daily').addEventListener('click', ()=>{
   const level = progress.cleared+1;
   if(level < DAILY_UNLOCK_LEVEL){ showToast(t('toast_daily_locked', DAILY_UNLOCK_LEVEL)); return; }
   isDailyMode=true;
+  gaDesign('Daily:Start');
   startGame({n:7, smalls:[1,2], compact:0.35, hearts:3, hints:3, prefillChance:0},
             hashStr('cosmii-daily-'+todayStr()));
 });
@@ -3355,6 +3528,7 @@ function renderProfilePanel(){
       if(!owned){
         if(progress.coins < item.price){ showToast(t('toast_need_coins')); return; }
         progress.coins -= item.price;
+        gaCoinsSpent(item.price, isAvatar ? 'Avatar' : 'Frame', item.id);
         ownedList.push(item.id);
         saveJSON('progress', progress);
         renderCoins(true);
@@ -3449,6 +3623,7 @@ document.getElementById('btn-place-mode').addEventListener('click', ()=>{
   }
   beep(620, 0.06, 'sine');
   vibrate(12);
+  gaDesign('Help:AutoPlace:' + state.n + 'x' + state.n, 3 - state.placeUses);
 });
 document.getElementById('btn-hint').addEventListener('click', useHint);
 document.getElementById('btn-next').addEventListener('click', ()=>{
@@ -3457,13 +3632,24 @@ document.getElementById('btn-next').addEventListener('click', ()=>{
   startGame(levelToConfig(progress.cleared+1));
 });
 document.getElementById('btn-menu-1').addEventListener('click', ()=>{ els.clearModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
-document.getElementById('btn-retry').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); resetBoard(); });
+document.getElementById('btn-retry').addEventListener('click', ()=>{
+  els.overModal.classList.remove('active');
+  gaDesign('Retry:AfterFail');
+  resetBoard();
+  gaStageStart();
+});
 document.getElementById('btn-menu-2').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
 
 // Opening settings mid-board is a pause, so the clock stops with it.
 document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); suspendTimer(); });
 document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); resumeTimerIfPlayable(); });
-document.getElementById('btn-restart').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); if(!coach.active) resetBoard(); });
+document.getElementById('btn-restart').addEventListener('click', ()=>{
+  els.settingsModal.classList.remove('active');
+  if(coach.active) return;
+  gaDesign('Retry:Manual');
+  resetBoard();
+  gaStageStart();
+});
 document.getElementById('btn-feedback').addEventListener('click', ()=>{ showToast(t('toast_feedback')); });
 document.querySelectorAll('#lang-toggle button').forEach(b=>{
   b.addEventListener('click', ()=>{
@@ -3471,6 +3657,7 @@ document.querySelectorAll('#lang-toggle button').forEach(b=>{
     lang = b.dataset.lang;
     saveJSON('lang', lang);
     applyLang();
+    gaDesign('Settings:Language:' + lang);
   });
 });
 els.gridWrap.addEventListener('pointerdown', onGridPointerDown);
@@ -3511,6 +3698,8 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
 
 /* ---------------- Init ---------------- */
 (async function init(){
+  // Before anything else, so a crash during startup still reports.
+  initAnalytics();
   // Now that saves actually round-trip, every load has to survive a blob
   // written by an older build: merge over the defaults and sanity-check the
   // shapes rather than trusting whatever comes back.
