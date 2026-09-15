@@ -71,8 +71,11 @@
   /* ---------- Title screen ---------- */
   #title-screen{
     justify-content:flex-start;
-    padding-top:calc(38px + env(safe-area-inset-top));
-    padding-bottom:calc(10px + env(safe-area-inset-bottom));
+    --title-card-h: clamp(124px, 17.8vh, 150px);
+    --title-gap: clamp(8px, 1.45vh, 14px);
+    --logo-to-collab-gap: clamp(14px, 2.4vh, 24px);
+    padding-top:calc(clamp(14px, 3.2vh, 38px) + env(safe-area-inset-top));
+    padding-bottom:calc(clamp(6px, 1.4vh, 12px) + env(safe-area-inset-bottom));
     background-image:
       radial-gradient(circle at 12% 8%, rgba(107,74,62,0.05) 0 34px, transparent 35px),
       radial-gradient(circle at 60% 4%, rgba(107,74,62,0.05) 0 30px, transparent 31px),
@@ -147,11 +150,12 @@
   .lang-toggle button.on{background:var(--accent); color:#fff;}
   .title-topbar{
     width:100%; max-width:420px; display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:16px;
-    padding-top:10px;
+    margin-bottom:var(--title-gap);
+    padding-top:0;
+    flex:0 0 auto;
   }
   .avatar-btn{
-    width:60px; height:60px; border-radius:18px;
+    width:clamp(48px, 7vh, 60px); height:clamp(48px, 7vh, 60px); border-radius:18px;
     border:4px solid var(--accent);            /* recoloured by the chosen frame */
     background:#fff; overflow:hidden;
     display:flex; align-items:center; justify-content:center;
@@ -167,20 +171,39 @@
      inside the collab window (see JS), so it disappears on its own once the
      event ends without needing a manual follow-up edit. */
   .suntv-collab-banner{
-    align-self:flex-start;
-    width:auto; max-width:280px; margin:-14px 0 0;
-    display:flex; align-items:center; gap:7px;
+    width:min(92vw, 360px); margin:var(--logo-to-collab-gap) auto var(--title-gap);
+    display:flex; align-items:center; gap:clamp(8px, 1.5vh, 12px);
     background:linear-gradient(120deg,#FFD24C,#F0863E);
-    border-radius:11px; padding:6px 10px;
-    box-shadow:0 3px 10px rgba(224,134,47,0.32);
+    border-radius:16px; padding:clamp(7px, 1.35vh, 10px) 14px;
+    box-shadow:0 8px 20px rgba(224,134,47,0.28);
+    flex:0 0 auto;
+    border:none; cursor:pointer; text-align:left;
+    font:inherit;
+    -webkit-tap-highlight-color:transparent;
   }
-  .suntv-collab-icon{width:28px; height:28px; object-fit:contain; flex-shrink:0;}
-  .suntv-collab-text{flex:1; min-width:0;}
-  .suntv-collab-title{font-family:'Baloo 2'; font-weight:800; font-size:11px; color:#fff;}
-  .suntv-collab-period{font-size:9px; font-weight:700; color:rgba(255,255,255,0.92); margin-top:0;}
+  .suntv-collab-banner:active{transform:translateY(2px); box-shadow:0 5px 14px rgba(224,134,47,0.24);}
+  .suntv-collab-icon{width:clamp(44px, 7.4vh, 64px); height:clamp(44px, 7.4vh, 64px); object-fit:contain; flex-shrink:0;}
+  .suntv-collab-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
+  .suntv-collab-title{font-family:'Baloo 2'; font-weight:800; font-size:clamp(14px, 2.1vh, 18px); line-height:1.05; color:#fff;}
+  .suntv-collab-period{font-size:clamp(9px, 1.3vh, 11px); font-weight:800; color:rgba(255,255,255,0.94); margin-top:0;}
+  .suntv-copyright{font-size:10px; font-weight:800; line-height:1; color:rgba(255,255,255,0.82);}
+  .suntv-info-art{width:92px; height:92px; object-fit:contain; margin:0 auto 8px; display:block;}
+  .suntv-info-steps{display:flex; flex-direction:column; gap:8px; margin:4px 0 12px;}
+  .suntv-info-step{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card-soft); border-radius:14px; padding:10px;
+    color:var(--text); font-size:13px; font-weight:900; line-height:1.35;
+  }
+  .suntv-info-step-num{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#fff; font-family:'Baloo 2'; font-size:15px;
+  }
+  .suntv-info-note{font-size:11px; font-weight:800; line-height:1.45; color:var(--text-muted); margin:0 0 14px;}
   .title-cards{
     width:100%; max-width:420px; display:flex; gap:12px;
-    margin:auto 0 0;                 /* pushes the group down off the header */
+    margin:0;
+    flex:0 0 auto;
   }
   .title-card{
     flex:1; border-radius:20px; padding:15px; min-height:158px; text-align:left;
@@ -199,15 +222,15 @@
   .title-card.locked .daily-icon, .title-card.locked .ta-icon{display:none;}
   .title-card:not(.locked) .lock-icon{display:none;}
   .sun-icon, .mission-icon{width:66px; height:66px;}
-  .title-cards.has-three .title-card{min-height:150px; padding:12px 10px;}
-  .title-cards.has-three .title-card:not(.half){height:150px;}
+  .title-cards.has-three .title-card{min-height:var(--title-card-h); padding:clamp(9px, 1.45vh, 12px) 10px;}
+  .title-cards.has-three .title-card:not(.half){height:var(--title-card-h);}
   .title-cards.has-three .title-card h3{font-size:12px;}
   .title-cards.has-three .daily-icon,
   .title-cards.has-three .ta-icon,
   .title-cards.has-three .sun-icon,
   .title-cards.has-three .mission-icon{width:46px; height:46px;}
   .title-cards.has-three .card-sub{font-size:10.5px;}
-  .title-card-stack{flex:1; display:flex; flex-direction:column; gap:8px; height:150px; min-width:0;}
+  .title-card-stack{flex:1; display:flex; flex-direction:column; gap:8px; height:var(--title-card-h); min-width:0;}
   .title-cards.has-three .title-card.half{
     flex:1 1 0; min-height:0; height:auto; padding:8px 6px; flex-direction:row; align-items:center; gap:6px;
     min-width:0; overflow:hidden;
@@ -234,28 +257,26 @@
   }
   .cosmii-wordmark{
     display:flex; align-items:center; justify-content:center;
-    margin:clamp(10px, 2.5vh, 18px) 0 6px;
+    margin:var(--title-gap) 0 var(--title-gap);
     padding:0 8px;
+    flex:0 0 auto;
   }
   .cosmii-wordmark-image{
-    width:min(86vw, 320px);
+    width:min(84vw, 340px);
     max-width:100%;
+    max-height:clamp(86px, 16vh, 142px);
     height:auto;
     display:block;
     object-fit:contain;
   }
-  .suntv-logo-lockup{
-    display:flex; align-items:center; justify-content:flex-start; gap:10px;
-    width:min(92vw, 360px); margin:-10px auto 0; min-height:96px;
-  }
-  .suntv-logo-lockup-image{
-    width:96px; height:96px; object-fit:contain; flex-shrink:0;
-  }
-  .suntv-logo-lockup-label{
-    color:#E0862F; background:#fff; border:2px solid rgba(224,134,47,.35);
-    border-radius:12px; box-shadow:0 3px 8px rgba(107,74,62,.14);
-    font-family:'Baloo 2'; font-size:15px; font-weight:800;
-    line-height:1.1; padding:7px 10px; white-space:nowrap;
+  .game-tagline{
+    width:min(92vw, 360px);
+    margin:calc(var(--title-gap) * -0.35) auto var(--title-gap);
+    color:var(--text-muted);
+    font-size:12px;
+    font-weight:900;
+    line-height:1.35;
+    text-align:center;
   }
   /* ---- Other games strip -------------------------------------------------
      A single-card-wide window that loops forever. The track holds a clone of
@@ -265,7 +286,8 @@
   ------------------------------------------------------------------------ */
   .promo-strip{
     width:100%; max-width:420px;
-    margin:18px auto 0;
+    margin:0 auto;
+    flex:0 0 auto;
     overflow:hidden;
     border-radius:24px;
     background:rgba(255,255,255,.92);
@@ -278,6 +300,7 @@
   }
   .promo-track{
     display:flex;
+    min-height:clamp(54px, 8.5vh, 72px);
     will-change:transform;
     touch-action:none;
   }
@@ -285,8 +308,8 @@
     flex:0 0 auto;
     display:flex;
     align-items:center;
-    gap:14px;
-    padding:16px 18px;
+    gap:clamp(10px, 1.6vh, 14px);
+    padding:clamp(9px, 1.75vh, 16px) 18px;
     text-decoration:none;
     color:var(--text);
     font-weight:700;
@@ -298,7 +321,7 @@
   .promo-card:hover{background:rgba(240,163,62,.08);}
   .promo-card:active{background:rgba(240,163,62,.14);}
   .promo-icon{
-    width:44px; height:44px; min-width:44px;
+    width:clamp(34px, 5.4vh, 44px); height:clamp(34px, 5.4vh, 44px); min-width:clamp(34px, 5.4vh, 44px);
     border-radius:11px;                     /* iOS icon corner ratio at 44px */
     overflow:hidden;
     display:flex; align-items:center; justify-content:center;
@@ -319,7 +342,7 @@
   .promo-chevron{margin-left:auto; color:var(--text-muted); font-size:18px; flex-shrink:0;}
   .promo-dots{
     display:flex; justify-content:center; gap:5px;
-    padding:0 0 9px;
+    padding:0 0 clamp(5px, 1vh, 9px);
   }
   .promo-dots span{
     width:5px; height:5px; border-radius:50%;
@@ -344,7 +367,7 @@
     user-select:none;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;
-    width:280px; max-width:70vw; padding:16px 18px; border:none; border-radius:24px;
+    width:280px; max-width:70vw; padding:clamp(12px, 1.9vh, 16px) 18px; border:none; border-radius:24px;
     flex-shrink:1;
     background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;
     font-family:'Baloo 2'; font-weight:700; font-size:19px; cursor:pointer;
@@ -354,7 +377,48 @@
   .start-row{
     display:flex; align-items:center; justify-content:center; gap:8px;
     width:100%; max-width:420px;
-    margin:clamp(20px, 4vh, 42px) 0 auto;    /* auto below centres the group */
+    margin:auto 0 var(--title-gap);
+    flex:0 0 auto;
+  }
+  @media (max-height: 740px){
+    #title-screen{
+      --title-card-h: 118px;
+      --title-gap: 6px;
+      --logo-to-collab-gap: 10px;
+      padding-top:calc(10px + env(safe-area-inset-top));
+      padding-bottom:calc(5px + env(safe-area-inset-bottom));
+    }
+    #title-screen .topbar-right{gap:6px;}
+    #title-screen .coin-chip{padding:5px 10px 5px 7px; font-size:14px;}
+    #title-screen .lang-toggle button{padding:5px 9px; font-size:11px;}
+    #title-screen .circle-btn{width:42px; height:42px;}
+    #title-screen .avatar-btn{width:48px; height:48px; border-width:3px;}
+    .title-cards{gap:10px;}
+    .title-cards.has-three .title-card h3{font-size:10.5px;}
+    .title-cards.has-three .card-sub{font-size:9.5px;}
+    .title-card-stack{gap:6px;}
+    .cosmii-wordmark-image{width:min(76vw, 286px); max-height:92px;}
+    .game-tagline{font-size:10.5px; margin-bottom:6px;}
+    .suntv-collab-banner{width:min(88vw, 320px); border-radius:14px; padding:6px 12px;}
+    .suntv-collab-icon{width:42px; height:42px;}
+    .suntv-collab-title{font-size:13px;}
+    .suntv-collab-period{font-size:8.5px;}
+    .suntv-copyright{font-size:8.5px;}
+    .level-btn{font-size:17px; padding:11px 16px;}
+    .promo-track{min-height:50px;}
+    .promo-card{padding:8px 16px; font-size:12px;}
+    .promo-icon{width:32px; height:32px; min-width:32px; border-radius:8px;}
+    .promo-sub{display:none;}
+    .promo-chevron{font-size:15px;}
+    .promo-dots{padding-bottom:4px;}
+  }
+  @media (min-height: 900px){
+    #title-screen{
+      --title-card-h: 158px;
+      --title-gap: 16px;
+      --logo-to-collab-gap: 26px;
+    }
+    .cosmii-wordmark-image{width:min(80vw, 380px); max-height:154px;}
   }
 
   /* ---------- Game screen ---------- */
@@ -943,8 +1007,6 @@
   .slider:before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;}
   .switch input:checked + .slider{background:#3F9A5C;}
   .switch input:checked + .slider:before{transform:translateX(20px);}
-  .feedback-btn{width:100%; padding:11px; border-radius:14px; border:2px solid var(--card-soft);
-    background:none; color:var(--text); font-weight:800; font-size:13px; margin:10px 0 0; cursor:pointer;}
   .toast{
     position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
     background:var(--text); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;
@@ -1102,24 +1164,6 @@
     0%,100%{box-shadow:0 0 30px 8px rgba(255,196,80,0.55), 0 10px 26px rgba(0,0,0,0.3);}
     50%{box-shadow:0 0 42px 14px rgba(255,196,80,0.8), 0 10px 26px rgba(0,0,0,0.3);}
   }
-  .suntv-bubble{
-    position:absolute; left:6%; top:-15%; z-index:2;
-    background:#fff; border-radius:16px; padding:9px 18px; font-weight:800; font-size:12.5px;
-    color:var(--text); box-shadow:0 6px 18px rgba(0,0,0,0.2);
-    opacity:0; transform:translate(0,6px); transition:opacity .25s ease, transform .25s ease;
-    white-space:nowrap; text-align:center; line-height:1.4;
-  }
-  /* The little tail is what actually reads as "someone is talking" rather
-     than just a floating card — sits directly above the character now, so
-     the tail points straight down to it instead of off to the side. */
-  .suntv-bubble::after{
-    content:''; position:absolute; left:14px; bottom:-9px;
-    width:0; height:0;
-    border-left:8px solid transparent;
-    border-right:3px solid transparent;
-    border-top:10px solid #fff;
-  }
-  .suntv-overlay.msg-in .suntv-bubble{opacity:1; transform:translate(0,0);}
   .suntv-poof{animation:suntvPoof .3s ease forwards;}
   /* The rotate event spins the whole board, Cosmii faces and all — cute for
      the board itself, but the little faces ended up lying on their side.
@@ -1180,10 +1224,10 @@
   <!-- TITLE -->
   <div class="screen" id="title-screen">
     <div class="title-topbar">
-      <div class="avatar-btn" id="btn-avatar">
+      <div class="avatar-btn" id="btn-avatar" title="プロフィール" aria-label="プロフィール">
         <img id="btn-avatar-img" src="assets/images/chara3_sub.PNG" alt="Cosmii Collection">
       </div>
-      <div class="coin-chip" id="coin-chip">
+      <div class="coin-chip" id="coin-chip" title="コスモコイン" aria-label="コスモコイン">
         <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
         <span id="coin-balance">0</span>
       </div>
@@ -1192,16 +1236,8 @@
           <button type="button" data-lang="ja">日本語</button>
           <button type="button" data-lang="en">EN</button>
         </div>
-        <button class="circle-btn" id="btn-shop" title="Shop">🛒</button>
-        <button class="circle-btn" id="btn-settings-title">⚙</button>
-      </div>
-    </div>
-
-    <div class="suntv-collab-banner" id="suntv-collab-banner" style="display:none;">
-      <img class="suntv-collab-icon" id="suntv-collab-icon" alt="サンテレビ おっさん">
-      <div class="suntv-collab-text">
-        <div class="suntv-collab-title" data-i18n="suntv_collab_title"></div>
-        <div class="suntv-collab-period" data-i18n="suntv_collab_period"></div>
+        <button class="circle-btn" id="btn-shop" title="ショップ" aria-label="ショップ">🛒</button>
+        <button class="circle-btn" id="btn-settings-title" title="設定" aria-label="設定">⚙</button>
       </div>
     </div>
 
@@ -1270,10 +1306,15 @@
     <div class="cosmii-wordmark">
       <img src="assets/images/CosmiiSudoku.PNG" alt="Cosmii Sudoku" class="cosmii-wordmark-image">
     </div>
-    <div class="suntv-logo-lockup" id="suntv-logo-lockup">
-      <img id="suntv-logo-lockup-image" alt="サンテレビ おっさん" class="suntv-logo-lockup-image">
-      <span class="suntv-logo-lockup-label">ゲームをイタズラするぞ！</span>
-    </div>
+    <div class="game-tagline" data-i18n="game_tagline"></div>
+    <button class="suntv-collab-banner" id="suntv-collab-banner" type="button" style="display:none;" aria-haspopup="dialog">
+      <img class="suntv-collab-icon" id="suntv-collab-icon" alt="おっ！サンコラボ">
+      <div class="suntv-collab-text">
+        <div class="suntv-collab-title" data-i18n="suntv_collab_title"></div>
+        <div class="suntv-collab-period" data-i18n="suntv_collab_period"></div>
+        <div class="suntv-copyright">© SUN-TV</div>
+      </div>
+    </button>
 
     <!-- Label is set by renderTitleScreen(), which needs the cleared count to
          choose between START and the next-stage wording; no data-i18n here or
@@ -1366,7 +1407,6 @@
       <div id="grid-wrap"></div>
       <div class="suntv-overlay" id="suntv-overlay">
         <div class="suntv-character" id="suntv-character"></div>
-        <div class="suntv-bubble" id="suntv-bubble"></div>
       </div>
     </div>
 
@@ -1532,6 +1572,20 @@
     </div>
   </div>
 
+  <!-- COLLAB INFO MODAL -->
+  <div class="modal-overlay" id="suntv-info-modal">
+    <div class="modal-card">
+      <img class="suntv-info-art" src="assets/images/ohsun_07.png" alt="おっ！サンコラボ">
+      <h2 class="display" data-i18n="suntv_info_title"></h2>
+      <div class="suntv-info-steps">
+        <div class="suntv-info-step"><span class="suntv-info-step-num">1</span><span data-i18n="suntv_info_step1"></span></div>
+        <div class="suntv-info-step"><span class="suntv-info-step-num">2</span><span data-i18n="suntv_info_step2"></span></div>
+      </div>
+      <p class="suntv-info-note" data-i18n="suntv_info_note"></p>
+      <button class="modal-btn primary" id="btn-suntv-info-close" data-i18n="confirm"></button>
+    </div>
+  </div>
+
   <!-- SETTINGS MODAL -->
   <div class="modal-overlay" id="profile-modal">
     <div class="modal-card profile-card-wrap">
@@ -1580,7 +1634,6 @@
         <span class="trow-label" data-i18n="opt_suntv"></span>
         <label class="switch"><input type="checkbox" id="toggle-suntv" checked><span class="slider"></span></label>
       </div>
-      <button class="feedback-btn" id="btn-feedback" data-i18n="feedback"></button>
       <button class="modal-btn primary" id="btn-restart" data-i18n="restart"></button>
     </div>
   </div>
@@ -2378,18 +2431,69 @@ async function saveJSON(key, obj){
 }
 
 /* ---------------- Sound / haptics ---------------- */
-let audioCtx=null;
+const BGM_VOLUME = 0.20;
+const SFX_VOLUME = {
+  tap: 0.36,
+  blocked: 0.38,
+  wrong: 0.34,
+  place: 0.42,
+  placeQuick: 0.36,
+  event: 0.32,
+  poof: 0.34,
+  reveal: 0.42,
+  revealHigh: 0.40,
+  button: 0.34,
+  successLow: 0.44,
+  successHigh: 0.44,
+};
+const sfx = {
+  tap: new Audio('assets/audio/sfx_tap.wav'),
+  blocked: new Audio('assets/audio/sfx_blocked.wav'),
+  wrong: new Audio('assets/audio/sfx_wrong.wav'),
+  place: new Audio('assets/audio/sfx_place.wav'),
+  placeQuick: new Audio('assets/audio/sfx_place_quick.wav'),
+  event: new Audio('assets/audio/sfx_event.wav'),
+  poof: new Audio('assets/audio/sfx_poof.wav'),
+  reveal: new Audio('assets/audio/sfx_reveal.wav'),
+  revealHigh: new Audio('assets/audio/sfx_reveal_high.wav'),
+  button: new Audio('assets/audio/sfx_button.wav'),
+  successLow: new Audio('assets/audio/sfx_success_low.wav'),
+  successHigh: new Audio('assets/audio/sfx_success_high.wav'),
+};
+let audioUnlocked = false;
+Object.keys(sfx).forEach(key=>{
+  sfx[key].preload = 'auto';
+  sfx[key].volume = SFX_VOLUME[key] || 0.4;
+});
+function unlockAudio(){
+  audioUnlocked = true;
+}
+function tryPlayAudio(audio){
+  const promise = audio.play();
+  if(promise && typeof promise.catch === 'function') promise.catch(()=>{});
+}
+function playSfx(audio){
+  if(!settings.sound || document.hidden || !audioUnlocked) return;
+  audio.pause();
+  audio.currentTime = 0;
+  tryPlayAudio(audio);
+}
+function sfxForBeep(freq, dur, type){
+  if(freq <= 220) return sfx.wrong;
+  if(freq <= 340) return sfx.blocked;
+  if(freq <= 470) return sfx.tap;
+  if(freq <= 560) return sfx.poof;
+  if(freq >= 600 && freq <= 640 && type === 'sine') return sfx.placeQuick;
+  if(freq <= 640) return sfx.button;
+  if(freq <= 690) return sfx.place;
+  if(freq <= 780) return sfx.reveal;
+  if(freq <= 850) return sfx.revealHigh;
+  if(freq <= 980 && type === 'square') return sfx.event;
+  if(freq <= 980) return sfx.successLow;
+  return sfx.successHigh;
+}
 function beep(freq, dur, type){
-  if(!settings.sound || document.hidden) return;
-  try{
-    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-    o.type = type||'sine'; o.frequency.value = freq;
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
-    o.start(); o.stop(audioCtx.currentTime+dur);
-  }catch(e){}
+  playSfx(sfxForBeep(freq, dur, type));
 }
 /* Haptics. `navigator.vibrate` does not exist in WKWebView at all, so on iOS —
    the platform this ships on — the vibration setting used to be a no-op with a
@@ -2439,7 +2543,12 @@ const GA_BUILD      = '1.01';          // keep in step with MARKETING_VERSION
 // small character set, so both lists are fixed up front and every call below
 // draws from them.
 const GA_CURRENCY   = 'CosmoCoin';
-const GA_ITEM_TYPES = ['StageClear','Streak','Record','Avatar','Frame'];
+// Every itemType passed to addResourceEvent must appear here: the SDK checks
+// membership in validateResourceEvent() and silently drops the whole event
+// otherwise. 'Place' (shop) and 'Mission' were missing, so those two coin
+// flows never reached the dashboard at all. 'Streak' is gone with the streak
+// bonus it belonged to.
+const GA_ITEM_TYPES = ['StageClear','Record','Avatar','Frame','Place','Mission'];
 
 let gaReady = false;
 function ga(){
@@ -2514,12 +2623,13 @@ const AREA_EN = 'star zone';
 const I18N = {
   ja:{
     splash_start:'タップしてはじめる',
+    game_tagline:'各行・列・星域にCosmiiを1体ずつ置こう',
     daily_title:'Black Hole<br>Cosmii',
-    daily_play:'プレイする',
+    daily_play:'星域に2体置く特別ルール',
     daily_cleared:'クリア済み',
     daily_locked:lv=>`Lv.${lv} で解放`,
     timeattack_title:'Time<br>Attack',
-    timeattack_play:'プレイする',
+    timeattack_play:'10問のタイムに挑戦',
     ta_rule_note:lv=>`最初の7問は通常ルール、残り3問はBlack Hole Cosmii（Hard Mode）`,
     ta_intro_title:'⏱ Time Attack',
     ta_intro_puzzles:'全10問の連続タイムアタック！',
@@ -2541,7 +2651,7 @@ const I18N = {
     mission_button:'ミッション',
     ranking_title:'🏆 ランキング',
     ranking_card_title:'ランキング',
-    ranking_sub:'記録を見る',
+    ranking_sub:'自分の記録を見る',
     ranking_tab_ta:'Time Attack',
     ranking_tab_normal:'通常ステージ',
     ranking_local_note:'※現在は端末内のみの記録です。他のプレイヤーとのランキングは今後対応予定です。',
@@ -2615,16 +2725,19 @@ const I18N = {
     opt_sound:'🔊 サウンド',
     opt_vibrate:'📳 バイブレーション',
     opt_pattern:'🔷 パターンモード',
-    opt_suntv:'📺 サンテレビイベント',
-    suntv_collab_title:'サンテレビコラボ実施中！',
+    opt_suntv:'おっ！サンコラボ演出',
+    suntv_collab_title:'おっ！サンコラボ実施中！',
     suntv_collab_period:'期間限定：9月21日〜10月31日まで',
-    suntv_msg_rotate:'おっ！盤面が回ってもうた！',
-    suntv_msg_clearx:'おっ！バツ印、消しといたで！',
-    suntv_msg_reveal2:'おっ！2体置いといたで！',
-    suntv_msg_clearall:'おっ！全部やっといたで！',
+    suntv_info_title:'おっ！サンコラボ',
+    suntv_info_step1:'ステージを進めると、おっ！サンが出てくることがあるよ。',
+    suntv_info_step2:'出てきたら、盤面を回す・×を消す・Cosmiiを置くことがあるよ。',
+    suntv_info_note:'Hard Mode、Time Attack、チュートリアル中は出ません。設定でON/OFFできます。',
+    suntv_msg_rotate:'',
+    suntv_msg_clearx:'',
+    suntv_msg_reveal2:'',
+    suntv_msg_clearall:'',
     suntv_tap_hint:'タップしてつづける',
-    feedback:'フィードバック',
-    restart:'やり直す',
+    restart:'この問題を最初から',
     coin_name:'コスモコイン',
     coin_total:v=>`所持 ${v}`,
     toast_coins:v=>`コスモコイン：${v} 枚`,
@@ -2638,7 +2751,6 @@ const I18N = {
     toast_collection:'Cosmiiコレクション（準備中）',
     toast_streak:d=>`現在のストリーク：${d}日`,
     toast_daily_locked:lv=>`Lv.${lv} で解放されます`,
-    toast_feedback:'ご意見ありがとうございます！',
     toast_genfail:'パズルを作れませんでした。もう一度お試しください',
     coach_next:'次へ',
     coach_start:'はじめる！',
@@ -2663,12 +2775,13 @@ const I18N = {
   },
   en:{
     splash_start:'Tap to start',
+    game_tagline:'Place one Cosmii in every row, column, and star zone',
     daily_title:'Black Hole<br>Cosmii',
-    daily_play:'Play',
+    daily_play:'2 Cosmii per star zone',
     daily_cleared:'Cleared',
     daily_locked:lv=>`Unlocks at Lv.${lv}`,
     timeattack_title:'Time<br>Attack',
-    timeattack_play:'Play',
+    timeattack_play:'Clear 10 puzzles fast',
     ta_rule_note:lv=>`Puzzles 1-7 use normal rules, 8-10 use Black Hole Cosmii (Hard Mode)`,
     ta_intro_title:'⏱ Time Attack',
     ta_intro_puzzles:'10 puzzles back to back, one running clock!',
@@ -2690,7 +2803,7 @@ const I18N = {
     mission_button:'Mission',
     ranking_title:'🏆 Ranking',
     ranking_card_title:'Ranking',
-    ranking_sub:'View records',
+    ranking_sub:'View your records',
     ranking_tab_ta:'Time Attack',
     ranking_tab_normal:'Normal Stages',
     ranking_local_note:'This is a local-only record for now. Ranking against other players is coming later.',
@@ -2764,16 +2877,19 @@ const I18N = {
     opt_sound:'🔊 Sound',
     opt_vibrate:'📳 Vibration',
     opt_pattern:'🔷 Pattern mode',
-    opt_suntv:'📺 SunTV Event',
-    suntv_collab_title:'SunTV Collaboration!',
+    opt_suntv:'Oh! Sun Collab Event',
+    suntv_collab_title:'Oh! Sun Collaboration!',
     suntv_collab_period:'Limited time: Sep 21 – Oct 31',
-    suntv_msg_rotate:'Whoa! The board just spun around!',
-    suntv_msg_clearx:'Cleared all your X marks for you!',
-    suntv_msg_reveal2:'Placed 2 Cosmii for you!',
-    suntv_msg_clearall:'Finished the whole board for you!',
+    suntv_info_title:'Oh! Sun Collaboration',
+    suntv_info_step1:'As you clear stages, Oh! Sun may appear.',
+    suntv_info_step2:'When Oh! Sun appears, he may spin the board, clear X marks, or place Cosmii.',
+    suntv_info_note:'Not available in Hard Mode, Time Attack, or tutorials. You can turn it on or off in Settings.',
+    suntv_msg_rotate:'',
+    suntv_msg_clearx:'',
+    suntv_msg_reveal2:'',
+    suntv_msg_clearall:'',
     suntv_tap_hint:'Tap to continue',
-    feedback:'Feedback',
-    restart:'Restart board',
+    restart:'Start this puzzle over',
     coin_name:'Cosmo Coin',
     coin_total:v=>`Total ${v}`,
     toast_coins:v=>`Cosmo Coins: ${v}`,
@@ -2787,7 +2903,6 @@ const I18N = {
     toast_collection:'Cosmii collection (coming soon)',
     toast_streak:d=>`Current streak: ${d} day${d===1?'':'s'}`,
     toast_daily_locked:lv=>`Unlocks at Level ${lv}`,
-    toast_feedback:'Thanks for the feedback!',
     toast_genfail:'Could not build a puzzle. Please try again',
     coach_next:'Next',
     coach_start:'Start!',
@@ -2950,6 +3065,7 @@ const els = {
   clearModal: document.getElementById('clear-modal'),
   overModal: document.getElementById('over-modal'),
   settingsModal: document.getElementById('settings-modal'),
+  restartBtn: document.getElementById('btn-restart'),
   clearTime: document.getElementById('clear-time'),
   statLevel: document.getElementById('stat-level'),
   statScore: document.getElementById('stat-score'),
@@ -2968,21 +3084,21 @@ function updateBgmPlayback(){
   const playableScreen =
     document.getElementById('title-screen').classList.contains('active') ||
     document.getElementById('game-screen').classList.contains('active');
-  if(settings.sound && appVisible && playableScreen){
-    bgm.volume = 0.35;
-    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
+  bgm.volume = BGM_VOLUME;
+  if(settings.sound && appVisible && playableScreen && audioUnlocked){
+    tryPlayAudio(bgm);
   } else {
     bgm.pause();
   }
 }
 function pauseAllAudio(){
   if(bgm) bgm.pause();
-  if(audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(()=>{});
+  Object.values(sfx).forEach(audio=>{
+    audio.pause();
+    audio.currentTime = 0;
+  });
 }
 function resumeAudioIfPlayable(){
-  if(audioCtx && audioCtx.state === 'suspended' && settings.sound && !document.hidden){
-    audioCtx.resume().catch(()=>{});
-  }
   updateBgmPlayback();
 }
 
@@ -2991,6 +3107,11 @@ function showScreen(el){
   el.classList.add('active');
   if(el.id === 'title-screen'){ resetPromoScroll(); }
   updateBgmPlayback();
+}
+function openSettings({showRestart=false}={}){
+  els.restartBtn.hidden = !showRestart;
+  els.settingsModal.classList.add('active');
+  if(showRestart) suspendTimer();
 }
 function fmtTime(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function showToast(msg){
@@ -3447,7 +3568,6 @@ const SUN_TV_COLLAB = {
   enabled: SUN_TV_COLLAB_ENABLED,
   assets: {
     titleBanner: 'assets/images/ohsun_07.png',
-    titleLockup: 'assets/images/ohsun_13.png',
     rotateBoard: 'assets/images/ohsun_12.png',
     clearCrossMarks: 'assets/images/ohsun_11.png',
     revealTwoCosmii: 'assets/images/ohsun_10.png',
@@ -3498,6 +3618,26 @@ function suntvPickEventType(){
   for(const e of pool){ if(roll < e.weight) return e.type; roll -= e.weight; }
   return pool[pool.length-1].type;
 }
+/* An event is a long chain of awaits — two of them wait on a player tap, which
+   may simply never come because the player left. Each run therefore claims a
+   token and the board it belongs to, and re-checks both after every await, so
+   a chain that outlived its board unwinds instead of applying its effect to
+   whatever is on screen by then. */
+let suntvRunId = 0;
+let suntvCancelWait = null;
+// Invalidates any in-flight event and puts the screen back the way it was.
+function suntvCancelEvent(){
+  suntvRunId++;
+  if(suntvCancelWait){ const cancel = suntvCancelWait; suntvCancelWait = null; cancel(); }
+  const overlay = document.getElementById('suntv-overlay');
+  if(overlay){
+    overlay.classList.remove('char-rise','char-set','msg-in','awaiting-tap');
+    overlay.style.pointerEvents = 'none';
+  }
+  const dim = document.getElementById('suntv-fullscreen-dim');
+  if(dim) dim.classList.remove('on');
+  suntvClearCharacter();
+}
 function suntvClearCharacter(){
   const character = document.getElementById('suntv-character');
   character.className = 'suntv-character';
@@ -3514,7 +3654,7 @@ function suntvSetCharacter(type){
   if(paths.length > 1) character.classList.add('suntv-gallery');
   for(const path of paths){
     const image = document.createElement('img');
-    image.alt = 'サンテレビ おっ！サン';
+    image.alt = 'おっ！サンコラボ';
     image.decoding = 'async';
     image.addEventListener('error', ()=>image.remove(), {once:true});
     image.src = path;
@@ -3539,21 +3679,22 @@ function suntvWaitForTap(){
   const screen = document.getElementById('game-screen');
   overlay.classList.add('awaiting-tap');
   return new Promise(resolve=>{
-    const handler = ()=>{
+    const finish = ()=>{
+      screen.removeEventListener('pointerdown', handler);
+      if(suntvCancelWait === finish) suntvCancelWait = null;
       overlay.classList.remove('awaiting-tap');
       resolve();
     };
+    const handler = ()=>finish();
     // Listens on the whole screen, not just the character/board area — the
     // dim now covers everything, so "tap anywhere" should too, not just a
     // tap that happens to land on the icon itself.
-    screen.addEventListener('pointerdown', handler, {once:true});
+    // Not {once:true}: the listener has to be removable from the outside too,
+    // or leaving mid-event strands it on the screen, where the next board's
+    // first tap would resume an event that no longer belongs to anything.
+    screen.addEventListener('pointerdown', handler);
+    suntvCancelWait = finish;
   });
-}
-function suntvShowMessage(key){
-  const overlay = document.getElementById('suntv-overlay');
-  document.getElementById('suntv-bubble').textContent = t(key);
-  overlay.classList.add('msg-in');
-  return new Promise(resolve=>setTimeout(resolve, 400));
 }
 function suntvHideCharacter(){
   const overlay = document.getElementById('suntv-overlay');
@@ -3662,21 +3803,29 @@ async function suntvTriggerEvent(){
   const type = suntvPickEventType();
   suntvSetCharacter(type);
 
+  // Claim this run. If either changes underneath us the board we were acting
+  // on is gone, and the rest of the chain must not touch whatever replaced it.
+  const myRun = ++suntvRunId;
+  const myState = state;
+  const lost = ()=> suntvRunId !== myRun || state !== myState;
+  const bail = ()=>{ myState.suntvBusy = false; return true; };
+
   await suntvShowCharacter();   // rises from the bottom, dims the screen, stops mid-way — automatic
+  if(lost()) return bail();
   await suntvWaitForTap();      // → tap to continue
+  if(lost()) return bail();
 
   gaDesign('SuntvEvent:' + type);
-  let msgKey = 'suntv_msg_rotate';
-  if(type==='rotate'){ msgKey='suntv_msg_rotate'; await suntvRotateBoard(); }
-  else if(type==='clearx'){ msgKey='suntv_msg_clearx'; await suntvClearXMarks(); }
-  else if(type==='reveal2'){ msgKey='suntv_msg_reveal2'; await suntvReveal2(); }
-  else if(type==='clearall'){ msgKey='suntv_msg_clearall'; await suntvClearAllReveal(); }
+  if(type==='rotate'){ await suntvRotateBoard(); }
+  else if(type==='clearx'){ await suntvClearXMarks(); }
+  else if(type==='reveal2'){ await suntvReveal2(); }
+  else if(type==='clearall'){ await suntvClearAllReveal(); }
+  if(lost()) return bail();
 
   await suntvWaitForTap();      // → tap to continue
-  await suntvShowMessage(msgKey);   // the closing line
-
-  await suntvWaitForTap();      // → tap to continue
+  if(lost()) return bail();
   await suntvHideCharacter();   // sunset, slowly, screen brightens back up once it's gone
+  if(lost()) return bail();
 
   state.suntvBusy = false;
   checkWin();   // reveal2 / clearall may have just completed the board
@@ -3686,10 +3835,10 @@ async function suntvTriggerEvent(){
 const HARD_UNLOCK_LEVEL = 10;
 // Campaign switch: set this to false after the Sun TV collaboration ends.
 // This removes both title-screen collaboration notices in one place.
-// TEMP FOR TESTING: forces Black Hole Cosmii open regardless of level so it can
-// be tried out right away. Set this back to false before shipping so the
-// Lv.10 gate (HARD_UNLOCK_LEVEL above) applies again.
-const HARD_MODE_FORCE_UNLOCK_FOR_TESTING = true;
+// Development switch: forces Black Hole Cosmii open regardless of level so it
+// can be tried out without grinding to Lv.10 first. Must stay false in any
+// build that ships — with it on, the HARD_UNLOCK_LEVEL gate does nothing.
+const HARD_MODE_FORCE_UNLOCK_FOR_TESTING = false;
 const HARD_N = 6;   // fixed board size for Time Attack's hard puzzles — kept constant there so the three hard rounds are comparable across runs
 // Standalone Black Hole Cosmii isn't tied to level progression, so its size
 // varies instead of being fixed. 8+ was tested and throws away uniqueness
@@ -3782,17 +3931,12 @@ async function buyShopItem(kind, qty){
 // caused it to look "missing" while testing ahead of the campaign start).
 function renderSuntvCollabBanner(){
   const banner = document.getElementById('suntv-collab-banner');
-  const lockup = document.getElementById('suntv-logo-lockup');
   const bannerIcon = document.getElementById('suntv-collab-icon');
-  const lockupImage = document.getElementById('suntv-logo-lockup-image');
   if(banner) banner.style.display = SUN_TV_COLLAB.enabled ? 'flex' : 'none';
-  if(lockup) lockup.style.display = SUN_TV_COLLAB.enabled ? 'flex' : 'none';
   if(SUN_TV_COLLAB.enabled){
     if(bannerIcon) bannerIcon.src = SUN_TV_COLLAB.assets.titleBanner;
-    if(lockupImage) lockupImage.src = SUN_TV_COLLAB.assets.titleLockup;
   } else {
     if(bannerIcon) bannerIcon.removeAttribute('src');
-    if(lockupImage) lockupImage.removeAttribute('src');
   }
 }
 function renderTitleScreen(){
@@ -4082,8 +4226,17 @@ async function startTimeAttackPuzzle(){
   updateTAProgressUI();
   updateTAResourceUI();
 }
-async function onWinTimeAttack(){
+// Move the clock that's currently running on `state` into the run total and
+// zero it, so the same seconds can never be banked twice. Called both on a
+// win and on a failed attempt — a Time Attack result has to account for every
+// second the player spent, not just the seconds on their successful try.
+function taBankElapsed(){
+  if(!taRun || !state) return;
   taRun.totalTime += state.elapsed;
+  state.elapsed = 0;
+}
+async function onWinTimeAttack(){
+  taBankElapsed();
   taRun.index += 1;
   updateTAProgressUI();
   if(taRun.index < TA_TOTAL){
@@ -4500,6 +4653,10 @@ async function startGame(config, seed){
       for(let i=rows.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
       prefillRows = rows.slice(0, Math.min(count, puzzle.n-1));
     }
+    // Any サンテレビ event still waiting on a tap belongs to the board we are
+    // about to replace. Cut it loose here as well as on the back button, so
+    // "next puzzle" and a Time Attack hand-off can't leave one running.
+    suntvCancelEvent();
     state = {
       n: puzzle.n, solution: puzzle.solution, regionOf: puzzle.regionOf,
       colorOf: assignColors(puzzle.n, puzzle.regionOf, rng),
@@ -4876,6 +5033,7 @@ function maybeStartCoach(){
 
 /* ---------------- Event bindings ---------------- */
 document.getElementById('btn-splash-start').addEventListener('click', () => {
+  unlockAudio();
   // Render before revealing: init() is async, so a fast tap can reach the
   // title before the stored progress has been read and the play button
   // labelled. Every other route into the title already does this.
@@ -4883,6 +5041,16 @@ document.getElementById('btn-splash-start').addEventListener('click', () => {
   showScreen(els.title);
 });
 const bgm = document.getElementById('bgm');
+if(bgm){
+  bgm.volume = BGM_VOLUME;
+  bgm.preload = 'auto';
+}
+function unlockAudioFromUserGesture(){
+  unlockAudio();
+  updateBgmPlayback();
+}
+window.addEventListener('pointerdown', unlockAudioFromUserGesture, {capture:true});
+window.addEventListener('keydown', unlockAudioFromUserGesture, {capture:true});
 
 const btnPlay = document.getElementById('btn-play');
 let startPlayPending = false;
@@ -5087,6 +5255,13 @@ document.getElementById('card-timeattack').addEventListener('click', ()=>{
 document.getElementById('coin-chip').addEventListener('click', ()=>{
   showToast(t('toast_coins', progress.coins));
 });
+document.getElementById('suntv-collab-banner').addEventListener('click', ()=>{
+  document.getElementById('suntv-info-modal').classList.add('active');
+  gaDesign('CollabInfo:Open');
+});
+document.getElementById('btn-suntv-info-close').addEventListener('click', ()=>{
+  document.getElementById('suntv-info-modal').classList.remove('active');
+});
 document.getElementById('btn-avatar').addEventListener('click', ()=>{ openProfileModal(); });
 document.getElementById('btn-name-edit').addEventListener('click', ()=>{
   const input = document.getElementById('profile-name');
@@ -5109,7 +5284,7 @@ document.getElementById('btn-profile-confirm').addEventListener('click', ()=>{
   document.getElementById('profile-modal').classList.remove('active');
   showToast(t('toast_profile_saved'));
 });
-document.getElementById('btn-settings-title').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
+document.getElementById('btn-settings-title').addEventListener('click', ()=>{ openSettings({showRestart:false}); });
 document.getElementById('btn-shop').addEventListener('click', ()=>{
   renderShop();
   document.getElementById('shop-modal').classList.add('active');
@@ -5206,12 +5381,7 @@ document.getElementById('btn-back').addEventListener('click', ()=>{
     }
     state.suntvFired = false;
     state.suntvBusy = false;
-    const overlay = document.getElementById('suntv-overlay');
-    overlay.classList.remove('char-rise','char-set','msg-in','awaiting-tap');
-    overlay.style.pointerEvents = 'none';
-    const dim = document.getElementById('suntv-fullscreen-dim');
-    if(dim) dim.classList.remove('on');
-    suntvClearCharacter();
+    suntvCancelEvent();
   }
   taRun = null;
   updateTAProgressUI();
@@ -5473,24 +5643,57 @@ document.getElementById('btn-place-mode').addEventListener('click', ()=>{
 });
 // Sharing a clear is an easy, optimistic reward — no server round trip to
 // confirm the share actually happened, just crediting it the moment the
-// share sheet opens. Capped at 10 so it can't be farmed indefinitely.
-function suntvShareURL(kind){
+// share sheet opens.
+//
+// PLACE_BANK_MAX only caps the stockpile, so on its own it stopped nothing:
+// spend a placement and you could share for another, on every clear screen,
+// through either of the two share buttons — an endless supply of "solve one
+// row for free". The lifetime counter below is the cap that actually bites.
+const SHARE_APP_URL = 'https://apps.apple.com/jp/app/id6797260932';
+const SHARE_REWARD_LIFETIME_MAX = 10;
+function suntvShareData(){
   const stageNum = progress.cleared;
-  const text = encodeURIComponent(`Stage:${stageNum}達成！一緒にやりましょう！\n\nCosmii Sudoku`);
+  return {
+    title:'Cosmii Sudoku',
+    text:`Stage:${stageNum}達成！一緒にやりましょう！\n\nCosmii Sudoku`,
+    url:SHARE_APP_URL
+  };
+}
+function suntvShareURL(kind){
+  const data = suntvShareData();
+  const text = encodeURIComponent(data.text);
   // Name-slug form (…/cosmii-sudoku-論理パズル/id…) breaks when LINE/X auto-link
   // the tweet/message text: their link-detection regexes don't reliably treat
   // percent-encoded non-ASCII path segments as part of the URL, so the link
   // gets cut off mid-path. The ID-only form is the same, permanent App Store
   // link without any non-ASCII characters to trip that up.
-  const url = encodeURIComponent('https://apps.apple.com/jp/app/id6797260932');
+  const url = encodeURIComponent(data.url);
   if(kind==='line') return `https://social-plugins.line.me/lineit/share?url=${url}&text=${text}`;
   return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
 }
+async function shareClear(kind){
+  const data = suntvShareData();
+  if(navigator.share && (!navigator.canShare || navigator.canShare(data))){
+    try{
+      const sharePromise = navigator.share(data);
+      grantShareReward();
+      await sharePromise.catch(()=>{});
+      return;
+    }catch(e){}
+  }
+  openExternal(suntvShareURL(kind));
+  grantShareReward();
+}
 async function grantShareReward(){
+  if((progress.shareRewards||0) >= SHARE_REWARD_LIFETIME_MAX){
+    showToast(t('toast_share_max'));
+    return;
+  }
   if((progress.placeBank||0) >= PLACE_BANK_MAX){
     showToast(t('toast_share_max'));
     return;
   }
+  progress.shareRewards = (progress.shareRewards||0) + 1;
   progress.placeBank = Math.min(PLACE_BANK_MAX, (progress.placeBank||0) + 1);
   await saveJSON('progress', progress);
   showToast(t('toast_share_reward', progress.placeBank));
@@ -5498,12 +5701,10 @@ async function grantShareReward(){
   renderPlaceMode();
 }
 document.getElementById('btn-share-line').addEventListener('click', ()=>{
-  openExternal(suntvShareURL('line'));
-  grantShareReward();
+  shareClear('line');
 });
 document.getElementById('btn-share-x').addEventListener('click', ()=>{
-  openExternal(suntvShareURL('x'));
-  grantShareReward();
+  shareClear('x');
 });
 document.getElementById('btn-next').addEventListener('click', ()=>{
   els.clearModal.classList.remove('active');
@@ -5522,14 +5723,22 @@ document.getElementById('btn-retry').addEventListener('click', ()=>{
   els.overModal.classList.remove('active');
   gaDesign('Retry:AfterFail');
   if(state && state.timeAttack && taRun){
+    // The time already sunk into the attempt that just failed still counts.
+    // Without this, losing on purpose reset the clock for that puzzle, so a
+    // player who stalled for five minutes could dump those minutes and post a
+    // total far below the time they actually took.
+    taBankElapsed();
     // A retry inside Time Attack shouldn't hand back the exact board that
     // just beat you — generate a fresh puzzle for the same slot instead.
     isHardMode = taRun.index >= TA_NORMAL_HALF;
+    // startGame() fires its own gaStageStart() once the new board exists;
+    // calling it here as well reported a Start against the board that had
+    // just been abandoned.
     startGame(taConfigForIndex(taRun.index));
   } else {
     resetBoard();
+    gaStageStart();
   }
-  gaStageStart();
 });
 document.getElementById('btn-menu-2').addEventListener('click', ()=>{
   els.overModal.classList.remove('active');
@@ -5553,7 +5762,7 @@ document.getElementById('game-screen').addEventListener('click', (e)=>{
     e.stopPropagation(); e.preventDefault();
   }
 }, true);
-document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); suspendTimer(); });
+document.getElementById('btn-settings').addEventListener('click', ()=>{ openSettings({showRestart:true}); });
 document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); resumeTimerIfPlayable(); });
 document.getElementById('btn-restart').addEventListener('click', ()=>{
   els.settingsModal.classList.remove('active');
@@ -5562,7 +5771,6 @@ document.getElementById('btn-restart').addEventListener('click', ()=>{
   resetBoard();
   gaStageStart();
 });
-document.getElementById('btn-feedback').addEventListener('click', ()=>{ showToast(t('toast_feedback')); });
 document.querySelectorAll('#lang-toggle button').forEach(b=>{
   b.addEventListener('click', ()=>{
     if(lang === b.dataset.lang) return;
@@ -5595,6 +5803,7 @@ els.coachSkip.addEventListener('click', endCoach);
 document.getElementById('toggle-sound').addEventListener('change', e=>{
   settings.sound=e.target.checked;
   saveJSON('settings', settings);
+  if(!settings.sound) pauseAllAudio();
   updateBgmPlayback();
 });
 document.getElementById('toggle-vibrate').addEventListener('change', e=>{ settings.vibrate=e.target.checked; saveJSON('settings', settings); });
@@ -5615,13 +5824,17 @@ document.getElementById('toggle-suntv').addEventListener('change', e=>{
   // shapes rather than trusting whatever comes back.
   bestTimes = await loadJSON('best-times', {});
   if(!bestTimes || typeof bestTimes !== 'object') bestTimes = {};
-  progress = {...{score:0, cleared:0, coins:0, hintBank:0, placeBank:0}, ...(await loadJSON('progress', {}))};
+  progress = {...{score:0, cleared:0, coins:0, hintBank:0, placeBank:0, shareRewards:0},
+              ...(await loadJSON('progress', {}))};
   if(typeof progress.score !== 'number') progress.score = 0;
   if(typeof progress.cleared !== 'number') progress.cleared = 0;
   // Saves written before coins existed have no such field.
   if(typeof progress.coins !== 'number') progress.coins = 0;
   if(typeof progress.hintBank !== 'number') progress.hintBank = 0;
   if(typeof progress.placeBank !== 'number') progress.placeBank = 0;
+  // Saves from before the share cap existed have no counter; starting them at
+  // zero is the intended grandfathering — they keep what they already earned.
+  if(typeof progress.shareRewards !== 'number') progress.shareRewards = 0;
   profileState = await loadProfileState();
   // Saves made before frames and names existed lack those fields.
   profileState = {...DEFAULT_PROFILE, ...profileState};

@@ -71,8 +71,11 @@
   /* ---------- Title screen ---------- */
   #title-screen{
     justify-content:flex-start;
-    padding-top:calc(54px + env(safe-area-inset-top));
-    padding-bottom:calc(24px + env(safe-area-inset-bottom));
+    --title-card-h: clamp(124px, 17.8vh, 150px);
+    --title-gap: clamp(8px, 1.45vh, 14px);
+    --logo-to-collab-gap: clamp(14px, 2.4vh, 24px);
+    padding-top:calc(clamp(14px, 3.2vh, 38px) + env(safe-area-inset-top));
+    padding-bottom:calc(clamp(6px, 1.4vh, 12px) + env(safe-area-inset-bottom));
     background-image:
       radial-gradient(circle at 12% 8%, rgba(107,74,62,0.05) 0 34px, transparent 35px),
       radial-gradient(circle at 60% 4%, rgba(107,74,62,0.05) 0 30px, transparent 31px),
@@ -89,6 +92,7 @@
     box-shadow:0 2px 0 rgba(107,74,62,0.08);
   }
   .coin-chip.bump{animation:coinBump .45s ease;}
+  .game-coin-chip.bump{animation:coinBump .45s ease;}
   @keyframes coinBump{
     0%,100%{transform:scale(1);} 35%{transform:scale(1.16);}
   }
@@ -112,6 +116,20 @@
     font-size:11px; font-weight:800; color:var(--text-muted);
   }
   .coin-breakdown .brow .amt{color:#B07A17;}
+  .share-row{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    margin:14px 0 2px;
+  }
+  .share-label{font-size:11px; font-weight:800; color:var(--text-muted);}
+  .share-buttons{display:flex; gap:8px;}
+  .share-btn{
+    width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .share-btn svg{width:18px; height:18px;}
+  .share-btn.line{background:#06C755;}
+  .share-btn.xshare{background:#000;}
+  .share-btn:active{transform:scale(.92);}
   .coin-breakdown .note{font-size:11px; font-weight:800; color:var(--text-muted); text-align:center;}
   .modal-overlay.active .coin-reward .coin-gain{
     display:inline-block; animation:coinPop .5s .15s backwards cubic-bezier(.34,1.56,.64,1);
@@ -132,11 +150,12 @@
   .lang-toggle button.on{background:var(--accent); color:#fff;}
   .title-topbar{
     width:100%; max-width:420px; display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:24px;
-    padding-top:10px;
+    margin-bottom:var(--title-gap);
+    padding-top:0;
+    flex:0 0 auto;
   }
   .avatar-btn{
-    width:60px; height:60px; border-radius:18px;
+    width:clamp(48px, 7vh, 60px); height:clamp(48px, 7vh, 60px); border-radius:18px;
     border:4px solid var(--accent);            /* recoloured by the chosen frame */
     background:#fff; overflow:hidden;
     display:flex; align-items:center; justify-content:center;
@@ -148,9 +167,43 @@
      to the edge of their canvas, and cover shaves them off. The box size comes
      per character from CHARACTER_FIT so faces match across the picker. */
   .avatar-btn img{object-fit:contain;}
+  /* Time-limited campaign banner — only rendered while today's date falls
+     inside the collab window (see JS), so it disappears on its own once the
+     event ends without needing a manual follow-up edit. */
+  .suntv-collab-banner{
+    width:min(92vw, 360px); margin:var(--logo-to-collab-gap) auto var(--title-gap);
+    display:flex; align-items:center; gap:clamp(8px, 1.5vh, 12px);
+    background:linear-gradient(120deg,#FFD24C,#F0863E);
+    border-radius:16px; padding:clamp(7px, 1.35vh, 10px) 14px;
+    box-shadow:0 8px 20px rgba(224,134,47,0.28);
+    flex:0 0 auto;
+    border:none; cursor:pointer; text-align:left;
+    font:inherit;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .suntv-collab-banner:active{transform:translateY(2px); box-shadow:0 5px 14px rgba(224,134,47,0.24);}
+  .suntv-collab-icon{width:clamp(44px, 7.4vh, 64px); height:clamp(44px, 7.4vh, 64px); object-fit:contain; flex-shrink:0;}
+  .suntv-collab-text{flex:1; min-width:0; display:flex; flex-direction:column; gap:3px;}
+  .suntv-collab-title{font-family:'Baloo 2'; font-weight:800; font-size:clamp(14px, 2.1vh, 18px); line-height:1.05; color:#fff;}
+  .suntv-collab-period{font-size:clamp(9px, 1.3vh, 11px); font-weight:800; color:rgba(255,255,255,0.94); margin-top:0;}
+  .suntv-copyright{font-size:10px; font-weight:800; line-height:1; color:rgba(255,255,255,0.82);}
+  .suntv-info-art{width:92px; height:92px; object-fit:contain; margin:0 auto 8px; display:block;}
+  .suntv-info-steps{display:flex; flex-direction:column; gap:8px; margin:4px 0 12px;}
+  .suntv-info-step{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card-soft); border-radius:14px; padding:10px;
+    color:var(--text); font-size:13px; font-weight:900; line-height:1.35;
+  }
+  .suntv-info-step-num{
+    width:26px; height:26px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#fff; font-family:'Baloo 2'; font-size:15px;
+  }
+  .suntv-info-note{font-size:11px; font-weight:800; line-height:1.45; color:var(--text-muted); margin:0 0 14px;}
   .title-cards{
     width:100%; max-width:420px; display:flex; gap:12px;
-    margin:auto 0 0;                 /* pushes the group down off the header */
+    margin:0;
+    flex:0 0 auto;
   }
   .title-card{
     flex:1; border-radius:20px; padding:15px; min-height:158px; text-align:left;
@@ -158,15 +211,41 @@
   }
   .title-card:active{transform:translateY(2px);}
   .title-card h3{margin:0; font-size:15px; font-weight:800; line-height:1.3;}
-  .title-card.daily{background:linear-gradient(160deg,#7F86D6,#5B62B8);}
-  .title-card.daily.locked{opacity:0.92;}
-  .title-card.streak{background:linear-gradient(160deg,#FFC94F,#F0A020);}
+  .title-card.hard{background:linear-gradient(160deg,#4A4E7A,#20223F);}
+  .title-card.hard.locked{opacity:0.92;}
+  .title-card.timeattack{background:linear-gradient(160deg,#5FBEDD,#3B8FA6);}
+  .title-card.timeattack.locked{opacity:0.92;}
+  .title-card.mission{background:linear-gradient(160deg,#FFC94F,#F0A020);}
   .card-icon-wrap{flex:1; display:flex; align-items:center; justify-content:center;}
   .lock-icon{width:38px; height:46px; opacity:0.95;}
-  .daily-icon{width:56px; height:56px;}
-  .title-card.daily.locked .daily-icon{display:none;}
-  .title-card.daily:not(.locked) .lock-icon{display:none;}
-  .sun-icon{width:66px; height:66px;}
+  .daily-icon, .ta-icon{width:56px; height:56px;}
+  .title-card.locked .daily-icon, .title-card.locked .ta-icon{display:none;}
+  .title-card:not(.locked) .lock-icon{display:none;}
+  .sun-icon, .mission-icon{width:66px; height:66px;}
+  .title-cards.has-three .title-card{min-height:var(--title-card-h); padding:clamp(9px, 1.45vh, 12px) 10px;}
+  .title-cards.has-three .title-card:not(.half){height:var(--title-card-h);}
+  .title-cards.has-three .title-card h3{font-size:12px;}
+  .title-cards.has-three .daily-icon,
+  .title-cards.has-three .ta-icon,
+  .title-cards.has-three .sun-icon,
+  .title-cards.has-three .mission-icon{width:46px; height:46px;}
+  .title-cards.has-three .card-sub{font-size:10.5px;}
+  .title-card-stack{flex:1; display:flex; flex-direction:column; gap:8px; height:var(--title-card-h); min-width:0;}
+  .title-cards.has-three .title-card.half{
+    flex:1 1 0; min-height:0; height:auto; padding:8px 6px; flex-direction:row; align-items:center; gap:6px;
+    min-width:0; overflow:hidden;
+  }
+  .title-card.half h3{font-size:9px; line-height:1.15; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  /* The icon was eating so much of an already-narrow column that the text
+     side collapsed to almost nothing on real phones — min-width:0 (needed so
+     the row can shrink at all) let it go all the way down to single
+     characters per line. Dropping the icon here gives the label the whole
+     card to work with, which is what actually keeps it readable. */
+  .title-card.half .card-icon-wrap{display:none;}
+  .title-card.half .half-card-text{flex:1 1 auto; min-width:0; width:100%;}
+  .title-card.half .card-sub{font-size:8.5px; text-align:left; margin-top:2px; opacity:0.85; line-height:1.3;}
+  .title-card.ranking{background:linear-gradient(160deg,#9C8CE0,#7B5FD9);}
+  .title-card.half .card-check{top:4px; right:6px; width:16px; height:16px; font-size:10px;}
   .card-sub{font-size:12px; font-weight:800; opacity:0.9; text-align:center;}
   .card-count-pill{
     background:rgba(255,255,255,0.55); border-radius:14px; text-align:center; padding:6px;
@@ -178,15 +257,26 @@
   }
   .cosmii-wordmark{
     display:flex; align-items:center; justify-content:center;
-    margin:clamp(18px, 5.5vh, 42px) 0 14px;
+    margin:var(--title-gap) 0 var(--title-gap);
     padding:0 8px;
+    flex:0 0 auto;
   }
   .cosmii-wordmark-image{
-    width:min(86vw, 320px);
+    width:min(84vw, 340px);
     max-width:100%;
+    max-height:clamp(86px, 16vh, 142px);
     height:auto;
     display:block;
     object-fit:contain;
+  }
+  .game-tagline{
+    width:min(92vw, 360px);
+    margin:calc(var(--title-gap) * -0.35) auto var(--title-gap);
+    color:var(--text-muted);
+    font-size:12px;
+    font-weight:900;
+    line-height:1.35;
+    text-align:center;
   }
   /* ---- Other games strip -------------------------------------------------
      A single-card-wide window that loops forever. The track holds a clone of
@@ -196,7 +286,8 @@
   ------------------------------------------------------------------------ */
   .promo-strip{
     width:100%; max-width:420px;
-    margin:18px auto 0;
+    margin:0 auto;
+    flex:0 0 auto;
     overflow:hidden;
     border-radius:24px;
     background:rgba(255,255,255,.92);
@@ -209,6 +300,7 @@
   }
   .promo-track{
     display:flex;
+    min-height:clamp(54px, 8.5vh, 72px);
     will-change:transform;
     touch-action:none;
   }
@@ -216,8 +308,8 @@
     flex:0 0 auto;
     display:flex;
     align-items:center;
-    gap:14px;
-    padding:16px 18px;
+    gap:clamp(10px, 1.6vh, 14px);
+    padding:clamp(9px, 1.75vh, 16px) 18px;
     text-decoration:none;
     color:var(--text);
     font-weight:700;
@@ -229,7 +321,7 @@
   .promo-card:hover{background:rgba(240,163,62,.08);}
   .promo-card:active{background:rgba(240,163,62,.14);}
   .promo-icon{
-    width:44px; height:44px; min-width:44px;
+    width:clamp(34px, 5.4vh, 44px); height:clamp(34px, 5.4vh, 44px); min-width:clamp(34px, 5.4vh, 44px);
     border-radius:11px;                     /* iOS icon corner ratio at 44px */
     overflow:hidden;
     display:flex; align-items:center; justify-content:center;
@@ -250,7 +342,7 @@
   .promo-chevron{margin-left:auto; color:var(--text-muted); font-size:18px; flex-shrink:0;}
   .promo-dots{
     display:flex; justify-content:center; gap:5px;
-    padding:0 0 9px;
+    padding:0 0 clamp(5px, 1vh, 9px);
   }
   .promo-dots span{
     width:5px; height:5px; border-radius:50%;
@@ -275,25 +367,104 @@
     user-select:none;
     -webkit-tap-highlight-color:transparent;
     -webkit-user-select:none;
-    width:280px; max-width:78vw; padding:16px 18px; border:none; border-radius:24px;
-    margin:clamp(20px, 4vh, 42px) 0 auto;    /* auto below centres the group */
-    flex-shrink:0;
+    width:280px; max-width:70vw; padding:clamp(12px, 1.9vh, 16px) 18px; border:none; border-radius:24px;
+    flex-shrink:1;
     background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;
     font-family:'Baloo 2'; font-weight:700; font-size:19px; cursor:pointer;
     box-shadow:0 4px 0 rgba(200,110,20,0.35);
   }
   .level-btn:active{transform:translateY(3px); box-shadow:none;}
+  .start-row{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:100%; max-width:420px;
+    margin:auto 0 var(--title-gap);
+    flex:0 0 auto;
+  }
+  @media (max-height: 740px){
+    #title-screen{
+      --title-card-h: 118px;
+      --title-gap: 6px;
+      --logo-to-collab-gap: 10px;
+      padding-top:calc(10px + env(safe-area-inset-top));
+      padding-bottom:calc(5px + env(safe-area-inset-bottom));
+    }
+    #title-screen .topbar-right{gap:6px;}
+    #title-screen .coin-chip{padding:5px 10px 5px 7px; font-size:14px;}
+    #title-screen .lang-toggle button{padding:5px 9px; font-size:11px;}
+    #title-screen .circle-btn{width:42px; height:42px;}
+    #title-screen .avatar-btn{width:48px; height:48px; border-width:3px;}
+    .title-cards{gap:10px;}
+    .title-cards.has-three .title-card h3{font-size:10.5px;}
+    .title-cards.has-three .card-sub{font-size:9.5px;}
+    .title-card-stack{gap:6px;}
+    .cosmii-wordmark-image{width:min(76vw, 286px); max-height:92px;}
+    .game-tagline{font-size:10.5px; margin-bottom:6px;}
+    .suntv-collab-banner{width:min(88vw, 320px); border-radius:14px; padding:6px 12px;}
+    .suntv-collab-icon{width:42px; height:42px;}
+    .suntv-collab-title{font-size:13px;}
+    .suntv-collab-period{font-size:8.5px;}
+    .suntv-copyright{font-size:8.5px;}
+    .level-btn{font-size:17px; padding:11px 16px;}
+    .promo-track{min-height:50px;}
+    .promo-card{padding:8px 16px; font-size:12px;}
+    .promo-icon{width:32px; height:32px; min-width:32px; border-radius:8px;}
+    .promo-sub{display:none;}
+    .promo-chevron{font-size:15px;}
+    .promo-dots{padding-bottom:4px;}
+  }
+  @media (min-height: 900px){
+    #title-screen{
+      --title-card-h: 158px;
+      --title-gap: 16px;
+      --logo-to-collab-gap: 26px;
+    }
+    .cosmii-wordmark-image{width:min(80vw, 380px); max-height:154px;}
+  }
 
   /* ---------- Game screen ---------- */
   #game-screen{
     justify-content:flex-start;
     padding-top:calc(48px + env(safe-area-inset-top));
     padding-bottom:calc(16px + env(safe-area-inset-bottom));
+    transition:background .5s ease;
   }
+  /* ---------- Black Hole Cosmii (Hard Mode) side background ----------
+     A dark nebula-and-starfield backdrop so Hard Mode reads as a distinct,
+     higher-stakes place the moment the board loads, not just a normal board
+     with an extra rule card. Foreground chrome (topbar, pills, rule cards)
+     gets light-on-dark overrides below so it stays readable. */
+  #game-screen.hard-bg{
+    background:
+      radial-gradient(circle at 50% 34%, rgba(150,120,255,0.35) 0%, rgba(150,120,255,0) 30%),
+      radial-gradient(circle at 18% 12%, rgba(255,255,255,0.9) 0 1.6px, transparent 2.2px),
+      radial-gradient(circle at 78% 8%,  rgba(255,255,255,0.7) 0 1.2px, transparent 2px),
+      radial-gradient(circle at 88% 28%, rgba(255,255,255,0.6) 0 1.4px, transparent 2px),
+      radial-gradient(circle at 8% 42%,  rgba(255,255,255,0.55) 0 1.3px, transparent 2px),
+      radial-gradient(circle at 64% 88%, rgba(255,255,255,0.6) 0 1.4px, transparent 2px),
+      radial-gradient(circle at 24% 92%, rgba(255,255,255,0.5) 0 1.2px, transparent 2px),
+      radial-gradient(circle at 92% 70%, rgba(255,255,255,0.45) 0 1.2px, transparent 2px),
+      linear-gradient(180deg, #2a2148 0%, #171130 45%, #0a0716 100%);
+  }
+  #game-screen.hard-bg #grid-wrap{
+    box-shadow:0 0 70px 14px rgba(150,120,255,0.28);
+    border-radius:16px;
+  }
+  #game-screen.hard-bg .circle-btn{background:rgba(255,255,255,0.92);}
+  #game-screen.hard-bg .header-stat .label{color:rgba(255,255,255,0.55);}
+  #game-screen.hard-bg .header-stat .value{color:#fff;}
+  #game-screen.hard-bg .pill{background:rgba(255,255,255,0.14); color:#fff;}
+  #game-screen.hard-bg .pill .frac-cur{color:#B8F0C8;}
+  #game-screen.hard-bg .rulecard{background:rgba(255,255,255,0.10);}
+  #game-screen.hard-bg .rulecard p{color:#fff;}
+  #game-screen.hard-bg .rulecard .mini-cell{background:rgba(255,255,255,0.18); color:rgba(255,255,255,0.65);}
+  #game-screen.hard-bg .rulecard .mini-cell.face{background:var(--accent-2);}
+  #game-screen.hard-bg .badge-label{color:#fff;}
+  #game-screen.hard-bg .ta-progress-badge .label{color:#C9B8FF;}
+  #game-screen.hard-bg .ta-progress-badge .value{color:#fff;}
   .topbar{
     width:100%; max-width:min(92vw,940px);
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:8px;
+    margin-bottom:8px; position:relative;
   }
   .circle-btn{
     background:var(--card); border:none; color:var(--text);
@@ -306,6 +477,34 @@
   .header-stat{text-align:center;}
   .header-stat .label{font-size:11px; color:var(--text-muted); font-weight:800;}
   .header-stat .value{font-size:20px; font-weight:800; font-family:'Baloo 2'; color:var(--text); line-height:1.1;}
+  /* Absolutely positioned so appearing/disappearing never changes how many
+     items justify-content:space-between is distributing — without this, the
+     "タイム" stat visibly jumped when a mode badge showed up, since it
+     stopped being a 3-item row. This keeps the clock's position identical
+     to the normal stage screen in every mode. Anchored to the upper-left,
+     next to the back button, on the same row as the timer. */
+  .ta-progress-badge{
+    text-align:center; position:absolute; left:60px; top:50%; transform:translateY(-50%);
+  }
+  .ta-progress-badge .label{font-size:9px; color:var(--accent-2); font-weight:900; letter-spacing:0.03em;}
+  .ta-progress-badge .value{font-size:16px; font-weight:800; font-family:'Baloo 2'; color:var(--accent-2);}
+  .hard-mode-badge{
+    text-align:center; position:absolute; left:60px; top:50%; transform:translateY(-50%);
+  }
+  .hard-mode-badge .label{font-size:9px; color:#B8A6FF; font-weight:900; letter-spacing:0.03em;}
+  .hard-mode-badge .value{font-size:13px; font-weight:800; font-family:'Baloo 2'; color:#fff; white-space:nowrap;}
+  /* Lives inside .pillrow as a normal pill, right next to the hearts pill —
+     it used to carry position:absolute meant for sitting inside .topbar,
+     but the markup moved it into .pillrow without dropping that rule, so on
+     narrow screens it was pinned relative to the whole game screen instead
+     of flowing with the other pills, which made it look crushed/off-place. */
+  .game-coin-chip{
+    display:flex; align-items:center; gap:4px;
+  }
+  .game-coin-chip .game-coin-icon{width:18px; height:18px; border-radius:50%; object-fit:contain;}
+  .game-coin-chip span{font-family:'Baloo 2'; font-weight:800; font-size:14px; color:#B07A17;}
+  #game-screen.hard-bg .game-coin-chip{background:rgba(255,255,255,0.14);}
+  #game-screen.hard-bg .game-coin-chip span{color:#FFD27A;}
 
   .pillrow{
     width:100%; max-width:min(92vw,940px);
@@ -346,6 +545,14 @@
   .rulecard .mini-cell.face{background:var(--accent-2);}
   .rulecard .mini-face-dot{width:8px; height:8px; border-radius:50%; background:#20223f; position:relative;}
   .rulecard p{margin:0; font-size:10px; font-weight:800; line-height:1.3; color:var(--text); text-align:center;}
+  .rulecard.hard-only{display:none;}
+  .rulecards.hard .rulecard.hard-only{display:flex;}
+  .rulecards.hard .rulecard.hard-hide{display:none;}
+  /* 星域=2体 leads, then row/column, then the touch rule — matches the order
+     the tutorial teaches them in. */
+  .rulecards.hard .rulecard.hard-only{order:-1;}
+  .rulecard .kw{color:var(--accent-dark); font-weight:900;}
+  #game-screen.hard-bg .rulecard .kw{color:#FFD27A;}
 
   #grid-wrap{
     position:relative; display:grid; background:var(--card);
@@ -509,6 +716,7 @@
   .badge-btn.disabled .badge-count{
     opacity:.6;
   }
+  .badge-count.bank{color:var(--accent-2);}
   .mode-cosmii{width:34px; height:34px; display:block; object-fit:contain;}
   #btn-place-mode:not(.disabled) .mode-cosmii{opacity:1; filter:none;}
   #btn-place-mode.disabled .mode-cosmii{opacity:.45; filter:grayscale(1);}
@@ -661,12 +869,127 @@
   .modal-overlay.active .modal-card{transform:translateY(0) scale(1);}
   .modal-card h2{font-family:'Baloo 2'; margin:2px 0 8px; font-size:22px;}
   .modal-card .time-big{font-size:28px; font-weight:800; color:var(--accent-dark); font-family:'Baloo 2';}
+  .clear-level{
+    display:inline-block; margin:2px auto 6px; padding:4px 14px; border-radius:20px;
+    background:var(--card-soft); color:var(--accent-dark);
+    font-family:'Baloo 2'; font-weight:800; font-size:14px;
+  }
+  .clear-level:empty{display:none; margin:0; padding:0;}
   .modal-card .best-line{color:var(--text-muted); font-size:13px; margin:4px 0 16px;}
   .modal-card .record{color:#3F9A5C; font-weight:900;}
   .modal-btn{width:100%; padding:12px; margin-top:8px; border:none; border-radius:14px;
     font-family:'Baloo 2'; font-weight:700; font-size:15px; cursor:pointer;}
   .modal-btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;}
   .modal-btn.secondary{background:var(--card-soft); color:var(--text);}
+
+  /* ---------- Time Attack result ---------- */
+  .ta-leaderboard{
+    background:var(--card-soft); border-radius:14px; padding:12px; margin:6px 0 14px; text-align:left;
+  }
+  .ta-leaderboard-title{font-size:12px; font-weight:900; color:var(--text); margin-bottom:6px;}
+  .ta-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:5px 2px; font-size:13px; font-weight:700; color:var(--text);
+  }
+  .ta-row.me{color:var(--accent-dark);}
+  .ta-row .rank{width:22px; color:var(--text-muted); font-weight:900;}
+  .ta-leaderboard-note{font-size:10px; color:var(--text-muted); font-weight:700; margin-top:6px; line-height:1.4;}
+  .ranking-empty{text-align:center; font-size:12px; font-weight:700; color:var(--text-muted); padding:18px 0;}
+  .ranking-stage-row{
+    display:flex; align-items:center; gap:12px; background:linear-gradient(135deg,var(--accent),var(--accent-dark));
+    border-radius:14px; padding:12px 14px; margin-bottom:10px;
+  }
+  .ranking-stage-badge{
+    flex-shrink:0; width:36px; height:36px; border-radius:50%; background:rgba(255,255,255,0.25);
+    color:#fff; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:900;
+  }
+  .ranking-stage-info{flex:1; color:#fff;}
+  .ranking-stage-value{font-size:16px; font-weight:900; font-family:'Baloo 2';}
+  .ranking-stage-sub{font-size:10.5px; font-weight:700; opacity:0.85; margin-top:1px;}
+  .ranking-subsection-label{font-size:11px; font-weight:800; color:var(--text-muted); margin:8px 2px 2px;}
+
+  /* ---------- Time Attack intro / warning ---------- */
+  .ta-intro-card{max-width:380px;}
+  .ta-intro-rows{
+    display:flex; flex-direction:column; gap:10px; text-align:left;
+    background:var(--card-soft); border-radius:14px; padding:14px; margin:14px 0 18px;
+  }
+  .ta-intro-row{display:flex; align-items:flex-start; gap:10px; font-size:13px; font-weight:700; color:var(--text); line-height:1.5;}
+  .ta-intro-icon{font-size:18px; flex-shrink:0;}
+  .ta-warning-card{max-width:340px;}
+  .ta-warning-icon{font-size:44px; margin-bottom:4px;}
+  .ta-warning-card h2{color:#7B5FD9;}
+  .ta-warning-card .best-line{margin-bottom:6px;}
+
+  /* ---------- Mission modal ---------- */
+  .mission-card{max-width:380px; text-align:left;}
+  .mission-card h2{text-align:center; margin:0;}
+  .mission-head{display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:6px; position:relative;}
+  .mission-coin-chip{
+    display:flex; align-items:center; gap:5px; background:var(--card-soft); border-radius:20px;
+    padding:5px 11px 5px 7px; font-family:'Baloo 2'; font-weight:700; font-size:13px; color:#B07A17;
+    position:absolute; right:0;
+  }
+  .mission-coin-chip .coin-icon{width:18px; height:18px; border-radius:50%; object-fit:contain;}
+  .mission-tabs{display:flex; gap:8px; margin:6px 0 14px;}
+  .mission-tab{
+    flex:1; padding:9px; border:none; border-radius:12px; background:var(--card-soft);
+    color:var(--text-muted); font-family:'Baloo 2'; font-weight:800; font-size:13px; cursor:pointer;
+  }
+  .mission-tab.active{background:var(--accent); color:#fff;}
+  .mission-list{display:flex; flex-direction:column; gap:10px; max-height:46vh; overflow-y:auto;}
+  .mission-item{
+    background:var(--card-soft); border-radius:14px; padding:12px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .mission-item-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .mission-item-title{font-size:13px; font-weight:800; color:var(--text); flex:1;}
+  .mission-item-reward{font-size:11px; font-weight:800; color:#B07A17; white-space:nowrap;}
+  .mission-progress-bar{height:8px; border-radius:5px; background:rgba(107,74,62,0.12); overflow:hidden;}
+  .mission-progress-fill{height:100%; background:var(--accent); border-radius:5px; transition:width .3s ease;}
+  .mission-item-bottom{display:flex; justify-content:space-between; align-items:center;}
+  .mission-item-count{font-size:11px; color:var(--text-muted); font-weight:700;}
+  .mission-claim-btn{
+    border:none; border-radius:10px; padding:6px 14px; font-family:'Baloo 2'; font-weight:800; font-size:12px; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;
+  }
+  .mission-claim-btn:disabled{background:rgba(107,74,62,0.15); color:var(--text-muted); cursor:default;}
+  .mission-reset-note{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    font-size:11px; color:var(--text-muted); font-weight:800; margin-top:10px; text-align:center;
+  }
+  .mission-reset-timer{
+    font-family:'Baloo 2'; font-weight:800; font-size:13px; color:var(--accent-dark);
+    background:var(--card-soft); border-radius:10px; padding:3px 9px; letter-spacing:0.02em;
+  }
+
+  /* ---------- Shop modal ---------- */
+  .shop-card{max-width:380px; text-align:left; max-height:80vh; overflow-y:auto;}
+  .shop-card h2{text-align:center; margin:0;}
+  .shop-entry{margin-bottom:6px;}
+  .shop-entry + .shop-entry{border-top:1px solid rgba(107,74,62,0.10); padding-top:6px;}
+  .shop-item{
+    display:flex; gap:12px; align-items:center; background:var(--card-soft);
+    border-radius:16px; padding:14px; margin:16px 0 14px;
+  }
+  .shop-item-icon{
+    width:52px; height:52px; border-radius:14px; background:var(--accent);
+    display:flex; align-items:center; justify-content:center; font-size:26px; flex-shrink:0;
+  }
+  .shop-item-info{flex:1;}
+  .shop-item-name{font-size:15px; font-weight:900; color:var(--text);}
+  .shop-item-desc{font-size:11.5px; color:var(--text-muted); font-weight:700; margin-top:2px; line-height:1.4;}
+  .shop-item-owned{font-size:12px; font-weight:800; color:#B07A17; margin-top:6px;}
+  .shop-buy-row{display:flex; gap:8px; margin-bottom:6px;}
+  .shop-buy-btn{
+    flex:1; border:none; border-radius:12px; padding:10px 4px; cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent-dark)); color:#fff;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+    font-family:'Baloo 2';
+  }
+  .shop-buy-btn:disabled{background:rgba(107,74,62,0.15); color:var(--text-muted); cursor:default;}
+  .shop-buy-qty{font-weight:900; font-size:14px;}
+  .shop-buy-price{font-weight:700; font-size:11px; opacity:.9;}
 
   /* ---------- Settings modal ---------- */
   .settings-card{width:100%; padding:22px 22px 24px; max-width:360px; text-align:left;}
@@ -684,8 +1007,6 @@
   .slider:before{content:""; position:absolute; width:18px; height:18px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.2s;}
   .switch input:checked + .slider{background:#3F9A5C;}
   .switch input:checked + .slider:before{transform:translateX(20px);}
-  .feedback-btn{width:100%; padding:11px; border-radius:14px; border:2px solid var(--card-soft);
-    background:none; color:var(--text); font-weight:800; font-size:13px; margin:10px 0 0; cursor:pointer;}
   .toast{
     position:absolute; bottom:26px; left:50%; transform:translateX(-50%);
     background:var(--text); color:#fff; padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;
@@ -709,15 +1030,16 @@
     50%{transform:scale(1.09); opacity:.75;}
   }
   .coach{
-    position:absolute; left:0; right:0; bottom:20px;
+    position:absolute; left:0; right:0; bottom:10px;
     display:none; flex-direction:column; align-items:center; gap:12px;
-    padding:0 16px; z-index:55; pointer-events:none;
+    padding:0 12px; z-index:55; pointer-events:none;
   }
   .coach.active{display:flex;}
   .coach-tip{
     background:#fff; border-radius:18px; padding:14px 18px; max-width:340px; text-align:center;
     font-weight:800; font-size:14px; line-height:1.65; color:var(--text);
     box-shadow:0 8px 24px rgba(107,74,62,.20); pointer-events:auto;
+    max-height:min(28vh, 210px); overflow-y:auto;
   }
   .coach-tip .kw{color:var(--danger);}
   .coach-tip .step{
@@ -771,6 +1093,86 @@
   /* Scaled from its top edge so the board can never slide under the tip
      sheet. Cells stay fully tappable at any scale. */
   #grid-wrap{transform-origin:top center; transition:transform .22s ease;}
+
+  /* ---------- サンテレビ おじゃまイベント ---------- */
+  .grid-stage{position:relative;}
+  .suntv-overlay{
+    position:absolute; inset:0; pointer-events:none; z-index:40;
+  }
+  /* Dims the whole play screen (topbar, rule cards, board, bottom bar — not
+     just the board) so the character reads as the one lit thing around. A
+     lighter touch than the first pass: still readable underneath, not a
+     near-black wash. Sits on #game-screen itself, not just the grid, and at
+     a lower z-index than the character so it never darkens the character. */
+  .suntv-fullscreen-dim{
+    position:absolute; inset:0; background:rgba(24,17,12,0.32); opacity:0;
+    transition:opacity .5s ease; pointer-events:none; z-index:35;
+  }
+  .suntv-fullscreen-dim.on{opacity:1;}
+  /* Placeholder mascot — swap the emoji/background for real サンテレビ character
+     art (e.g. an <img> pointing at assets/images/suntv_chara.png) whenever
+     that's ready; nothing else about the event logic needs to change. The
+     motion is a sunrise/sunset arc: rises from the lower-left, rests up near
+     the top-left (level with the first rule card) while it does its thing,
+     then sinks away lower-right. */
+  .suntv-character{
+    position:absolute; left:10%; top:12%; z-index:2;
+    width:180px; height:180px; border-radius:50%;
+    background:linear-gradient(160deg,#FFD24C,#F0863E);
+    display:flex; align-items:center; justify-content:center; font-size:30px;
+    box-shadow:0 0 30px 8px rgba(255,196,80,0.55), 0 10px 26px rgba(0,0,0,0.3);
+    transform:translate(-60%,320%) scale(.45);
+    opacity:0;
+  }
+  .suntv-character img{width:100%; height:100%; object-fit:contain; display:block; pointer-events:none;}
+  .suntv-character.suntv-gallery{
+    width:min(88vw, 420px); height:auto; min-height:0; padding:8px;
+    border-radius:18px; background:rgba(255,255,255,.92);
+    box-shadow:0 0 30px 8px rgba(255,196,80,0.55), 0 10px 26px rgba(0,0,0,0.3);
+    display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px;
+  }
+  .suntv-character.suntv-gallery img{width:100%; height:auto; aspect-ratio:1; object-fit:contain;}
+  .suntv-overlay.char-rise .suntv-character.suntv-gallery{
+    left:50%; transform:translate(-50%,-50%) scale(1);
+  }
+  .suntv-overlay.char-set .suntv-character.suntv-gallery{
+    left:50%; transform:translate(-50%,170%) scale(.5);
+  }
+  @media (max-width:480px){
+    .suntv-character.suntv-gallery{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; padding:6px;}
+  }
+  .suntv-overlay.char-rise .suntv-character{
+     /* Keep the enlarged image fully inside the playfield instead of letting
+       the old left-edge transform crop it. */
+    transform:translate(-3%,-50%) scale(1);
+    opacity:1;
+    /* Visible early — well within the first half of the 1.3s rise — even
+       though the climb itself keeps going the whole time. */
+    transition:transform 1.3s cubic-bezier(.16,.72,.32,1), opacity .25s ease;
+  }
+  .suntv-overlay.char-set .suntv-character{
+    transform:translate(220%,170%) scale(.5);
+    opacity:0;
+    /* Slower sunset — this is the one moment the whole sequence is allowed
+       to take its time. */
+    transition:transform 1.1s cubic-bezier(.55,0,.85,.45), opacity 1s ease .15s;
+  }
+  /* A soft pulse on the character while it's waiting for a tap, so the pause
+     reads as "your move" rather than looking stalled — no text needed. */
+  .suntv-overlay.awaiting-tap .suntv-character{animation:suntvTapPulse 1.1s ease-in-out infinite;}
+  @keyframes suntvTapPulse{
+    0%,100%{box-shadow:0 0 30px 8px rgba(255,196,80,0.55), 0 10px 26px rgba(0,0,0,0.3);}
+    50%{box-shadow:0 0 42px 14px rgba(255,196,80,0.8), 0 10px 26px rgba(0,0,0,0.3);}
+  }
+  .suntv-poof{animation:suntvPoof .3s ease forwards;}
+  /* The rotate event spins the whole board, Cosmii faces and all — cute for
+     the board itself, but the little faces ended up lying on their side.
+     Counter-rotating each cell's content keeps every Cosmii facing upright
+     the whole time, gimbal-style, while the board underneath keeps turning. */
+  #grid-wrap.suntv-rot90 .cell{transform:rotate(-90deg); transition:transform .6s ease;}
+  @keyframes suntvPoof{0%{opacity:1; transform:scale(1);} 100%{opacity:0; transform:scale(.4);}}
+  .suntv-pop{animation:suntvPop .3s ease;}
+  @keyframes suntvPop{0%{transform:scale(.3);} 60%{transform:scale(1.18);} 100%{transform:scale(1);}}
   /* Without this a horizontal sweep is claimed by the browser as a pan or
      text selection and the paint stroke dies after the first cell. */
   #grid-wrap, .cell{touch-action:none;}
@@ -822,10 +1224,10 @@
   <!-- TITLE -->
   <div class="screen" id="title-screen">
     <div class="title-topbar">
-      <div class="avatar-btn" id="btn-avatar">
+      <div class="avatar-btn" id="btn-avatar" title="プロフィール" aria-label="プロフィール">
         <img id="btn-avatar-img" src="assets/images/chara3_sub.PNG" alt="Cosmii Collection">
       </div>
-      <div class="coin-chip" id="coin-chip">
+      <div class="coin-chip" id="coin-chip" title="コスモコイン" aria-label="コスモコイン">
         <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
         <span id="coin-balance">0</span>
       </div>
@@ -834,43 +1236,92 @@
           <button type="button" data-lang="ja">日本語</button>
           <button type="button" data-lang="en">EN</button>
         </div>
-        <button class="circle-btn" id="btn-settings-title">⚙</button>
+        <button class="circle-btn" id="btn-shop" title="ショップ" aria-label="ショップ">🛒</button>
+        <button class="circle-btn" id="btn-settings-title" title="設定" aria-label="設定">⚙</button>
       </div>
     </div>
 
-    <div class="title-cards">
-      <div class="title-card daily locked" id="card-daily">
+    <div class="title-cards has-three">
+      <div class="title-card hard locked" id="card-hard">
         <h3 data-i18n="daily_title"></h3>
         <div class="card-icon-wrap">
           <svg class="lock-icon" viewBox="0 0 24 30" fill="none"><rect x="2" y="12" width="20" height="16" rx="4" fill="#fff"/><path d="M6 12V8a6 6 0 0 1 12 0v4" stroke="#fff" stroke-width="3" fill="none"/></svg>
           <!-- Shown once the mode is unlocked; the padlock stayed up before, so
-               an available mode still read as locked. -->
-          <svg class="daily-icon" viewBox="0 0 60 60" fill="none"><circle cx="30" cy="30" r="26" fill="#fff" opacity=".95"/><path d="M25 20 L42 30 L25 40 Z" fill="#5B62B8"/></svg>
-        </div>
-        <div class="card-sub" id="daily-unlock-label"></div>
-        <div class="card-check" id="daily-check" style="display:none;">✓</div>
-      </div>
-      <div class="title-card streak" id="card-streak">
-        <h3 data-i18n="streak_title"></h3>
-        <div class="card-icon-wrap">
-          <svg class="sun-icon" viewBox="0 0 100 100">
-            <path fill="#fff" opacity="0.9" d="M50 4 L57 22 L72 10 L68 29 L88 27 L74 40 L92 50 L74 60 L88 73 L68 71 L72 90 L57 78 L50 96 L43 78 L28 90 L32 71 L12 73 L26 60 L8 50 L26 40 L12 27 L32 29 L28 10 L43 22 Z"/>
-            <circle cx="50" cy="50" r="24" fill="#fff"/>
+               an available mode still read as locked. A little black hole
+               stands in for the old sunburst "daily" icon. -->
+          <svg class="daily-icon" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="30" r="26" fill="#20223f" opacity=".95"/>
+            <circle cx="30" cy="30" r="26" fill="none" stroke="#fff" stroke-width="2" opacity=".5"/>
+            <circle cx="30" cy="30" r="10" fill="#fff" opacity=".9"/>
           </svg>
         </div>
-        <div class="card-count-pill" id="streak-count">1</div>
-        <div class="card-check" id="streak-check" style="display:none;">✓</div>
+        <div class="card-sub" id="hard-unlock-label"></div>
+      </div>
+      <div class="title-card timeattack locked" id="card-timeattack">
+        <h3 data-i18n="timeattack_title"></h3>
+        <div class="card-icon-wrap">
+          <svg class="lock-icon" viewBox="0 0 24 30" fill="none"><rect x="2" y="12" width="20" height="16" rx="4" fill="#fff"/><path d="M6 12V8a6 6 0 0 1 12 0v4" stroke="#fff" stroke-width="3" fill="none"/></svg>
+          <svg class="ta-icon" viewBox="0 0 60 60" fill="none">
+            <circle cx="30" cy="32" r="22" fill="#fff" opacity=".95"/>
+            <rect x="24" y="4" width="12" height="8" rx="2" fill="#fff"/>
+            <line x1="30" y1="32" x2="30" y2="18" stroke="#3B8FA6" stroke-width="3" stroke-linecap="round"/>
+            <line x1="30" y1="32" x2="40" y2="32" stroke="#3B8FA6" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="card-sub" id="ta-unlock-label"></div>
+      </div>
+      <div class="title-card-stack">
+        <div class="title-card half mission" id="card-mission">
+          <div class="card-icon-wrap">
+            <svg class="mission-icon" viewBox="0 0 100 100" fill="none">
+              <circle cx="50" cy="50" r="34" fill="#fff" opacity="0.95"/>
+              <circle cx="50" cy="50" r="22" fill="none" stroke="#F0A33E" stroke-width="6"/>
+              <circle cx="50" cy="50" r="8" fill="#F0A33E"/>
+            </svg>
+          </div>
+          <div class="half-card-text">
+            <h3 data-i18n="mission_title"></h3>
+            <div class="card-sub" id="mission-ready-label"></div>
+          </div>
+          <div class="card-check" id="mission-ready-check" style="display:none;">✓</div>
+        </div>
+        <div class="title-card half ranking" id="card-ranking">
+          <div class="card-icon-wrap">
+            <svg class="ranking-icon" viewBox="0 0 100 100" fill="none">
+              <path d="M30 46 L30 84 L70 84 L70 46 Z" fill="#fff" opacity="0.95"/>
+              <path d="M30 46 L15 30 L15 20 L30 20 Z" fill="#fff" opacity="0.8"/>
+              <path d="M70 46 L85 30 L85 20 L70 20 Z" fill="#fff" opacity="0.8"/>
+              <rect x="22" y="14" width="56" height="32" rx="4" fill="#fff"/>
+              <circle cx="50" cy="30" r="10" fill="#7B5FD9"/>
+            </svg>
+          </div>
+          <div class="half-card-text">
+            <h3 data-i18n="ranking_card_title"></h3>
+            <div class="card-sub" data-i18n="ranking_sub"></div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="cosmii-wordmark">
       <img src="assets/images/CosmiiSudoku.PNG" alt="Cosmii Sudoku" class="cosmii-wordmark-image">
     </div>
+    <div class="game-tagline" data-i18n="game_tagline"></div>
+    <button class="suntv-collab-banner" id="suntv-collab-banner" type="button" style="display:none;" aria-haspopup="dialog">
+      <img class="suntv-collab-icon" id="suntv-collab-icon" alt="おっ！サンコラボ">
+      <div class="suntv-collab-text">
+        <div class="suntv-collab-title" data-i18n="suntv_collab_title"></div>
+        <div class="suntv-collab-period" data-i18n="suntv_collab_period"></div>
+        <div class="suntv-copyright">© SUN-TV</div>
+      </div>
+    </button>
 
     <!-- Label is set by renderTitleScreen(), which needs the cleared count to
          choose between START and the next-stage wording; no data-i18n here or
          applyLang would overwrite it with the plain START string. -->
-    <button class="level-btn" id="btn-play" type="button"></button>
+    <div class="start-row">
+      <button class="level-btn" id="btn-play" type="button"></button>
+    </div>
 
     <div class="promo-strip" id="promo-strip">
       <div class="promo-track" id="promo-track"></div>
@@ -887,14 +1338,23 @@
 
   <!-- GAME -->
   <div class="screen" id="game-screen">
+    <div class="suntv-fullscreen-dim" id="suntv-fullscreen-dim"></div>
     <div class="topbar">
       <button class="circle-btn" id="btn-back">←</button>
       <div class="header-stats">
-        <div class="header-stat"><div class="label" data-i18n="level_word"></div><div class="value" id="stat-level">1</div></div>
-        <div class="header-stat"><div class="label" data-i18n="score_word"></div><div class="value" id="stat-score">0</div></div>
+        <div class="header-stat" id="stat-level-wrap"><div class="label" data-i18n="level_word"></div><div class="value" id="stat-level">1</div></div>
+        <div class="header-stat" id="stat-score-wrap"><div class="label" data-i18n="score_word"></div><div class="value" id="stat-score">0</div></div>
         <!-- The clear screen rates you on time and tracks a best, so the clock
              has to be visible while you are actually racing it. -->
-        <div class="header-stat"><div class="label" data-i18n="time_word"></div><div class="value" id="stat-time">00:00</div></div>
+        <div class="header-stat" id="stat-time-wrap"><div class="label" data-i18n="time_word"></div><div class="value" id="stat-time">00:00</div></div>
+      </div>
+      <div class="header-stat ta-progress-badge" id="ta-progress" style="display:none;">
+        <div class="label">TIME ATTACK</div>
+        <div class="value" id="ta-progress-value">1/10</div>
+      </div>
+      <div class="header-stat hard-mode-badge" id="hard-mode-badge" style="display:none;">
+        <div class="label">MODE</div>
+        <div class="value">🌌 BLACK HOLE</div>
       </div>
       <button class="circle-btn" id="btn-settings">⚙</button>
     </div>
@@ -902,10 +1362,14 @@
     <div class="pillrow">
       <div class="pill"><img class="fortune-icon" src="assets/images/chara4_sub.PNG" alt="占い"> <span><span class="frac-cur" id="progress-cur">0</span>/<span id="progress-max">6</span></span></div>
       <div class="pill" id="stat-hearts"></div>
+      <div class="pill game-coin-chip" id="game-coin-chip">
+        <img class="game-coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin">
+        <span id="game-coin-balance">0</span>
+      </div>
     </div>
 
     <div class="rulecards">
-      <div class="rulecard">
+      <div class="rulecard hard-hide">
         <div class="mini-grid">
           <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
           <div class="mini-cell face"><div class="mini-face-dot"></div></div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
@@ -929,9 +1393,22 @@
         </div>
         <p data-i18n="rule_touch"></p>
       </div>
+      <div class="rulecard hard-only">
+        <div class="mini-grid">
+          <div class="mini-cell">✕</div><div class="mini-cell face"><div class="mini-face-dot"></div></div><div class="mini-cell">✕</div>
+          <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell face"><div class="mini-face-dot"></div></div>
+          <div class="mini-cell">✕</div><div class="mini-cell">✕</div><div class="mini-cell">✕</div>
+        </div>
+        <p data-i18n="rule_area2"></p>
+      </div>
     </div>
 
-    <div id="grid-wrap"></div>
+    <div class="grid-stage">
+      <div id="grid-wrap"></div>
+      <div class="suntv-overlay" id="suntv-overlay">
+        <div class="suntv-character" id="suntv-character"></div>
+      </div>
+    </div>
 
     <div class="bottombar">
       <div class="badge-btn" id="btn-place-mode">
@@ -941,11 +1418,6 @@
         <div class="badge-count" id="place-count">3</div>
         <div class="badge-label" data-i18n="place_mode"></div>
       </div>
-      <div class="badge-btn" id="btn-hint">
-        <div class="badge-circle">✨</div>
-        <div class="badge-count" id="hint-count">3</div>
-        <div class="badge-label" data-i18n="hint"></div>
-      </div>
     </div>
   </div>
 
@@ -953,8 +1425,8 @@
   <div class="modal-overlay" id="clear-modal">
     <div class="modal-card">
       <h2 class="display" data-i18n="clear_title"></h2>
+      <div class="clear-level" id="clear-level"></div>
       <div class="time-big" id="clear-time">00:00</div>
-      <div class="best-line" id="clear-best"></div>
       <div class="coin-reward" id="coin-reward">
         <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
         <span class="coin-gain">+0</span>
@@ -965,6 +1437,17 @@
       <div class="coin-breakdown" id="coin-breakdown"></div>
       <button class="modal-btn primary" id="btn-next" data-i18n="next_puzzle"></button>
       <button class="modal-btn secondary" id="btn-menu-1" data-i18n="back_menu"></button>
+      <div class="share-row">
+        <div class="share-buttons">
+          <button type="button" class="share-btn line" id="btn-share-line" aria-label="LINE">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.032-.199.032-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.345 0-.63-.285-.63-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.346 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.346 0 .629.283.629.63 0 .344-.283.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.813 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08 0 0-.141.848-.171 1.027-.053.301-.24 1.186 1.049.647 1.291-.54 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          </button>
+          <button type="button" class="share-btn xshare" id="btn-share-x" aria-label="X">
+            <svg viewBox="0 0 24 24" fill="#fff"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </button>
+        </div>
+        <div class="share-label" data-i18n="share_label"></div>
+      </div>
     </div>
   </div>
 
@@ -975,6 +1458,131 @@
       <p class="best-line" data-i18n="over_body"></p>
       <button class="modal-btn primary" id="btn-retry" data-i18n="retry"></button>
       <button class="modal-btn secondary" id="btn-menu-2" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- TIME ATTACK INTRO MODAL -->
+  <div class="modal-overlay" id="ta-intro-modal">
+    <div class="modal-card ta-intro-card">
+      <h2 class="display" data-i18n="ta_intro_title"></h2>
+      <div class="ta-intro-rows">
+        <div class="ta-intro-row"><span class="ta-intro-icon">🧩</span><span data-i18n="ta_intro_puzzles"></span></div>
+        <div class="ta-intro-row"><span class="ta-intro-icon">🌌</span><span data-i18n="ta_intro_hardpart"></span></div>
+        <div class="ta-intro-row"><span class="ta-intro-icon">✨</span><span data-i18n="ta_intro_limits"></span></div>
+        <div class="ta-intro-row"><span class="ta-intro-icon">⏱</span><span data-i18n="ta_intro_timer"></span></div>
+      </div>
+      <button class="modal-btn primary" id="btn-ta-intro-start" data-i18n="ta_intro_start"></button>
+      <button class="modal-btn secondary" id="btn-ta-intro-cancel" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- TIME ATTACK BLACK HOLE WARNING MODAL -->
+  <div class="modal-overlay" id="ta-warning-modal">
+    <div class="modal-card ta-warning-card">
+      <div class="ta-warning-icon">🌌</div>
+      <h2 class="display" data-i18n="ta_warning_title"></h2>
+      <p class="best-line" data-i18n="ta_warning_body"></p>
+      <button class="modal-btn primary" id="btn-ta-warning-ok" data-i18n="ta_warning_ok"></button>
+    </div>
+  </div>
+
+  <!-- TIME ATTACK RESULT MODAL -->
+  <div class="modal-overlay" id="ta-result-modal">
+    <div class="modal-card">
+      <h2 class="display" data-i18n="ta_result_title"></h2>
+      <div class="best-line" data-i18n="ta_total_time"></div>
+      <div class="time-big" id="ta-result-time">00:00</div>
+      <div class="best-line" id="ta-result-best"></div>
+      <div class="ta-leaderboard">
+        <div class="ta-leaderboard-title" data-i18n="ta_leaderboard"></div>
+        <div id="ta-leaderboard-list"></div>
+        <div class="ta-leaderboard-note" data-i18n="ta_leaderboard_note"></div>
+      </div>
+      <button class="modal-btn primary" id="btn-ta-retry" data-i18n="ta_retry"></button>
+      <button class="modal-btn secondary" id="btn-ta-menu" data-i18n="ta_back"></button>
+    </div>
+  </div>
+
+  <!-- SHOP MODAL -->
+  <div class="modal-overlay" id="shop-modal">
+    <div class="modal-card shop-card">
+      <div class="mission-head">
+        <h2 class="display" data-i18n="shop_title"></h2>
+        <div class="mission-coin-chip">
+          <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
+          <span id="shop-coin-balance">0</span>
+        </div>
+      </div>
+      <div class="shop-entry" data-kind="place">
+        <div class="shop-item">
+          <div class="shop-item-icon">🪄</div>
+          <div class="shop-item-info">
+            <div class="shop-item-name" data-i18n="shop_place_name"></div>
+            <div class="shop-item-desc" data-i18n="shop_place_desc"></div>
+            <div class="shop-item-owned"><span data-i18n="shop_owned"></span> <span class="shop-owned-count" id="shop-place-owned">0</span></div>
+          </div>
+        </div>
+        <div class="shop-buy-row">
+          <button type="button" class="shop-buy-btn" data-kind="place" data-qty="1"><span class="shop-buy-qty">×1</span><span class="shop-buy-price"></span></button>
+          <button type="button" class="shop-buy-btn" data-kind="place" data-qty="5"><span class="shop-buy-qty">×5</span><span class="shop-buy-price"></span></button>
+        </div>
+      </div>
+      <button class="modal-btn secondary" id="btn-shop-close" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- MISSION MODAL -->
+  <div class="modal-overlay" id="mission-modal">
+    <div class="modal-card mission-card">
+      <div class="mission-head">
+        <h2 class="display" data-i18n="mission_title"></h2>
+        <div class="mission-coin-chip">
+          <img class="coin-icon" src="assets/images/CosmoCoin.PNG" alt="Cosmo Coin" aria-hidden="true">
+          <span id="mission-coin-balance">0</span>
+        </div>
+      </div>
+      <div class="mission-tabs">
+        <button type="button" class="mission-tab active" id="mission-tab-daily" data-i18n="mission_tab_daily"></button>
+        <button type="button" class="mission-tab" id="mission-tab-weekly" data-i18n="mission_tab_weekly"></button>
+      </div>
+      <div class="mission-list" id="mission-list-daily"></div>
+      <div class="mission-list" id="mission-list-weekly" style="display:none;"></div>
+      <div class="mission-reset-note" id="mission-reset-note" style="display:none;">
+        <span data-i18n="mission_reset_label"></span>
+        <span class="mission-reset-timer" id="mission-reset-timer">00:00:00</span>
+      </div>
+      <button class="modal-btn secondary" id="btn-mission-close" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- RANKING MODAL -->
+  <div class="modal-overlay" id="ranking-modal">
+    <div class="modal-card mission-card">
+      <div class="mission-head">
+        <h2 class="display" data-i18n="ranking_title"></h2>
+      </div>
+      <div class="mission-tabs">
+        <button type="button" class="mission-tab active" id="ranking-tab-ta" data-i18n="ranking_tab_ta"></button>
+        <button type="button" class="mission-tab" id="ranking-tab-normal" data-i18n="ranking_tab_normal"></button>
+      </div>
+      <div class="mission-list" id="ranking-list-ta"></div>
+      <div class="mission-list" id="ranking-list-normal" style="display:none;"></div>
+      <div class="ta-leaderboard-note" data-i18n="ranking_local_note"></div>
+      <button class="modal-btn secondary" id="btn-ranking-close" data-i18n="back_menu"></button>
+    </div>
+  </div>
+
+  <!-- COLLAB INFO MODAL -->
+  <div class="modal-overlay" id="suntv-info-modal">
+    <div class="modal-card">
+      <img class="suntv-info-art" src="assets/images/ohsun_07.png" alt="おっ！サンコラボ">
+      <h2 class="display" data-i18n="suntv_info_title"></h2>
+      <div class="suntv-info-steps">
+        <div class="suntv-info-step"><span class="suntv-info-step-num">1</span><span data-i18n="suntv_info_step1"></span></div>
+        <div class="suntv-info-step"><span class="suntv-info-step-num">2</span><span data-i18n="suntv_info_step2"></span></div>
+      </div>
+      <p class="suntv-info-note" data-i18n="suntv_info_note"></p>
+      <button class="modal-btn primary" id="btn-suntv-info-close" data-i18n="confirm"></button>
     </div>
   </div>
 
@@ -1022,7 +1630,10 @@
         <span class="trow-label" data-i18n="opt_pattern"></span>
         <label class="switch"><input type="checkbox" id="toggle-pattern"><span class="slider"></span></label>
       </div>
-      <button class="feedback-btn" id="btn-feedback" data-i18n="feedback"></button>
+      <div class="toggle-row">
+        <span class="trow-label" data-i18n="opt_suntv"></span>
+        <label class="switch"><input type="checkbox" id="toggle-suntv" checked><span class="slider"></span></label>
+      </div>
       <button class="modal-btn primary" id="btn-restart" data-i18n="restart"></button>
     </div>
   </div>
@@ -1513,13 +2124,159 @@ function generatePuzzleRobust(cfg, rng){
   return null;
 }
 
+/* ---------------- Black Hole Cosmii (Hard Mode) generation ----------------
+   Same board, same three base rules, plus a fourth: every star zone now
+   holds exactly TWO Cosmii instead of one. Rows and columns are untouched
+   (still exactly one Cosmii each), so a normal puzzle's solution — a single
+   column choice per row — is still the right shape. The only thing that
+   actually changes is the region map: take a normal-style layout of n
+   regions (one Cosmii apiece) and fuse them into n/2 pairs, preferring pairs
+   that already share a border so the fused zone still reads as one blob.
+   Uniqueness and solvability are then re-checked against the new capacity
+   with dedicated (capacity-aware) versions of the normal solvers, since the
+   original ones hard-code "exactly one per region".
+------------------------------------------------------------------------- */
+function mergeRegionsForHard(n, regionOf, rng){
+  if(n % 2 !== 0) return null; // needs an even count of regions to pair up
+  const adj = Array.from({length:n}, ()=>new Set());
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    const g = regionOf[r][c];
+    if(r+1<n){ const h=regionOf[r+1][c]; if(h!==g){ adj[g].add(h); adj[h].add(g); } }
+    if(c+1<n){ const h=regionOf[r][c+1]; if(h!==g){ adj[g].add(h); adj[h].add(g); } }
+  }
+  const order = Array.from({length:n},(_,i)=>i);
+  for(let i=order.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [order[i],order[j]]=[order[j],order[i]]; }
+  const used = new Array(n).fill(false);
+  const mapping = new Array(n).fill(-1);
+  let nextId = 0;
+  for(const g of order){
+    if(used[g]) continue;
+    const candidates = Array.from(adj[g]).filter(x=>!used[x]);
+    let partner;
+    if(candidates.length){
+      partner = candidates[(rng()*candidates.length)|0];
+    } else {
+      const rest = order.filter(x=>!used[x] && x!==g);
+      if(!rest.length) return null;
+      partner = rest[(rng()*rest.length)|0];
+    }
+    used[g]=true; used[partner]=true;
+    mapping[g]=nextId; mapping[partner]=nextId; nextId++;
+  }
+  const merged = Array.from({length:n},()=>new Array(n));
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) merged[r][c]=mapping[regionOf[r][c]];
+  return merged;
+}
+function countSolutionsHard(n, regionOf, limit){
+  const usedCols=new Set();
+  const regCount=new Array(n).fill(0);
+  let count=0;
+  function backtrack(row, prevCol){
+    if(count>=limit) return;
+    if(row===n){ count++; return; }
+    for(let c=0;c<n;c++){
+      if(usedCols.has(c)) continue;
+      if(prevCol!==null && Math.abs(c-prevCol)===1) continue;
+      const reg = regionOf[row][c];
+      if(regCount[reg]>=2) continue;
+      usedCols.add(c); regCount[reg]++;
+      backtrack(row+1,c);
+      usedCols.delete(c); regCount[reg]--;
+      if(count>=limit) return;
+    }
+  }
+  backtrack(0,null);
+  return count;
+}
+function analyseSolvabilityHard(n, regionOf){
+  const numRegions = n/2;
+  const rowDone=new Array(n).fill(false), colDone=new Array(n).fill(false);
+  const regCount=new Array(numRegions).fill(0);
+  const dead=Array.from({length:n},()=>new Array(n).fill(false));
+  let assigned=0;
+  const alive=(r,c)=>!dead[r][c] && !rowDone[r] && !colDone[c] && regCount[regionOf[r][c]]<2;
+  function place(r,c){
+    rowDone[r]=true; colDone[c]=true;
+    const reg=regionOf[r][c];
+    regCount[reg]++;
+    if(regCount[reg]>=2){
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(regionOf[i][j]===reg) dead[i][j]=true;
+    }
+    for(let di=-1;di<=1;di++) for(let dj=-1;dj<=1;dj++){
+      const ni=r+di,nj=c+dj; if(ni>=0&&ni<n&&nj>=0&&nj<n) dead[ni][nj]=true;
+    }
+    assigned++;
+  }
+  let progressed=true;
+  while(progressed && assigned<n){
+    progressed=false;
+    for(let r=0;r<n&&!progressed;r++){
+      if(rowDone[r]) continue;
+      const cands=[]; for(let c=0;c<n;c++) if(alive(r,c)) cands.push(c);
+      if(cands.length===1){ place(r,cands[0]); progressed=true; }
+    }
+    if(progressed) continue;
+    for(let c=0;c<n&&!progressed;c++){
+      if(colDone[c]) continue;
+      const rs=[]; for(let r=0;r<n;r++) if(alive(r,c)) rs.push(r);
+      if(rs.length===1){ place(rs[0],c); progressed=true; }
+    }
+    if(progressed) continue;
+    for(let g=0; g<numRegions && !progressed; g++){
+      const need = 2-regCount[g];
+      if(need<=0) continue;
+      const cells=[];
+      for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(regionOf[r][c]===g && alive(r,c)) cells.push([r,c]);
+      if(cells.length===need){
+        for(const [r,c] of cells){ place(r,c); progressed=true; }
+      }
+    }
+  }
+  return {solved: assigned===n};
+}
+function generateHardPuzzle(n, rng){
+  const size = (n % 2 === 0) ? n : n - 1;
+  const plans = [
+    {compact:0.6, requireLogical:true},
+    {compact:0.45, requireLogical:true},
+    {compact:0.3, requireLogical:true},
+    {compact:0.6, requireLogical:false},
+    {compact:0.45, requireLogical:false},
+    {compact:0.3, requireLogical:false},
+  ];
+  for(const plan of plans){
+    for(let a=0;a<120;a++){
+      const solution = generateSolution(size, rng);
+      if(!solution) continue;
+      const targets = makeTargetSizes(size, rng, [1,2]);
+      const regionOf = generateRegions(size, solution, rng, targets, plan.compact);
+      if(!regionOf) continue;
+      // A single region layout can pair up several different ways; trying a
+      // handful of pairings per layout costs little and rescues many layouts
+      // whose *first* pairing happened to create an ambiguous board.
+      for(let m=0;m<8;m++){
+        const merged = mergeRegionsForHard(size, regionOf, rng);
+        if(!merged) break;
+        if(countSolutionsHard(size, merged, 2)!==1) continue;
+        if(plan.requireLogical && !analyseSolvabilityHard(size, merged).solved) continue;
+        return {n:size, solution, regionOf:merged, hard:true};
+      }
+    }
+  }
+  return null;
+}
+
 /* Worker entry point. Guarded so it is inert when this same source runs on
    the main thread, where `importScripts` (and `onmessage`) do not exist. */
+function runGeneration(cfg, rng){
+  if(cfg && cfg.hard) return generateHardPuzzle(cfg.n, rng);
+  return generatePuzzleRobust(cfg, rng);
+}
 if(typeof importScripts === 'function'){
   self.onmessage = function(e){
     const {id, cfg, seed} = e.data;
     try{
-      self.postMessage({id, puzzle: generatePuzzleRobust(cfg, mulberry32(seed))});
+      self.postMessage({id, puzzle: runGeneration(cfg, mulberry32(seed))});
     }catch(err){
       self.postMessage({id, puzzle: null, error: String(err && err.message || err)});
     }
@@ -1562,7 +2319,7 @@ function warmPuzzleWorker(){ try{ puzzleWorker(); }catch(e){} }
 
 function generatePuzzleAsync(cfg, seed){
   const w = puzzleWorker();
-  if(!w) return Promise.resolve(generatePuzzleRobust(cfg, mulberry32(seed)));
+  if(!w) return Promise.resolve(runGeneration(cfg, mulberry32(seed)));
   return new Promise(resolve=>{
     const id = ++_puzzleReqId;
     let settled = false;
@@ -1581,7 +2338,7 @@ function generatePuzzleAsync(cfg, seed){
       reportWorkerIssue('worker timed out n=' + cfg.n);
       _puzzleWorkerDead = true; _puzzleWorker = null;
       try{ w.terminate(); }catch(e){}
-      done(generatePuzzleRobust(cfg, mulberry32(seed)));
+      done(runGeneration(cfg, mulberry32(seed)));
     }, 10000);
     w.addEventListener('message', onMessage);
     w.postMessage({id, cfg, seed});
@@ -1674,18 +2431,69 @@ async function saveJSON(key, obj){
 }
 
 /* ---------------- Sound / haptics ---------------- */
-let audioCtx=null;
+const BGM_VOLUME = 0.20;
+const SFX_VOLUME = {
+  tap: 0.36,
+  blocked: 0.38,
+  wrong: 0.34,
+  place: 0.42,
+  placeQuick: 0.36,
+  event: 0.32,
+  poof: 0.34,
+  reveal: 0.42,
+  revealHigh: 0.40,
+  button: 0.34,
+  successLow: 0.44,
+  successHigh: 0.44,
+};
+const sfx = {
+  tap: new Audio('assets/audio/sfx_tap.wav'),
+  blocked: new Audio('assets/audio/sfx_blocked.wav'),
+  wrong: new Audio('assets/audio/sfx_wrong.wav'),
+  place: new Audio('assets/audio/sfx_place.wav'),
+  placeQuick: new Audio('assets/audio/sfx_place_quick.wav'),
+  event: new Audio('assets/audio/sfx_event.wav'),
+  poof: new Audio('assets/audio/sfx_poof.wav'),
+  reveal: new Audio('assets/audio/sfx_reveal.wav'),
+  revealHigh: new Audio('assets/audio/sfx_reveal_high.wav'),
+  button: new Audio('assets/audio/sfx_button.wav'),
+  successLow: new Audio('assets/audio/sfx_success_low.wav'),
+  successHigh: new Audio('assets/audio/sfx_success_high.wav'),
+};
+let audioUnlocked = false;
+Object.keys(sfx).forEach(key=>{
+  sfx[key].preload = 'auto';
+  sfx[key].volume = SFX_VOLUME[key] || 0.4;
+});
+function unlockAudio(){
+  audioUnlocked = true;
+}
+function tryPlayAudio(audio){
+  const promise = audio.play();
+  if(promise && typeof promise.catch === 'function') promise.catch(()=>{});
+}
+function playSfx(audio){
+  if(!settings.sound || document.hidden || !audioUnlocked) return;
+  audio.pause();
+  audio.currentTime = 0;
+  tryPlayAudio(audio);
+}
+function sfxForBeep(freq, dur, type){
+  if(freq <= 220) return sfx.wrong;
+  if(freq <= 340) return sfx.blocked;
+  if(freq <= 470) return sfx.tap;
+  if(freq <= 560) return sfx.poof;
+  if(freq >= 600 && freq <= 640 && type === 'sine') return sfx.placeQuick;
+  if(freq <= 640) return sfx.button;
+  if(freq <= 690) return sfx.place;
+  if(freq <= 780) return sfx.reveal;
+  if(freq <= 850) return sfx.revealHigh;
+  if(freq <= 980 && type === 'square') return sfx.event;
+  if(freq <= 980) return sfx.successLow;
+  return sfx.successHigh;
+}
 function beep(freq, dur, type){
-  if(!settings.sound || document.hidden) return;
-  try{
-    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
-    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-    o.type = type||'sine'; o.frequency.value = freq;
-    o.connect(g); g.connect(audioCtx.destination);
-    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+dur);
-    o.start(); o.stop(audioCtx.currentTime+dur);
-  }catch(e){}
+  playSfx(sfxForBeep(freq, dur, type));
 }
 /* Haptics. `navigator.vibrate` does not exist in WKWebView at all, so on iOS —
    the platform this ships on — the vibration setting used to be a no-op with a
@@ -1735,7 +2543,12 @@ const GA_BUILD      = '1.01';          // keep in step with MARKETING_VERSION
 // small character set, so both lists are fixed up front and every call below
 // draws from them.
 const GA_CURRENCY   = 'CosmoCoin';
-const GA_ITEM_TYPES = ['StageClear','Streak','Record','Avatar','Frame'];
+// Every itemType passed to addResourceEvent must appear here: the SDK checks
+// membership in validateResourceEvent() and silently drops the whole event
+// otherwise. 'Place' (shop) and 'Mission' were missing, so those two coin
+// flows never reached the dashboard at all. 'Streak' is gone with the streak
+// bonus it belonged to.
+const GA_ITEM_TYPES = ['StageClear','Record','Avatar','Frame','Place','Mission'];
 
 let gaReady = false;
 function ga(){
@@ -1774,7 +2587,7 @@ function initAnalytics(){
 // two would never line up in a funnel.
 function gaStageStart(){
   if(!state) return;
-  state.gaIds = ['Stage', 'Lv' + (isDailyMode ? 'Daily' : (progress.cleared + 1)),
+  state.gaIds = ['Stage', 'Lv' + (isHardMode ? 'Daily' : (progress.cleared + 1)),
                  state.n + 'x' + state.n];
   ga('addProgressionEvent', 'Start', state.gaIds[0], state.gaIds[1], state.gaIds[2]);
 }
@@ -1810,10 +2623,73 @@ const AREA_EN = 'star zone';
 const I18N = {
   ja:{
     splash_start:'タップしてはじめる',
-    daily_title:'デイリー<br>チャレンジ',
-    daily_play:'プレイする',
+    game_tagline:'各行・列・星域にCosmiiを1体ずつ置こう',
+    daily_title:'Black Hole<br>Cosmii',
+    daily_play:'星域に2体置く特別ルール',
     daily_cleared:'クリア済み',
     daily_locked:lv=>`Lv.${lv} で解放`,
+    timeattack_title:'Time<br>Attack',
+    timeattack_play:'10問のタイムに挑戦',
+    ta_rule_note:lv=>`最初の7問は通常ルール、残り3問はBlack Hole Cosmii（Hard Mode）`,
+    ta_intro_title:'⏱ Time Attack',
+    ta_intro_puzzles:'全10問の連続タイムアタック！',
+    ta_intro_hardpart:'最初の7問は通常ルール、残り3問はBlack Hole Cosmii（星域ごとに2体）ルール',
+    ta_intro_limits:'Cosmii配置は10問通して2回まで',
+    ta_intro_timer:'スタートを押すとタイマー開始！',
+    ta_intro_start:'スタート',
+    ta_warning_title:'⚠️ Black Holeが近づいています',
+    ta_warning_body:'ここからはBlack Hole Cosmiiルール。星域ごとに2体になるから注意してね！',
+    ta_warning_ok:'よし、いくぞ！',
+    ta_result_title:'⏱ Time Attack 結果',
+    ta_total_time:'合計タイム',
+    ta_puzzle_progress:(i,tt)=>`${i} / ${tt} 問`,
+    ta_leaderboard:'ランキング（端末内・仮実装）',
+    ta_leaderboard_note:'※現在は端末内のみの記録です。オンラインランキングは今後対応予定です。',
+    ta_back:'メニューへ戻る',
+    ta_retry:'もう一度挑戦',
+    ta_new_best:'🏆 自己ベスト更新！',
+    mission_button:'ミッション',
+    ranking_title:'🏆 ランキング',
+    ranking_card_title:'ランキング',
+    ranking_sub:'自分の記録を見る',
+    ranking_tab_ta:'Time Attack',
+    ranking_tab_normal:'通常ステージ',
+    ranking_local_note:'※現在は端末内のみの記録です。他のプレイヤーとのランキングは今後対応予定です。',
+    ranking_empty:'まだ記録がありません',
+    ranking_board_size:n=>`${n} × ${n}`,
+    ranking_hard_label:'Black Hole Cosmii',
+    ranking_you:'YOU',
+    ranking_current_stage:lv=>`ステージ ${lv}`,
+    ranking_stage_sub:'現在の進行状況（他のプレイヤーとの比較は準備中）',
+    ranking_best_times_label:'自己ベストタイム',
+    ranking_best_time_label:'自己ベスト',
+    ranking_history_label:'過去の記録',
+    ranking_ta_best_sub:'自己ベストタイム（他のプレイヤーとの比較は準備中）',
+    shop_title:'ショップ',
+    shop_hint_name:'ヒント',
+    shop_hint_desc:'パズルの次の一手を教えてくれるアイテム。手持ちのヒントを使い切った後に使えます。',
+    shop_place_name:'Cosmii配置',
+    shop_place_desc:'ランダムな1マスに自動でCosmiiを置くアイテム。手持ちの配置を使い切った後に使えます。',
+    shop_owned:'所持数',
+    toast_hint_bought:n=>`ヒントを${n}個購入しました`,
+    toast_place_bought:n=>`Cosmii配置を${n}個購入しました`,
+    mission_title:'ミッション',
+    mission_tab_daily:'デイリー',
+    mission_tab_weekly:'ウィークリー',
+    mission_claim:'受け取る',
+    mission_claimed:'受取済み',
+    mission_locked:'未達成',
+    mission_login:'ログインしました',
+    mission_daily_stage:'10 Stage Clearしました',
+    mission_daily_hint:'Cosmii配置を使いました',
+    mission_weekly_login:'ログインを5日間実施しました',
+    mission_weekly_normal:'通常モードを100 Stage Clear',
+    mission_weekly_hard:'Black Hole Cosmiiを50 Stage Clear',
+    mission_reward:c=>`+${c} コスモコイン`,
+    mission_weekly_reset_note:'ウィークリーミッションは毎週日曜0時にリセットされます',
+    mission_reset_label:'リセットまで',
+    mission_claimable:n=>`${n}件 受け取り可能`,
+    toast_mission_claimed:c=>`ミッション達成！+${c} コスモコイン`,
     time_word:'タイム',
     reward_clear:'クリア',
     reward_streak:'ストリーク',
@@ -1826,13 +2702,18 @@ const I18N = {
     start_button:'START',
     continue_button:lv=>`次のステージ ${lv}`,
     level_word:'レベル',
+    clear_level_label:lv=>`🎉 レベル ${lv} に到達！`,
     score_word:'スコア',
     rule_area:`${AREA_JA}ごとに1体`,
+    rule_area2:`${AREA_JA}ごとに<span class="kw">2体</span>`,
     rule_line:'行と列に1体ずつ',
     rule_touch:'Cosmii同士は接触不可',
     place_mode:'Cosmii配置',
     hint:'ヒント',
     clear_title:'🎉 クリア！',
+    share_label:'シェアしてCosmii配置+1！',
+    toast_share_reward:n=>`Cosmii配置+1！（現在の所持数: ${n}）`,
+    toast_share_max:'Cosmii配置はもう最大数（5）に達しています',
     best:tm=>`ベスト ${tm}`,
     record:'🏆 新記録！',
     next_puzzle:'次のパズルへ',
@@ -1844,8 +2725,19 @@ const I18N = {
     opt_sound:'🔊 サウンド',
     opt_vibrate:'📳 バイブレーション',
     opt_pattern:'🔷 パターンモード',
-    feedback:'フィードバック',
-    restart:'やり直す',
+    opt_suntv:'おっ！サンコラボ演出',
+    suntv_collab_title:'おっ！サンコラボ実施中！',
+    suntv_collab_period:'期間限定：9月21日〜10月31日まで',
+    suntv_info_title:'おっ！サンコラボ',
+    suntv_info_step1:'ステージを進めると、おっ！サンが出てくることがあるよ。',
+    suntv_info_step2:'出てきたら、盤面を回す・×を消す・Cosmiiを置くことがあるよ。',
+    suntv_info_note:'Hard Mode、Time Attack、チュートリアル中は出ません。設定でON/OFFできます。',
+    suntv_msg_rotate:'',
+    suntv_msg_clearx:'',
+    suntv_msg_reveal2:'',
+    suntv_msg_clearall:'',
+    suntv_tap_hint:'タップしてつづける',
+    restart:'この問題を最初から',
     coin_name:'コスモコイン',
     coin_total:v=>`所持 ${v}`,
     toast_coins:v=>`コスモコイン：${v} 枚`,
@@ -1859,7 +2751,6 @@ const I18N = {
     toast_collection:'Cosmiiコレクション（準備中）',
     toast_streak:d=>`現在のストリーク：${d}日`,
     toast_daily_locked:lv=>`Lv.${lv} で解放されます`,
-    toast_feedback:'ご意見ありがとうございます！',
     toast_genfail:'パズルを作れませんでした。もう一度お試しください',
     coach_next:'次へ',
     coach_start:'はじめる！',
@@ -1873,13 +2764,84 @@ const I18N = {
       `<span class="step">RULE 3 / 3</span>Cosmii 同士は<span class="kw">ナナメにも隣接できません</span>。<br>残りの光ったマスにも ✕ をつけよう！<span class="count" id="coach-count"></span>`,
       `<span class="step">READY</span>✕ は候補を消すメモなので、<br>何度でも付け外しできます。<br>この要領で全部置けたらクリアです！`,
     ],
+    hardCoach:[
+      `<span class="step">RULE 1 / 4</span>ここは特別な<span class="kw">${AREA_JA}</span>、<span class="kw">Black Hole Cosmii</span>です。`,
+      `<span class="step">TRY IT</span>光っているマスに<span class="kw">ダブルタップ</span>で置いてみよう！`,
+      `<span class="step">RULE 2 / 4</span>実は同じ${AREA_JA}に<span class="kw">2体</span>住みます。<br>もう1体、ダブルタップで置いてみよう！`,
+      `<span class="step">RULE 3 / 4</span><span class="kw">同じ行・列</span>には2体置けません。<br>光ったマスをタップして✕をつけよう！<span class="count" id="coach-count"></span>`,
+      `<span class="step">RULE 4 / 4</span><span class="kw">ナナメの隣接</span>もNGです。<br>残りにも✕をつけよう！<span class="count" id="coach-count"></span>`,
+      `<span class="step">READY</span>✕は何度でも付け外しOK。<br>この要領で全部置いたらクリアです！`,
+    ],
   },
   en:{
     splash_start:'Tap to start',
-    daily_title:'Daily<br>Challenge',
-    daily_play:'Play',
+    game_tagline:'Place one Cosmii in every row, column, and star zone',
+    daily_title:'Black Hole<br>Cosmii',
+    daily_play:'2 Cosmii per star zone',
     daily_cleared:'Cleared',
     daily_locked:lv=>`Unlocks at Lv.${lv}`,
+    timeattack_title:'Time<br>Attack',
+    timeattack_play:'Clear 10 puzzles fast',
+    ta_rule_note:lv=>`Puzzles 1-7 use normal rules, 8-10 use Black Hole Cosmii (Hard Mode)`,
+    ta_intro_title:'⏱ Time Attack',
+    ta_intro_puzzles:'10 puzzles back to back, one running clock!',
+    ta_intro_hardpart:'Puzzles 1-7 use normal rules, 8-10 switch to Black Hole Cosmii (2 per zone)',
+    ta_intro_limits:'Cosmii-placement is limited to 2 uses across all 10 puzzles',
+    ta_intro_timer:'The timer starts the moment you hit Start!',
+    ta_intro_start:'Start',
+    ta_warning_title:'⚠️ Black Hole incoming',
+    ta_warning_body:"From here it's Black Hole Cosmii rules — every zone now needs 2!",
+    ta_warning_ok:"Let's go!",
+    ta_result_title:'⏱ Time Attack Result',
+    ta_total_time:'Total time',
+    ta_puzzle_progress:(i,tt)=>`Puzzle ${i} / ${tt}`,
+    ta_leaderboard:'Ranking (on-device, placeholder)',
+    ta_leaderboard_note:'This is a local-only record for now. Online ranking is coming later.',
+    ta_back:'Back to menu',
+    ta_retry:'Try again',
+    ta_new_best:'🏆 New personal best!',
+    mission_button:'Mission',
+    ranking_title:'🏆 Ranking',
+    ranking_card_title:'Ranking',
+    ranking_sub:'View your records',
+    ranking_tab_ta:'Time Attack',
+    ranking_tab_normal:'Normal Stages',
+    ranking_local_note:'This is a local-only record for now. Ranking against other players is coming later.',
+    ranking_empty:'No records yet',
+    ranking_board_size:n=>`${n} × ${n}`,
+    ranking_hard_label:'Black Hole Cosmii',
+    ranking_you:'YOU',
+    ranking_current_stage:lv=>`Stage ${lv}`,
+    ranking_stage_sub:"Where you are right now (comparing with other players is coming later)",
+    ranking_best_times_label:'Personal Best Times',
+    ranking_best_time_label:'Personal Best',
+    ranking_history_label:'Past Runs',
+    ranking_ta_best_sub:'Your personal best (comparing with other players is coming later)',
+    shop_title:'Shop',
+    shop_hint_name:'Hint',
+    shop_hint_desc:"Reveals your next move. Kicks in once your free hints for the puzzle run out.",
+    shop_place_name:'Cosmii Placement',
+    shop_place_desc:'Auto-places a Cosmii in a random valid cell. Kicks in once your free placements run out.',
+    shop_owned:'Owned',
+    toast_hint_bought:n=>`Bought ${n} hint${n===1?'':'s'}`,
+    toast_place_bought:n=>`Bought ${n} placement${n===1?'':'s'}`,
+    mission_title:'Missions',
+    mission_tab_daily:'Daily',
+    mission_tab_weekly:'Weekly',
+    mission_claim:'Claim',
+    mission_claimed:'Claimed',
+    mission_locked:'Not yet',
+    mission_login:'Logged in today',
+    mission_daily_stage:'Clear 10 stages',
+    mission_daily_hint:'Use a Cosmii Placement',
+    mission_weekly_login:'Log in on 5 different days',
+    mission_weekly_normal:'Clear 100 normal stages',
+    mission_weekly_hard:'Clear 50 Black Hole Cosmii stages',
+    mission_reward:c=>`+${c} Cosmo Coin`,
+    mission_weekly_reset_note:'Weekly missions reset every Sunday at midnight',
+    mission_reset_label:'Resets in',
+    mission_claimable:n=>`${n} ready`,
+    toast_mission_claimed:c=>`Mission complete! +${c} Cosmo Coin`,
     time_word:'Time',
     reward_clear:'Clear',
     reward_streak:'Streak',
@@ -1892,13 +2854,18 @@ const I18N = {
     start_button:'START',
     continue_button:lv=>`Next stage ${lv}`,
     level_word:'Level',
+    clear_level_label:lv=>`🎉 Reached Lv. ${lv}!`,
     score_word:'Score',
     rule_area:`One per ${AREA_EN}`,
+    rule_area2:`<span class="kw">Two</span> per ${AREA_EN}`,
     rule_line:'One per row & column',
     rule_touch:'Cosmii can never touch',
     place_mode:'Place Cosmii',
     hint:'Hint',
     clear_title:'🎉 Cleared!',
+    share_label:'Share for +1 Cosmii Placement!',
+    toast_share_reward:n=>`+1 Cosmii Placement! (now have: ${n})`,
+    toast_share_max:"Cosmii Placement is already at the max (5)",
     best:tm=>`Best ${tm}`,
     record:'🏆 New record!',
     next_puzzle:'Next puzzle',
@@ -1910,8 +2877,19 @@ const I18N = {
     opt_sound:'🔊 Sound',
     opt_vibrate:'📳 Vibration',
     opt_pattern:'🔷 Pattern mode',
-    feedback:'Feedback',
-    restart:'Restart board',
+    opt_suntv:'Oh! Sun Collab Event',
+    suntv_collab_title:'Oh! Sun Collaboration!',
+    suntv_collab_period:'Limited time: Sep 21 – Oct 31',
+    suntv_info_title:'Oh! Sun Collaboration',
+    suntv_info_step1:'As you clear stages, Oh! Sun may appear.',
+    suntv_info_step2:'When Oh! Sun appears, he may spin the board, clear X marks, or place Cosmii.',
+    suntv_info_note:'Not available in Hard Mode, Time Attack, or tutorials. You can turn it on or off in Settings.',
+    suntv_msg_rotate:'',
+    suntv_msg_clearx:'',
+    suntv_msg_reveal2:'',
+    suntv_msg_clearall:'',
+    suntv_tap_hint:'Tap to continue',
+    restart:'Start this puzzle over',
     coin_name:'Cosmo Coin',
     coin_total:v=>`Total ${v}`,
     toast_coins:v=>`Cosmo Coins: ${v}`,
@@ -1925,7 +2903,6 @@ const I18N = {
     toast_collection:'Cosmii collection (coming soon)',
     toast_streak:d=>`Current streak: ${d} day${d===1?'':'s'}`,
     toast_daily_locked:lv=>`Unlocks at Level ${lv}`,
-    toast_feedback:'Thanks for the feedback!',
     toast_genfail:'Could not build a puzzle. Please try again',
     coach_next:'Next',
     coach_start:'Start!',
@@ -1938,6 +2915,14 @@ const I18N = {
       `<span class="step">RULE 2 / 3</span>No two Cosmii share a <span class="kw">row or column</span>.<br><span class="kw">Single-tap</span> each glowing square<br>to cross it off.<span class="count" id="coach-count"></span>`,
       `<span class="step">RULE 3 / 3</span>Cosmii can't touch — <span class="kw">not even diagonally</span>.<br>Cross off the rest.<span class="count" id="coach-count"></span>`,
       `<span class="step">READY</span>Crosses are only notes,<br>so tap again to remove one.<br>Place every Cosmii to clear the board!`,
+    ],
+    hardCoach:[
+      `<span class="step">RULE 1 / 4</span>Welcome to <span class="kw">Black Hole Cosmii</span>, a special zone board.`,
+      `<span class="step">TRY IT</span>The glowing square needs a Cosmii.<br><span class="kw">Double-tap</span> to place it!`,
+      `<span class="step">RULE 2 / 4</span><span class="kw">Two Cosmii</span> live in every zone here.<br>Double-tap to place a second one!`,
+      `<span class="step">RULE 3 / 4</span>No two share a <span class="kw">row or column</span>.<br>Tap each glowing square to cross it off.<span class="count" id="coach-count"></span>`,
+      `<span class="step">RULE 4 / 4</span>Cosmii can't <span class="kw">touch diagonally</span> either.<br>Cross off the rest.<span class="count" id="coach-count"></span>`,
+      `<span class="step">READY</span>Crosses are just notes — tap again to undo.<br>Place every Cosmii to clear it!`,
     ],
   },
 };
@@ -2037,6 +3022,9 @@ function assignColors(n, regionOf, rng){
 let state = null;
 let timerHandle = null;
 let bestTimes = {};
+// サンテレビ おじゃまイベント: which stage numbers have already used their
+// one-time event, persisted so a retry (or an app restart) can't reuse it.
+let suntvSeenStages = {};
 /* ---------------- Cosmo Coin economy ----------------
    A flat 10 per clear against 1000-coin avatars meant 700 clears to own
    everything, which made the whole unlock system decorative. The reward now
@@ -2049,31 +3037,23 @@ let bestTimes = {};
 ------------------------------------------------------ */
 const COIN_BASE          = 8;    // flat part of a clear
 const COIN_PER_ROW       = 4;    // ...plus this much per board row
-const COIN_DAILY_MULT    = 2;    // the daily challenge is worth double
+const COIN_HARD_MULT     = 2;    // Black Hole Cosmii (Hard Mode) is worth double
 const COIN_RECORD_BONUS  = 15;   // beat your own best time for this size
-const COIN_STREAK_PER_DAY= 5;
-const COIN_STREAK_CAP    = 7;    // streak bonus stops growing after a week
 
 // Returns the total and an itemised list, so the clear screen can show the
 // player why they earned what they earned.
-function clearReward({n, isDaily, isRecord, streak}){
+function clearReward({n, isHard, isRecord}){
   const parts = [];
   let base = COIN_BASE + COIN_PER_ROW * n;
-  if(isDaily) base *= COIN_DAILY_MULT;
+  if(isHard) base *= COIN_HARD_MULT;
   parts.push({key:'reward_clear', amount:base});
-  const bonus = Math.min(streak||0, COIN_STREAK_CAP) * COIN_STREAK_PER_DAY;
-  if(bonus > 0) parts.push({key:'reward_streak', amount:bonus});
   if(isRecord) parts.push({key:'reward_record', amount:COIN_RECORD_BONUS});
   return {total: parts.reduce((a,p)=>a+p.amount, 0), parts};
 }
 
-let progress = {score:0, cleared:0, coins:0};
-let settings = {sound:true, vibrate:true, pattern:false, placeMode:false};
-let isDailyMode = false;
-// Written on every daily clear but never read back, which let the daily be
-// farmed for coins any number of times a day. Now it gates the reward.
-let dailyProgress = {date:null, cleared:false, time:0};
-function dailyClearedToday(){ return dailyProgress.cleared && dailyProgress.date === todayStr(); }
+let progress = {score:0, cleared:0, coins:0, hintBank:0, placeBank:0};
+let settings = {sound:true, vibrate:true, pattern:false, placeMode:false, suntvEvents:true};
+let isHardMode = false;
 
 const els = {
   title: document.getElementById('title-screen'),
@@ -2085,8 +3065,8 @@ const els = {
   clearModal: document.getElementById('clear-modal'),
   overModal: document.getElementById('over-modal'),
   settingsModal: document.getElementById('settings-modal'),
+  restartBtn: document.getElementById('btn-restart'),
   clearTime: document.getElementById('clear-time'),
-  clearBest: document.getElementById('clear-best'),
   statLevel: document.getElementById('stat-level'),
   statScore: document.getElementById('stat-score'),
   progressCur: document.getElementById('progress-cur'),
@@ -2104,21 +3084,21 @@ function updateBgmPlayback(){
   const playableScreen =
     document.getElementById('title-screen').classList.contains('active') ||
     document.getElementById('game-screen').classList.contains('active');
-  if(settings.sound && appVisible && playableScreen){
-    bgm.volume = 0.35;
-    bgm.play().catch(error=>{ console.log('BGMを再生できませんでした:', error); });
+  bgm.volume = BGM_VOLUME;
+  if(settings.sound && appVisible && playableScreen && audioUnlocked){
+    tryPlayAudio(bgm);
   } else {
     bgm.pause();
   }
 }
 function pauseAllAudio(){
   if(bgm) bgm.pause();
-  if(audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(()=>{});
+  Object.values(sfx).forEach(audio=>{
+    audio.pause();
+    audio.currentTime = 0;
+  });
 }
 function resumeAudioIfPlayable(){
-  if(audioCtx && audioCtx.state === 'suspended' && settings.sound && !document.hidden){
-    audioCtx.resume().catch(()=>{});
-  }
   updateBgmPlayback();
 }
 
@@ -2127,6 +3107,11 @@ function showScreen(el){
   el.classList.add('active');
   if(el.id === 'title-screen'){ resetPromoScroll(); }
   updateBgmPlayback();
+}
+function openSettings({showRestart=false}={}){
+  els.restartBtn.hidden = !showRestart;
+  els.settingsModal.classList.add('active');
+  if(showRestart) suspendTimer();
 }
 function fmtTime(sec){ const m=Math.floor(sec/60), s=sec%60; return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0'); }
 function showToast(msg){
@@ -2147,6 +3132,11 @@ function heartsHtml(cur, max){
 
 function updateHeaderStats(){
   els.statLevel.textContent = progress.cleared + 1;
+  els.statScore.textContent = progress.score;
+}
+// Score can update the instant it's earned, but the level number is held
+// back — see onWin()'s comment — until "次へ" is actually pressed.
+function updateScoreDisplay(){
   els.statScore.textContent = progress.score;
 }
 
@@ -2394,6 +3384,7 @@ function handleCellTap(r, c){
   }
 }
 function handleSingleTap(r,c){
+  if(state.suntvBusy) return;
   if(coach.active && coach.act && coach.act!=='cross'){ coachNudge(); return; }
   const cur = state.board[r][c];
   // Settled cells are read-only: a red X is a spent life, and a placed Cosmii
@@ -2408,7 +3399,8 @@ function handleSingleTap(r,c){
   beep(420,0.05,'triangle');
   if(coach.active && coach.act==='cross' && state.board[r][c]===2) coachCellDone(r,c);
 }
-function handleDoubleTap(r,c){
+function handleDoubleTap(r,c,fromAutoPlace){
+  if(state.suntvBusy) return;
   if(coach.active && coach.act && coach.act!=='place'){ coachNudge(); return; }
   const cur = state.board[r][c];
   // A placed Cosmii is always part of the one true solution (isValidPlacement
@@ -2429,6 +3421,9 @@ function handleDoubleTap(r,c){
       }
     }
     if(coach.active && coach.act==='place'){ coachCellDone(r,c); return; }
+    // The event is specifically a reaction to the player's own double-tap
+    // gesture, not to the auto-placement button doing the same job.
+    if(!fromAutoPlace && suntvShouldTrigger()){ suntvTriggerEvent(); return; }
     checkWin();
   } else {
     // Seal the cell with a red X rather than clearing it. The guess is now
@@ -2444,6 +3439,15 @@ function handleDoubleTap(r,c){
     if(state.hearts<=0){
       state.finished=true; stopTimer();
       renderHintState();          // the board is over; grey the hint button too
+      // A failed attempt un-uses the サンテレビ event for this stage — the
+      // "no repeats" rule is about farming a clear, not about being denied
+      // it forever after a genuine fail-and-retry.
+      if(state.suntvFired){
+        const stageNum = progress.cleared + 1;
+        delete suntvSeenStages[stageNum];
+        saveJSON('suntv-seen-stages', suntvSeenStages);
+        state.suntvFired = false;
+      }
       gaStageFail(progress.score);
       showOverModal();
     }
@@ -2551,18 +3555,298 @@ async function onCorrectPlacement(r,c){
   await saveJSON('progress', progress);
 }
 
-const DAILY_UNLOCK_LEVEL = 20;
-let streakData = {lastDate:null, streak:0};
-async function updateStreak(){
-  const today = todayStr();
-  if(streakData.lastDate === today) return;
-  const d = new Date(); d.setDate(d.getDate()-1);
-  const yesterday = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-  if(streakData.lastDate === yesterday) streakData.streak += 1;
-  else streakData.streak = 1;
-  streakData.lastDate = today;
-  await saveJSON('streak', streakData);
+/* ================= サンテレビ おじゃまイベント =================
+   Every 5th stage (5, 10, 15, 20…) gets one surprise event, triggered right
+   after the player's first correct placement on that stage. Only ever runs
+   on normal stages — Black Hole Cosmii and Time Attack are explicitly out of
+   scope — and never during the tutorial. One of four effects fires, chosen
+   by weighted chance; two of them (clear X's, reveal 2) fall back out of the
+   draw when their precondition can't be met (no X's yet / nothing left to
+   reveal) so the remaining pool is redrawn instead of doing nothing. */
+const SUN_TV_COLLAB_ENABLED = true;
+const SUN_TV_COLLAB = {
+  enabled: SUN_TV_COLLAB_ENABLED,
+  assets: {
+    titleBanner: 'assets/images/ohsun_07.png',
+    rotateBoard: 'assets/images/ohsun_12.png',
+    clearCrossMarks: 'assets/images/ohsun_11.png',
+    revealTwoCosmii: 'assets/images/ohsun_10.png',
+    completeGame: [
+      'assets/images/ohsun_07.png', 'assets/images/ohsun_08.png',
+      'assets/images/ohsun_09.png', 'assets/images/ohsun_10.png',
+      'assets/images/ohsun_11.png', 'assets/images/ohsun_12.png',
+      'assets/images/ohsun_13.png',
+    ],
+  },
+};
+const SUNTV_EVENT_INTERVAL = 2;     // every multiple of 2 gets the event, no exceptions
+const SUNTV_EVENTS = [
+  {type:'rotate',   weight:45},
+  {type:'clearx',   weight:15},
+  {type:'reveal2',  weight:30},
+  {type:'clearall', weight:10},
+];
+function suntvHasXMarks(){
+  for(let r=0;r<state.n;r++) for(let c=0;c<state.n;c++) if(state.board[r][c]===2) return true;
+  return false;
 }
+function suntvHasUnplacedCorrect(){
+  for(let r=0;r<state.n;r++) if(state.board[r][state.solution[r]]===0) return true;
+  return false;
+}
+function suntvShouldTrigger(){
+  if(!SUN_TV_COLLAB.enabled || !settings.suntvEvents) return false;
+  if(!state || state.hardMode || state.timeAttack) return false;
+  if(coach.active || state.suntvFired || state.suntvBusy) return false;
+  const stageNum = progress.cleared + 1;
+  if(stageNum % SUNTV_EVENT_INTERVAL !== 0) return false;
+  if(suntvSeenStages[stageNum]) return false;
+  // Timing is randomised per stage (state.suntvTriggerAt, chosen when the
+  // puzzle was generated) rather than always firing on the first placement.
+  if(state.suntvTriggerAt == null || placedCount() < state.suntvTriggerAt) return false;
+  return true;
+}
+function suntvPickEventType(){
+  let pool = SUNTV_EVENTS.filter(e=>{
+    if(e.type==='clearx') return suntvHasXMarks();
+    if(e.type==='reveal2') return suntvHasUnplacedCorrect();
+    return true;
+  });
+  if(!pool.length) pool = [{type:'clearall', weight:1}];   // always valid, so this is the safe floor
+  const total = pool.reduce((a,e)=>a+e.weight, 0);
+  let roll = Math.random() * total;
+  for(const e of pool){ if(roll < e.weight) return e.type; roll -= e.weight; }
+  return pool[pool.length-1].type;
+}
+/* An event is a long chain of awaits — two of them wait on a player tap, which
+   may simply never come because the player left. Each run therefore claims a
+   token and the board it belongs to, and re-checks both after every await, so
+   a chain that outlived its board unwinds instead of applying its effect to
+   whatever is on screen by then. */
+let suntvRunId = 0;
+let suntvCancelWait = null;
+// Invalidates any in-flight event and puts the screen back the way it was.
+function suntvCancelEvent(){
+  suntvRunId++;
+  if(suntvCancelWait){ const cancel = suntvCancelWait; suntvCancelWait = null; cancel(); }
+  const overlay = document.getElementById('suntv-overlay');
+  if(overlay){
+    overlay.classList.remove('char-rise','char-set','msg-in','awaiting-tap');
+    overlay.style.pointerEvents = 'none';
+  }
+  const dim = document.getElementById('suntv-fullscreen-dim');
+  if(dim) dim.classList.remove('on');
+  suntvClearCharacter();
+}
+function suntvClearCharacter(){
+  const character = document.getElementById('suntv-character');
+  character.className = 'suntv-character';
+  character.replaceChildren();
+}
+function suntvSetCharacter(type){
+  const character = document.getElementById('suntv-character');
+  suntvClearCharacter();
+  if(!SUN_TV_COLLAB.enabled) return;
+  const paths = type === 'rotate' ? [SUN_TV_COLLAB.assets.rotateBoard]
+    : type === 'clearx' ? [SUN_TV_COLLAB.assets.clearCrossMarks]
+    : type === 'reveal2' ? [SUN_TV_COLLAB.assets.revealTwoCosmii]
+    : SUN_TV_COLLAB.assets.completeGame;
+  if(paths.length > 1) character.classList.add('suntv-gallery');
+  for(const path of paths){
+    const image = document.createElement('img');
+    image.alt = 'おっ！サンコラボ';
+    image.decoding = 'async';
+    image.addEventListener('error', ()=>image.remove(), {once:true});
+    image.src = path;
+    character.appendChild(image);
+  }
+}
+function suntvShowCharacter(){
+  const overlay = document.getElementById('suntv-overlay');
+  stopTimer();   // the clock shouldn't run while the character is on screen
+  overlay.style.pointerEvents = 'auto';   // captures taps for the rest of the event
+  document.getElementById('suntv-fullscreen-dim').classList.add('on');   // whole screen but the character dims
+  beep(920, 0.14, 'square');   // placeholder cue — swap for a real SFX asset when one exists
+  vibrate(20);
+  void overlay.offsetWidth;   // flush the character's off-screen starting position first
+  overlay.classList.add('char-rise');   // sunrise: bottom-left up to resting spot on the left
+  return new Promise(resolve=>setTimeout(resolve, 1320));
+}
+// Pauses the sequence until the player taps the overlay — the event now
+// advances step by step on tap rather than purely on a timer.
+function suntvWaitForTap(){
+  const overlay = document.getElementById('suntv-overlay');
+  const screen = document.getElementById('game-screen');
+  overlay.classList.add('awaiting-tap');
+  return new Promise(resolve=>{
+    const finish = ()=>{
+      screen.removeEventListener('pointerdown', handler);
+      if(suntvCancelWait === finish) suntvCancelWait = null;
+      overlay.classList.remove('awaiting-tap');
+      resolve();
+    };
+    const handler = ()=>finish();
+    // Listens on the whole screen, not just the character/board area — the
+    // dim now covers everything, so "tap anywhere" should too, not just a
+    // tap that happens to land on the icon itself.
+    // Not {once:true}: the listener has to be removable from the outside too,
+    // or leaving mid-event strands it on the screen, where the next board's
+    // first tap would resume an event that no longer belongs to anything.
+    screen.addEventListener('pointerdown', handler);
+    suntvCancelWait = finish;
+  });
+}
+function suntvHideCharacter(){
+  const overlay = document.getElementById('suntv-overlay');
+  overlay.classList.remove('msg-in');
+  overlay.classList.add('char-set');   // sunset: sinks away toward the bottom-right, slowly
+  // The dim stays on through the whole sunset — the screen only brightens
+  // back up once the character has fully disappeared.
+  return new Promise(resolve=>setTimeout(()=>{
+    document.getElementById('suntv-fullscreen-dim').classList.remove('on');
+    overlay.classList.remove('char-rise','char-set');
+    overlay.style.pointerEvents = 'none';
+    suntvClearCharacter();
+    startTimer();   // the character is gone — the clock can run again
+    resolve();
+  }, 1150));
+}
+function suntvRotateBoard(){
+  return new Promise(resolve=>{
+    const grid = els.gridWrap;
+    grid.style.transition = 'transform .6s ease';
+    grid.style.transformOrigin = 'center center';
+    state.suntvRotation = ((state.suntvRotation||0) + 90) % 360;
+    grid.style.transform = `rotate(${state.suntvRotation}deg)`;
+    grid.classList.add('suntv-rot90');   // keeps every Cosmii face upright as the board turns
+    setTimeout(resolve, 620);
+  });
+}
+function suntvClearXMarks(){
+  const n = state.n;
+  const cells = [];
+  // Only the player's own voluntary marks (2) — a locked, heart-spent wrong
+  // guess (3) stays locked, or clearing it would look like an invite to
+  // retry a cell that already cost a life.
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(state.board[r][c]===2) cells.push([r,c]);
+  return new Promise(resolve=>{
+    let i=0;
+    function step(){
+      if(i>=cells.length){ resolve(); return; }
+      const [r,c] = cells[i++];
+      state.board[r][c] = 0;
+      renderCell(r,c);
+      const el = cellEl(r,c);
+      if(el){ el.classList.add('suntv-poof'); setTimeout(()=>el.classList.remove('suntv-poof'), 300); }
+      beep(520, 0.03, 'sine');
+      setTimeout(step, 55);
+    }
+    step();
+  });
+}
+function suntvReveal2(){
+  const n = state.n;
+  const candidates = [];
+  for(let r=0;r<n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c] === 0) candidates.push([r,c]);
+  }
+  for(let i=candidates.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [candidates[i],candidates[j]]=[candidates[j],candidates[i]]; }
+  const picks = candidates.slice(0, 2);
+  return new Promise(resolve=>{
+    let i=0;
+    function step(){
+      if(i>=picks.length){ resolve(); return; }
+      const [r,c] = picks[i++];
+      state.board[r][c] = 1;
+      assignRandomCharacter(r,c);
+      renderCell(r,c);
+      const el = cellEl(r,c);
+      if(el){ el.classList.add('suntv-pop'); setTimeout(()=>el.classList.remove('suntv-pop'), 300); }
+      onCorrectPlacement(r,c);
+      beep(720, 0.09, 'triangle');
+      setTimeout(step, 380);
+    }
+    step();
+  });
+}
+function suntvClearAllReveal(){
+  const n = state.n;
+  const cells = [];
+  for(let r=0;r<n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c] !== 1) cells.push([r,c]);
+  }
+  return new Promise(resolve=>{
+    let i=0;
+    function step(){
+      if(i>=cells.length){ resolve(); return; }
+      const [r,c] = cells[i++];
+      state.board[r][c] = 1;
+      assignRandomCharacter(r,c);
+      renderCell(r,c);
+      const el = cellEl(r,c);
+      if(el){ el.classList.add('suntv-pop'); setTimeout(()=>el.classList.remove('suntv-pop'), 250); }
+      beep(820, 0.06, 'triangle');
+      setTimeout(step, 85);
+    }
+    step();
+  });
+}
+async function suntvTriggerEvent(){
+  state.suntvFired = true;
+  state.suntvBusy = true;
+  const stageNum = progress.cleared + 1;
+  suntvSeenStages[stageNum] = true;
+  saveJSON('suntv-seen-stages', suntvSeenStages);
+  gaDesign('SuntvEvent:Trigger', stageNum);
+  const type = suntvPickEventType();
+  suntvSetCharacter(type);
+
+  // Claim this run. If either changes underneath us the board we were acting
+  // on is gone, and the rest of the chain must not touch whatever replaced it.
+  const myRun = ++suntvRunId;
+  const myState = state;
+  const lost = ()=> suntvRunId !== myRun || state !== myState;
+  const bail = ()=>{ myState.suntvBusy = false; return true; };
+
+  await suntvShowCharacter();   // rises from the bottom, dims the screen, stops mid-way — automatic
+  if(lost()) return bail();
+  await suntvWaitForTap();      // → tap to continue
+  if(lost()) return bail();
+
+  gaDesign('SuntvEvent:' + type);
+  if(type==='rotate'){ await suntvRotateBoard(); }
+  else if(type==='clearx'){ await suntvClearXMarks(); }
+  else if(type==='reveal2'){ await suntvReveal2(); }
+  else if(type==='clearall'){ await suntvClearAllReveal(); }
+  if(lost()) return bail();
+
+  await suntvWaitForTap();      // → tap to continue
+  if(lost()) return bail();
+  await suntvHideCharacter();   // sunset, slowly, screen brightens back up once it's gone
+  if(lost()) return bail();
+
+  state.suntvBusy = false;
+  checkWin();   // reveal2 / clearall may have just completed the board
+}
+
+
+const HARD_UNLOCK_LEVEL = 10;
+// Campaign switch: set this to false after the Sun TV collaboration ends.
+// This removes both title-screen collaboration notices in one place.
+// Development switch: forces Black Hole Cosmii open regardless of level so it
+// can be tried out without grinding to Lv.10 first. Must stay false in any
+// build that ships — with it on, the HARD_UNLOCK_LEVEL gate does nothing.
+const HARD_MODE_FORCE_UNLOCK_FOR_TESTING = false;
+const HARD_N = 6;   // fixed board size for Time Attack's hard puzzles — kept constant there so the three hard rounds are comparable across runs
+// Standalone Black Hole Cosmii isn't tied to level progression, so its size
+// varies instead of being fixed. 8+ was tested and throws away uniqueness
+// almost every time once boards get that large (the region-merge approach
+// stops constraining the solution enough) — 4 and 6 are the sizes that
+// generate reliably, so those are the only two in the pool.
+function randomHardN(){ const opts=[4,6,6]; return opts[(Math.random()*opts.length)|0]; }
+const TA_N = 6;     // fixed board size for Time Attack's normal-rule half, so all 10 rounds feel consistent
 function renderCoins(bump){
   const el = document.getElementById('coin-balance');
   if(!el) return;
@@ -2573,25 +3857,424 @@ function renderCoins(bump){
     void chip.offsetWidth;
     chip.classList.add('bump');
   }
+  // The playfield's own coin chip (topbar) mirrors the same balance.
+  const gameEl = document.getElementById('game-coin-balance');
+  if(gameEl){
+    gameEl.textContent = progress.coins;
+    if(bump){
+      const gameChip = document.getElementById('game-coin-chip');
+      gameChip.classList.remove('bump');
+      void gameChip.offsetWidth;
+      gameChip.classList.add('bump');
+    }
+  }
 }
 
+/* ================= Shop ================= */
+/* Sells two things: extra hints and extra Cosmii-placements, each spendable
+   once a puzzle's free allowance runs out. progress.hintBank / placeBank
+   persist across puzzles and sessions, unlike state.hintsLeft / placeUses
+   which reset with every new board. */
+const HINT_PRICE = 30;
+const PLACE_PRICE = 30;
+// Shared cap on progress.placeBank — whether it's topped up by buying in the
+// shop or by sharing, the stockpile itself can't exceed this.
+const PLACE_BANK_MAX = 5;
+const SHOP_ITEMS = {
+  place: {price: PLACE_PRICE, bankKey: 'placeBank', ownedEl: 'shop-place-owned', toastKey: 'toast_place_bought', max: PLACE_BANK_MAX},
+};
+function renderShop(){
+  const coinEl = document.getElementById('shop-coin-balance');
+  if(coinEl) coinEl.textContent = progress.coins;
+  for(const kind in SHOP_ITEMS){
+    const cfg = SHOP_ITEMS[kind];
+    const ownedEl = document.getElementById(cfg.ownedEl);
+    if(ownedEl) ownedEl.textContent = progress[cfg.bankKey] || 0;
+  }
+  document.querySelectorAll('.shop-buy-btn').forEach(btn=>{
+    const kind = btn.dataset.kind;
+    const cfg = SHOP_ITEMS[kind];
+    if(!cfg) return;
+    const qty = parseInt(btn.dataset.qty, 10);
+    const price = cfg.price * qty;
+    const priceEl = btn.querySelector('.shop-buy-price');
+    if(priceEl) priceEl.textContent = '🪙' + price;
+    const owned = progress[cfg.bankKey] || 0;
+    const wouldExceedMax = cfg.max != null && owned >= cfg.max;
+    btn.disabled = progress.coins < price || wouldExceedMax;
+  });
+}
+async function buyShopItem(kind, qty){
+  const cfg = SHOP_ITEMS[kind];
+  if(!cfg) return;
+  const owned = progress[cfg.bankKey] || 0;
+  if(cfg.max != null && owned >= cfg.max){ showToast(t('toast_share_max')); return; }
+  // Buying past the cap (e.g. ×5 while sitting at 3/5) only grants the
+  // remaining room — charge for exactly that many, not the full bundle.
+  if(cfg.max != null) qty = Math.min(qty, cfg.max - owned);
+  const price = cfg.price * qty;
+  if(progress.coins < price){ showToast(t('toast_need_coins')); return; }
+  progress.coins -= price;
+  progress[cfg.bankKey] = owned + qty;
+  updateHeaderStats();
+  renderCoins(true);
+  await saveJSON('progress', progress);
+  gaCoinsSpent(price, kind==='hint' ? 'Hint' : 'Place', 'Shop');
+  showToast(t(cfg.toastKey, qty));
+  renderShop();
+  renderHintState();
+  renderPlaceMode();
+}
+
+// サンテレビコラボ banner — always shown; the copy itself states the dates,
+// so there's no need to gate visibility on the actual calendar date (that
+// caused it to look "missing" while testing ahead of the campaign start).
+function renderSuntvCollabBanner(){
+  const banner = document.getElementById('suntv-collab-banner');
+  const bannerIcon = document.getElementById('suntv-collab-icon');
+  if(banner) banner.style.display = SUN_TV_COLLAB.enabled ? 'flex' : 'none';
+  if(SUN_TV_COLLAB.enabled){
+    if(bannerIcon) bannerIcon.src = SUN_TV_COLLAB.assets.titleBanner;
+  } else {
+    if(bannerIcon) bannerIcon.removeAttribute('src');
+  }
+}
 function renderTitleScreen(){
   renderCoins(false);
+  renderSuntvCollabBanner();
   const level = progress.cleared + 1;
-  const unlocked = level >= DAILY_UNLOCK_LEVEL;
-  const dailyCard = document.getElementById('card-daily');
-  dailyCard.classList.toggle('locked', !unlocked);
-  const dailyDone = unlocked && dailyClearedToday();
-  document.getElementById('daily-unlock-label').textContent =
-    !unlocked ? t('daily_locked', DAILY_UNLOCK_LEVEL) : (dailyDone ? t('daily_cleared') : t('daily_play'));
-  document.getElementById('daily-check').style.display = dailyDone ? 'flex' : 'none';
-  document.getElementById('streak-count').textContent = streakData.streak || 0;
-  document.getElementById('streak-check').style.display = (streakData.lastDate===todayStr()) ? 'flex' : 'none';
+  // Time Attack has no level gate — anyone can jump in.
+  const hardUnlocked = HARD_MODE_FORCE_UNLOCK_FOR_TESTING || level >= HARD_UNLOCK_LEVEL;
+  const hardCard = document.getElementById('card-hard');
+  hardCard.classList.toggle('locked', !hardUnlocked);
+  document.getElementById('hard-unlock-label').textContent =
+    !hardUnlocked ? t('daily_locked', HARD_UNLOCK_LEVEL) : t('daily_play');
+  const taCard = document.getElementById('card-timeattack');
+  if(taCard) taCard.classList.toggle('locked', false);
+  document.getElementById('ta-unlock-label').textContent = t('timeattack_play');
+  renderMissions();
   // A returning player is resuming a run, not starting one, so the button says
   // which stage is next. Keyed off cleared stages rather than score: a session
   // that earned points but never finished a board has no stage to return to.
   const play = document.getElementById('btn-play');
   if(play) play.textContent = progress.cleared > 0 ? t('continue_button', level) : t('start_button');
+}
+
+/* ================= Missions ================= */
+/* Daily missions reset with the calendar day; weekly missions reset every
+   Sunday (local time). Both persist through the same storage backend as the
+   rest of the app's progress, so a claim survives a relaunch. */
+function sundayOf(d){
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() - dt.getDay()); // getDay(): 0 = Sunday
+  dt.setHours(0,0,0,0);
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+const DAILY_MISSION_COIN = 100;
+const WEEKLY_MISSION_COIN = 1000;
+const WEEKLY_LOGIN_TARGET = 5;
+const WEEKLY_NORMAL_TARGET = 100;
+const WEEKLY_HARD_TARGET = 50;
+const DAILY_STAGE_TARGET = 10;
+
+function freshMissionState(){
+  return {
+    date:null, loginDone:false, stageCount:0, hintUsed:false,
+    claimedLogin:false, claimedStage:false, claimedHint:false,
+    weekStart:null, loginDays:[], normalCleared:0, hardCleared:0,
+    claimedWeekLogin:false, claimedWeekNormal:false, claimedWeekHard:false,
+  };
+}
+let missionState = freshMissionState();
+
+// Rolls daily/weekly fields forward if the calendar has moved on since the
+// state was last touched. Called on load and whenever the mission modal or
+// title screen might show stale counters.
+function rollMissionState(){
+  const today = todayStr();
+  if(missionState.date !== today){
+    missionState.date = today;
+    missionState.loginDone = true;      // opening the app today counts as today's login
+    missionState.stageCount = 0;
+    missionState.hintUsed = false;
+    missionState.claimedLogin = false;
+    missionState.claimedStage = false;
+    missionState.claimedHint = false;
+    if(missionState.loginDays.indexOf(today) < 0) missionState.loginDays.push(today);
+  }
+  const wk = sundayOf(new Date());
+  if(missionState.weekStart !== wk){
+    missionState.weekStart = wk;
+    missionState.loginDays = [today];
+    missionState.normalCleared = 0;
+    missionState.hardCleared = 0;
+    missionState.claimedWeekLogin = false;
+    missionState.claimedWeekNormal = false;
+    missionState.claimedWeekHard = false;
+  }
+}
+async function saveMissionState(){ await saveJSON('missions', missionState); }
+
+// Hooked from onWin(): every non-Time-Attack stage clear counts toward the
+// relevant weekly total and the daily "10 stages" mission.
+async function onStageClearedForMissions(isHard){
+  rollMissionState();
+  missionState.stageCount += 1;
+  if(isHard) missionState.hardCleared += 1; else missionState.normalCleared += 1;
+  await saveMissionState();
+  renderMissions();
+}
+async function onDailyPlaceUsedForMissions(){
+  rollMissionState();
+  if(!missionState.hintUsed){ missionState.hintUsed = true; await saveMissionState(); renderMissions(); }
+}
+async function claimMission(kind){
+  rollMissionState();
+  let amount = 0;
+  if(kind==='login' && missionState.loginDone && !missionState.claimedLogin){ missionState.claimedLogin = true; amount = DAILY_MISSION_COIN; }
+  else if(kind==='stage' && missionState.stageCount>=DAILY_STAGE_TARGET && !missionState.claimedStage){ missionState.claimedStage = true; amount = DAILY_MISSION_COIN; }
+  else if(kind==='hint' && missionState.hintUsed && !missionState.claimedHint){ missionState.claimedHint = true; amount = DAILY_MISSION_COIN; }
+  else if(kind==='weekLogin' && missionState.loginDays.length>=WEEKLY_LOGIN_TARGET && !missionState.claimedWeekLogin){ missionState.claimedWeekLogin = true; amount = WEEKLY_MISSION_COIN; }
+  else if(kind==='weekNormal' && missionState.normalCleared>=WEEKLY_NORMAL_TARGET && !missionState.claimedWeekNormal){ missionState.claimedWeekNormal = true; amount = WEEKLY_MISSION_COIN; }
+  else if(kind==='weekHard' && missionState.hardCleared>=WEEKLY_HARD_TARGET && !missionState.claimedWeekHard){ missionState.claimedWeekHard = true; amount = WEEKLY_MISSION_COIN; }
+  if(amount<=0) return;
+  progress.coins += amount;
+  updateHeaderStats(); renderCoins(true);
+  await saveJSON('progress', progress);
+  await saveMissionState();
+  gaCoinsEarned(amount, 'Mission', kind);
+  showToast(t('toast_mission_claimed', amount));
+  renderMissions();
+}
+function missionRow({title, current, target, claimed, kind, coin}){
+  const done = current >= target;
+  const pct = Math.min(100, Math.round((current/target)*100));
+  const btnLabel = claimed ? t('mission_claimed') : (done ? t('mission_claim') : t('mission_locked'));
+  return `<div class="mission-item">
+    <div class="mission-item-top">
+      <div class="mission-item-title">${title}</div>
+      <div class="mission-item-reward">${t('mission_reward', coin)}</div>
+    </div>
+    <div class="mission-progress-bar"><div class="mission-progress-fill" style="width:${pct}%"></div></div>
+    <div class="mission-item-bottom">
+      <div class="mission-item-count">${Math.min(current,target)} / ${target}</div>
+      <button type="button" class="mission-claim-btn" data-kind="${kind}" ${(!done||claimed)?'disabled':''}>${btnLabel}</button>
+    </div>
+  </div>`;
+}
+function claimableMissionCount(){
+  return (missionState.loginDone && !missionState.claimedLogin ? 1:0) +
+    (missionState.stageCount>=DAILY_STAGE_TARGET && !missionState.claimedStage ? 1:0) +
+    (missionState.hintUsed && !missionState.claimedHint ? 1:0) +
+    (missionState.loginDays.length>=WEEKLY_LOGIN_TARGET && !missionState.claimedWeekLogin ? 1:0) +
+    (missionState.normalCleared>=WEEKLY_NORMAL_TARGET && !missionState.claimedWeekNormal ? 1:0) +
+    (missionState.hardCleared>=WEEKLY_HARD_TARGET && !missionState.claimedWeekHard ? 1:0);
+}
+function renderMissionCard(){
+  const label = document.getElementById('mission-ready-label');
+  const check = document.getElementById('mission-ready-check');
+  if(!label || !check) return;
+  const n = claimableMissionCount();
+  label.textContent = n>0 ? t('mission_claimable', n) : t('mission_button');
+  check.style.display = n>0 ? 'flex' : 'none';
+}
+function nextSundayMidnight(){
+  const d = new Date();
+  let daysUntil = (7 - d.getDay()) % 7;
+  if(daysUntil === 0) daysUntil = 7;   // today's own reset already happened; count to next week's
+  const target = new Date(d.getFullYear(), d.getMonth(), d.getDate() + daysUntil, 0, 0, 0, 0);
+  return target;
+}
+let missionCountdownHandle = null;
+function tickMissionCountdown(){
+  const el = document.getElementById('mission-reset-timer');
+  if(!el) return;
+  let diff = Math.max(0, nextSundayMidnight() - new Date());
+  const days = Math.floor(diff/86400000); diff -= days*86400000;
+  const hours = Math.floor(diff/3600000); diff -= hours*3600000;
+  const mins = Math.floor(diff/60000); diff -= mins*60000;
+  const secs = Math.floor(diff/1000);
+  const hh = String(hours).padStart(2,'0'), mm = String(mins).padStart(2,'0'), ss = String(secs).padStart(2,'0');
+  el.textContent = days>0 ? `${days}${lang==='ja'?'日':'d'} ${hh}:${mm}:${ss}` : `${hh}:${mm}:${ss}`;
+}
+function startMissionCountdown(){
+  stopMissionCountdown();
+  tickMissionCountdown();
+  missionCountdownHandle = setInterval(tickMissionCountdown, 1000);
+}
+function stopMissionCountdown(){
+  if(missionCountdownHandle){ clearInterval(missionCountdownHandle); missionCountdownHandle = null; }
+}
+function renderMissions(){
+  rollMissionState();
+  renderMissionCard();
+  const coinEl = document.getElementById('mission-coin-balance');
+  if(coinEl) coinEl.textContent = progress.coins;
+  const dailyEl = document.getElementById('mission-list-daily');
+  const weeklyEl = document.getElementById('mission-list-weekly');
+  if(!dailyEl || !weeklyEl) return;
+  dailyEl.innerHTML =
+    missionRow({title:t('mission_login'), current:missionState.loginDone?1:0, target:1, claimed:missionState.claimedLogin, kind:'login', coin:DAILY_MISSION_COIN}) +
+    missionRow({title:t('mission_daily_stage'), current:missionState.stageCount, target:DAILY_STAGE_TARGET, claimed:missionState.claimedStage, kind:'stage', coin:DAILY_MISSION_COIN}) +
+    missionRow({title:t('mission_daily_hint'), current:missionState.hintUsed?1:0, target:1, claimed:missionState.claimedHint, kind:'hint', coin:DAILY_MISSION_COIN});
+  weeklyEl.innerHTML =
+    missionRow({title:t('mission_weekly_login'), current:missionState.loginDays.length, target:WEEKLY_LOGIN_TARGET, claimed:missionState.claimedWeekLogin, kind:'weekLogin', coin:WEEKLY_MISSION_COIN}) +
+    missionRow({title:t('mission_weekly_normal'), current:missionState.normalCleared, target:WEEKLY_NORMAL_TARGET, claimed:missionState.claimedWeekNormal, kind:'weekNormal', coin:WEEKLY_MISSION_COIN}) +
+    missionRow({title:t('mission_weekly_hard'), current:missionState.hardCleared, target:WEEKLY_HARD_TARGET, claimed:missionState.claimedWeekHard, kind:'weekHard', coin:WEEKLY_MISSION_COIN});
+  [dailyEl, weeklyEl].forEach(list=>{
+    list.querySelectorAll('.mission-claim-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>claimMission(btn.dataset.kind));
+    });
+  });
+}
+
+/* ================= Ranking ================= */
+/* Local-only personal records for now — Time Attack's best runs and each
+   normal board size's best clear time. Multiplayer/online ranking (seeing
+   other players' results) is a separate, later effort; this is just the
+   on-device view. */
+function rankingRow(rank, label, time, extra){
+  return `<div class="ta-row"><span class="rank">${rank}</span><span>${label}</span><span>${time}</span>${extra||''}</div>`;
+}
+function renderRankingModal(){
+  const taEl = document.getElementById('ranking-list-ta');
+  const normalEl = document.getElementById('ranking-list-normal');
+  if(!taEl || !normalEl) return;
+
+  // Time Attack: personal best up top (the number that actually matters when
+  // racing yourself), then the full run history below it for context.
+  let taHtml = '';
+  if(taLeaderboard.length){
+    const best = Math.min(...taLeaderboard.map(r=>r.time));
+    taHtml += `<div class="ranking-stage-row">
+      <div class="ranking-stage-badge">${t('ranking_you')}</div>
+      <div class="ranking-stage-info">
+        <div class="ranking-stage-value">${t('ranking_best_time_label')} ${fmtTime(best)}</div>
+        <div class="ranking-stage-sub">${t('ranking_ta_best_sub')}</div>
+      </div>
+    </div>`;
+    taHtml += `<div class="ranking-subsection-label">${t('ranking_history_label')}</div>`;
+    taHtml += taLeaderboard.map((row,i)=>rankingRow(i+1, row.date, fmtTime(row.time))).join('');
+  } else {
+    taHtml = `<div class="ranking-empty">${t('ranking_empty')}</div>`;
+  }
+  taEl.innerHTML = taHtml;
+
+  // "通常ステージ" is framed around progress, not speed: where you currently
+  // stand in the ladder, in a shape that's ready to grow into "what stage is
+  // everyone else on" once there's a server to compare against. For now
+  // there's only ever one row — you — ranked #1 by default.
+  const level = progress.cleared + 1;
+  normalEl.innerHTML = `<div class="ranking-stage-row">
+    <div class="ranking-stage-badge">${t('ranking_you')}</div>
+    <div class="ranking-stage-info">
+      <div class="ranking-stage-value">${t('ranking_current_stage', level)}</div>
+      <div class="ranking-stage-sub">${t('ranking_stage_sub')}</div>
+    </div>
+  </div>`;
+}
+
+/* ================= Time Attack ================= */
+/* Ten puzzles back to back on one running clock: the first five use the
+   normal rules, the last five swap in Black Hole Cosmii (Hard Mode). There is
+   no server here, so the "ranking" is an on-device history of past runs —
+   a placeholder shape ready to be swapped for a real API later. */
+const TA_TOTAL = 10;
+const TA_NORMAL_COUNT = 7;   // first 7 puzzles use the normal 3-rule set
+const TA_NORMAL_HALF = TA_NORMAL_COUNT;   // kept for readability at the call sites below
+const TA_PLACE_LIMIT = 2;    // shared across all 10 puzzles, not per-puzzle
+const TA_HINT_LIMIT = 2;     // ...and separate from the shop's purchased hint bank
+let taRun = null; // {index, totalTime, placesLeft, hintsLeft, warnedHard}
+let taLeaderboard = [];
+
+function taConfigForIndex(i){
+  if(i < TA_NORMAL_HALF) return {n:TA_N, smalls:[1,2], compact:0.5, hearts:3, hints:3, prefillChance:0, timeAttack:true};
+  return {n:HARD_N, hard:true, hearts:3, hints:3, prefillChance:0, timeAttack:true};
+}
+function updateTAProgressUI(){
+  const badge = document.getElementById('ta-progress');
+  const val = document.getElementById('ta-progress-value');
+  if(!badge || !val) return;
+  if(taRun){
+    badge.style.display = 'block';
+    val.textContent = t('ta_puzzle_progress', Math.min(taRun.index+1, TA_TOTAL), TA_TOTAL);
+  } else {
+    badge.style.display = 'none';
+  }
+}
+// Shown every time — a quick refresher on the format, not a one-time lesson.
+function openTimeAttackIntro(){
+  document.getElementById('ta-intro-modal').classList.add('active');
+}
+async function startTimeAttack(){
+  taRun = {index:0, totalTime:0, placesLeft:TA_PLACE_LIMIT, hintsLeft:TA_HINT_LIMIT, warnedHard:false};
+  gaDesign('TimeAttack:Begin');
+  await startTimeAttackPuzzle();
+}
+async function startTimeAttackPuzzle(){
+  if(!taRun) return;
+  // One heads-up, right before the rules actually change, rather than
+  // buried in the intro card where it's easy to forget by puzzle 8.
+  if(taRun.index === TA_NORMAL_COUNT && !taRun.warnedHard){
+    taRun.warnedHard = true;
+    stopTimer();
+    document.getElementById('ta-warning-modal').classList.add('active');
+    return;
+  }
+  isHardMode = taRun.index >= TA_NORMAL_HALF;
+  await startGame(taConfigForIndex(taRun.index));
+  updateTAProgressUI();
+  updateTAResourceUI();
+}
+// Move the clock that's currently running on `state` into the run total and
+// zero it, so the same seconds can never be banked twice. Called both on a
+// win and on a failed attempt — a Time Attack result has to account for every
+// second the player spent, not just the seconds on their successful try.
+function taBankElapsed(){
+  if(!taRun || !state) return;
+  taRun.totalTime += state.elapsed;
+  state.elapsed = 0;
+}
+async function onWinTimeAttack(){
+  taBankElapsed();
+  taRun.index += 1;
+  updateTAProgressUI();
+  if(taRun.index < TA_TOTAL){
+    await startTimeAttackPuzzle();
+  } else {
+    await finishTimeAttack();
+  }
+}
+async function finishTimeAttack(){
+  const totalTime = taRun.totalTime;
+  taRun = null;
+  updateTAProgressUI();
+  const prevBest = taLeaderboard.length ? Math.min(...taLeaderboard.map(r=>r.time)) : undefined;
+  const isNewBest = prevBest === undefined || totalTime < prevBest;
+  taLeaderboard.push({time: totalTime, date: todayStr()});
+  taLeaderboard.sort((a,b)=>a.time-b.time);
+  taLeaderboard = taLeaderboard.slice(0, 10);
+  await saveJSON('timeattack-leaderboard', taLeaderboard);
+  gaDesign('TimeAttack:Complete', totalTime);
+
+  document.getElementById('ta-result-time').textContent = fmtTime(totalTime);
+  document.getElementById('ta-result-best').innerHTML = isNewBest
+    ? `<span class="record">${t('ta_new_best')}</span>` : t('best', fmtTime(prevBest));
+  const listEl = document.getElementById('ta-leaderboard-list');
+  listEl.innerHTML = taLeaderboard.map((row,i)=>
+    `<div class="ta-row ${row.time===totalTime && i===taLeaderboard.findIndex(r=>r.time===totalTime) ? 'me' : ''}">
+       <span class="rank">${i+1}</span><span>${fmtTime(row.time)}</span><span>${row.date}</span>
+     </div>`).join('');
+  showScreen(els.title);
+  renderTitleScreen();
+  document.getElementById('ta-result-modal').classList.add('active');
+}
+// Time Attack's placement/hint badges show the run-wide pool (2 each, shared
+// across all 10 puzzles) instead of the normal per-puzzle counts — both
+// helpers above already branch on state.timeAttack, so this just repaints.
+function updateTAResourceUI(){
+  renderPlaceMode();
+  renderHintState();
 }
 
 function checkWin(){
@@ -2600,7 +4283,15 @@ function checkWin(){
 
 function renderTime(){
   const el = document.getElementById('stat-time');
-  if(el) el.textContent = fmtTime(state ? state.elapsed : 0);
+  if(!el) return;
+  // The visible clock must never look like it "reset" mid-run: each puzzle's
+  // own state.elapsed starts fresh, so show the run's running total (time
+  // banked from earlier puzzles + the current one in progress) instead.
+  if(state && state.timeAttack && taRun){
+    el.textContent = fmtTime(taRun.totalTime + state.elapsed);
+  } else {
+    el.textContent = fmtTime(state ? state.elapsed : 0);
+  }
 }
 function startTimer(){
   stopTimer();
@@ -2642,56 +4333,53 @@ window.addEventListener('pageshow', resumeAudioIfPlayable);
 
 async function onWin(){
   beep(880,0.18,'sine'); setTimeout(()=>beep(1100,0.22,'sine'),150);
-  const diffKey = isDailyMode ? 'daily' : String(state.n);
+
+  if(state.timeAttack){ await onWinTimeAttack(); return; }
+
+  const diffKey = isHardMode ? 'hard' : String(state.n);
   const prevBest = bestTimes[diffKey];
   let isRecord=false;
   if(prevBest===undefined || state.elapsed < prevBest){ bestTimes[diffKey]=state.elapsed; isRecord=true; await saveJSON('best-times', bestTimes); }
 
-  // The streak has to move before the reward is priced, otherwise the first
-  // clear of a new day pays yesterday's bonus.
-  await updateStreak();
+  const reward = clearReward({n:state.n, isHard:isHardMode, isRecord});
 
-  // A second daily run on the same day still counts for the leaderboard time,
-  // but it does not pay again.
-  const alreadyClaimed = isDailyMode && dailyClearedToday();
-  const reward = alreadyClaimed
-    ? {total:0, parts:[]}
-    : clearReward({n:state.n, isDaily:isDailyMode, isRecord, streak:streakData.streak});
-
-  // The daily is a side mode; letting it advance the main ladder meant a
-  // player could skip stages by replaying it.
-  if(!isDailyMode) progress.cleared += 1;
+  // Every clear — Black Hole Cosmii included — advances the level count now,
+  // so playing Hard Mode is progress toward the ladder rather than a detour
+  // from it. The *displayed* level number is deliberately held back though —
+  // it only ticks up once "次へ" is pressed, so it doesn't change out from
+  // under the player while the clear popup (which still shows the level they
+  // were just playing) is on screen.
+  progress.cleared += 1;
   progress.score += 300;
   progress.coins += reward.total;
-  updateHeaderStats();
+  updateScoreDisplay();
   renderCoins(true);
   await saveJSON('progress', progress);
-  if(isDailyMode && !alreadyClaimed){
-    dailyProgress = {date: todayStr(), cleared:true, time: state.elapsed};
-    await saveJSON('daily-progress', dailyProgress);
-  }
+  await onStageClearedForMissions(isHardMode);
 
   gaStageComplete(progress.score);
-  gaDesign(isDailyMode ? 'Clear:Daily' : 'Clear:Stage', state.elapsed);
+  gaDesign(isHardMode ? 'Clear:Hard' : 'Clear:Stage', state.elapsed);
   // Itemised so the dashboard shows where the economy actually pays out.
   for(const part of reward.parts){
     gaCoinsEarned(part.amount,
-      part.key === 'reward_streak' ? 'Streak' : (part.key === 'reward_record' ? 'Record' : 'StageClear'),
-      isDailyMode ? 'Daily' : (state.n + 'x' + state.n));
+      part.key === 'reward_record' ? 'Record' : 'StageClear',
+      isHardMode ? 'Hard' : (state.n + 'x' + state.n));
   }
   els.clearTime.textContent = fmtTime(state.elapsed);
-  els.clearBest.innerHTML = isRecord ? `<span class="record">${t('record')}</span>` : t('best', fmtTime(bestTimes[diffKey]));
+  // Black Hole Cosmii doesn't surface the level at all (it's hidden on the
+  // playfield too, by design) — showing it only on the clear popup for that
+  // mode would be a confusing half-measure, so it's normal-mode only here.
+  const clearLevelEl = document.getElementById('clear-level');
+  if(clearLevelEl) clearLevelEl.textContent = isHardMode ? '' : t('clear_level_label', progress.cleared + 1);
   document.querySelector('#coin-reward .coin-gain').textContent = '+' + reward.total;
   document.getElementById('coin-total').textContent = t('coin_total', progress.coins);
   const bd = document.getElementById('coin-breakdown');
   if(bd){
-    bd.innerHTML = alreadyClaimed
-      ? `<div class="note">${t('reward_daily_done')}</div>`
-      // A single line explains nothing the big number didn't; only itemise
-      // once a bonus actually stacked on top of the base reward.
-      : (reward.parts.length > 1
-          ? reward.parts.map(p=>`<div class="brow"><span>${t(p.key)}</span><span class="amt">+${p.amount}</span></div>`).join('')
-          : '');
+    // A single line explains nothing the big number didn't; only itemise
+    // once a bonus actually stacked on top of the base reward.
+    bd.innerHTML = reward.parts.length > 1
+        ? reward.parts.map(p=>`<div class="brow"><span>${t(p.key)}</span><span class="amt">+${p.amount}</span></div>`).join('')
+        : '';
   }
   els.clearModal.classList.add('active');
 }
@@ -2712,15 +4400,20 @@ function showOverModal(){ document.getElementById('over-modal').classList.add('a
 // wrongly-guessed cells are out.
 function liveCandidates(){
   const n = state.n;
+  const cap = state.hardMode ? 2 : 1;   // Black Hole Cosmii: 2 per star zone
   const dead = Array.from({length:n},()=>new Array(n).fill(false));
   const rowDone = new Array(n).fill(false);
   const colDone = new Array(n).fill(false);
-  const regDone = new Array(n).fill(false);
+  const regCount = new Array(n).fill(0);
   for(let r=0;r<n;r++) for(let c=0;c<n;c++){
     if(state.board[r][c] !== 1) continue;
-    rowDone[r] = true; colDone[c] = true; regDone[state.regionOf[r][c]] = true;
-    for(let i=0;i<n;i++) for(let j=0;j<n;j++)
-      if(state.regionOf[i][j] === state.regionOf[r][c]) dead[i][j] = true;
+    rowDone[r] = true; colDone[c] = true;
+    const reg = state.regionOf[r][c];
+    regCount[reg] = (regCount[reg]||0) + 1;
+    if(regCount[reg] >= cap){
+      for(let i=0;i<n;i++) for(let j=0;j<n;j++)
+        if(state.regionOf[i][j] === reg) dead[i][j] = true;
+    }
     for(let di=-1;di<=1;di++) for(let dj=-1;dj<=1;dj++){
       const ni=r+di, nj=c+dj;
       if(ni>=0&&ni<n&&nj>=0&&nj<n) dead[ni][nj] = true;
@@ -2730,15 +4423,15 @@ function liveCandidates(){
   // they have already ruled out, so the hint should not hand it back to them.
   for(let r=0;r<n;r++) for(let c=0;c<n;c++)
     if(state.board[r][c] === 2 || state.board[r][c] === 3) dead[r][c] = true;
-  return {dead, rowDone, colDone, regDone,
-          alive:(r,c)=> !dead[r][c] && !rowDone[r] && !colDone[c] && !regDone[state.regionOf[r][c]]};
+  return {dead, rowDone, colDone, regCount, cap,
+          alive:(r,c)=> !dead[r][c] && !rowDone[r] && !colDone[c] && (regCount[state.regionOf[r][c]]||0) < cap};
 }
 // The most satisfying hint is a forced cell — a row, column or region with
 // exactly one candidate left. Falling back to any unplaced solution cell keeps
 // the button useful even on a board the simple rules cannot crack yet.
 function findHintCell(){
   const n = state.n;
-  const {alive} = liveCandidates();
+  const {alive, regCount, cap} = liveCandidates();
   const forced = [];
   for(let r=0;r<n;r++){
     const cs=[]; for(let c=0;c<n;c++) if(alive(r,c)) cs.push(c);
@@ -2748,10 +4441,17 @@ function findHintCell(){
     const rs=[]; for(let r=0;r<n;r++) if(alive(r,c)) rs.push(r);
     if(rs.length===1 && state.solution[rs[0]]===c) forced.push([rs[0],c]);
   }
-  for(let g=0;g<n;g++){
+  const seenRegions = new Set();
+  for(let r=0;r<n;r++) for(let c=0;c<n;c++){
+    const g = state.regionOf[r][c];
+    if(seenRegions.has(g)) continue; seenRegions.add(g);
+    const need = cap - (regCount[g]||0);
+    if(need<=0) continue;
     const cells=[];
-    for(let r=0;r<n;r++) for(let c=0;c<n;c++) if(state.regionOf[r][c]===g && alive(r,c)) cells.push([r,c]);
-    if(cells.length===1 && state.solution[cells[0][0]]===cells[0][1]) forced.push(cells[0]);
+    for(let i=0;i<n;i++) for(let j=0;j<n;j++) if(state.regionOf[i][j]===g && alive(i,j)) cells.push([i,j]);
+    if(cells.length===need){
+      for(const cell of cells) if(state.solution[cell[0]]===cell[1]) forced.push(cell);
+    }
   }
   if(forced.length) return forced[(Math.random()*forced.length)|0];
   // Fall back to any unplaced Cosmii, including one standing on a cell the
@@ -2767,9 +4467,39 @@ function findHintCell(){
   }
   return rest.length ? rest[(Math.random()*rest.length)|0] : null;
 }
+function updateHintCountUI(){
+  if(!els.hintCount) return;
+  if(state && state.timeAttack){
+    els.hintCount.textContent = taRun ? Math.max(0, taRun.hintsLeft) : 0;
+    els.hintCount.classList.remove('bank');
+    return;
+  }
+  els.hintCount.textContent = state.hintsLeft>0 ? state.hintsLeft : (progress.hintBank||0);
+  els.hintCount.classList.toggle('bank', state.hintsLeft<=0);
+}
 function useHint(){
   if(!state || state.finished || coach.active) return;
-  if(state.hintsLeft<=0) return;
+  if(state.timeAttack){
+    // Its own 2-per-run pool: no top-up from the per-puzzle allowance or the
+    // shop's purchased hints, so a good early run isn't undercut by a bad one.
+    if(!taRun || taRun.hintsLeft<=0) return;
+    const cell = findHintCell();
+    if(!cell){ showToast(t('toast_hint_none')); return; }
+    const [r,c] = cell;
+    state.board[r][c] = 1;
+    assignRandomCharacter(r,c);
+    renderCell(r,c);
+    cellEl(r,c).classList.add('hinted');
+    taRun.hintsLeft = Math.max(0, taRun.hintsLeft - 1);
+    updateHintCountUI();
+    renderHintState();
+    gaDesign('TimeAttack:Hint', TA_HINT_LIMIT - taRun.hintsLeft);
+    onCorrectPlacement(r,c);
+    checkWin();
+    return;
+  }
+  const usingBank = state.hintsLeft<=0;
+  if(usingBank && (progress.hintBank||0)<=0) return;
   const cell = findHintCell();
   if(!cell){ showToast(t('toast_hint_none')); return; }   // nothing left to reveal
   const [r,c] = cell;
@@ -2777,21 +4507,35 @@ function useHint(){
   assignRandomCharacter(r,c);
   renderCell(r,c);
   cellEl(r,c).classList.add('hinted');
-  state.hintsLeft--;
-  els.hintCount.textContent = state.hintsLeft;
+  if(usingBank){
+    progress.hintBank = Math.max(0, (progress.hintBank||0) - 1);
+    saveJSON('progress', progress);
+    renderShop();
+  } else {
+    state.hintsLeft--;
+  }
+  updateHintCountUI();
   renderHintState();
   gaDesign('Help:Hint:' + state.n + 'x' + state.n, state.maxHints - state.hintsLeft);
   onCorrectPlacement(r,c);
+  onHintUsedForMissions();
   checkWin();
 }
 
 /* ---------------- Flow control ---------------- */
 function resetBoard(){
   const n = state.n;
+  // A rotate event's transform lives on the DOM node itself, which survives
+  // across puzzles unless explicitly cleared — every new stage must start
+  // right-side up regardless of what the last one ended up rotated to.
+  els.gridWrap.style.transform = '';
+  els.gridWrap.style.transition = '';
+  els.gridWrap.style.transformOrigin = '';
+  els.gridWrap.classList.remove('suntv-rot90');
   state.board = Array.from({length:n},()=>new Array(n).fill(0));
   state.hearts = state.maxHearts;
   state.finished=false;
-  state.placeUses = 3;
+  state.placeUses = 1;
   settings.placeMode = false;
   state.hintsLeft = state.maxHints;
   state.elapsed = 0;
@@ -2800,7 +4544,7 @@ function resetBoard(){
     state.board[r][state.solution[r]] = 1;
     assignRandomCharacter(r, state.solution[r]);
   }
-  els.hintCount.textContent = state.hintsLeft;
+  updateHintCountUI();
   updateHearts();
   renderPlaceMode();     // refreshes the counter *and* clears 'disabled'
   renderHintState();
@@ -2909,19 +4653,65 @@ async function startGame(config, seed){
       for(let i=rows.length-1;i>0;i--){ const j=(rng()*(i+1))|0; [rows[i],rows[j]]=[rows[j],rows[i]]; }
       prefillRows = rows.slice(0, Math.min(count, puzzle.n-1));
     }
+    // Any サンテレビ event still waiting on a tap belongs to the board we are
+    // about to replace. Cut it loose here as well as on the back button, so
+    // "next puzzle" and a Time Attack hand-off can't leave one running.
+    suntvCancelEvent();
     state = {
       n: puzzle.n, solution: puzzle.solution, regionOf: puzzle.regionOf,
       colorOf: assignColors(puzzle.n, puzzle.regionOf, rng),
       maxHearts: config.hearts, maxHints: config.hints, prefillRows, elapsed:0,
-      placeUses: 3,
+      placeUses: 1, hardMode: !!(puzzle.hard || config.hard), timeAttack: !!config.timeAttack,
       character: Array.from({length:puzzle.n},()=>Array(puzzle.n).fill('')),
+      suntvFired:false, suntvBusy:false, suntvRotation:0,
     };
+    renderCoins(false);
+    // Random timing: if this stage qualifies for the event, decide right now
+    // which correct placement (not necessarily the first) will trigger it,
+    // rather than always firing on placement #1. Must land after any
+    // prefilled cells, and — this is the important part — at or before the
+    // halfway point: for an 8-cell stage that means by placement 4, for an
+    // 11-cell stage by placement 5, i.e. floor(n/2).
+    state.suntvTriggerAt = null;
+    if(!state.hardMode && !state.timeAttack){
+      const stageNum = progress.cleared + 1;
+      if(stageNum % SUNTV_EVENT_INTERVAL === 0){
+        const floor = prefillRows.length + 1;
+        const ceiling = Math.max(floor, Math.floor(puzzle.n / 2));
+        state.suntvTriggerAt = floor + Math.floor(Math.random() * (ceiling - floor + 1));
+      }
+    }
+    document.querySelectorAll('.rulecards').forEach(el=>el.classList.toggle('hard', state.hardMode));
+    document.getElementById('game-screen').classList.toggle('hard-bg', state.hardMode);
+    // A running clock (reset fresh every stage) helps both modes, so it's
+    // always on for actual play — only the tutorial pauses it.
+    // Make it unmistakable which mode you're in, beyond just the dark
+    // backdrop — a plain text badge that reads whenever you glance up.
+    const hardBadge = document.getElementById('hard-mode-badge');
+    if(hardBadge) hardBadge.style.display = (state.hardMode && !state.timeAttack) ? 'block' : 'none';
+    // Level and score aren't meaningful on the Black Hole Cosmii or Time
+    // Attack playfields (the ladder position they'd show doesn't describe
+    // either mode), so hide them there; the mode badges already say what
+    // you're playing.
+    const hideStats = state.timeAttack || state.hardMode;
+    const levelWrap = document.getElementById('stat-level-wrap');
+    const scoreWrap = document.getElementById('stat-score-wrap');
+    // Hiding level/score must not shift where the clock sits — display:none
+    // collapses the flex row and drags the time stat leftward into their
+    // spot, so its position no longer matches the normal stage screen.
+    // visibility:hidden keeps the layout slot reserved instead.
+    if(levelWrap) levelWrap.style.visibility = hideStats ? 'hidden' : '';
+    if(scoreWrap) scoreWrap.style.visibility = hideStats ? 'hidden' : '';
     resetBoard();
     // Decide before the first paint of the game screen whether the tutorial
     // might run. The bottom bar is hidden on that assumption and revealed again
     // in maybeStartCoach() if no tutorial is due — the reverse order let the
     // bar (and its blue Cosmii icon) show for one frame.
-    if(!coachDone && !coach.active && !isDailyMode && progress.cleared === 0){
+    // Black Hole Cosmii runs its own hands-on tutorial every time it's played
+    // directly from the title card (never inside a Time Attack run, where a
+    // full tutorial mid-race would be a bad surprise).
+    const hardTutorialPending = state.hardMode && !state.timeAttack && !coach.active && hardCoachSeenDate !== todayStr();
+    if(hardTutorialPending || (!coachDone && !coach.active && !isHardMode && progress.cleared === 0)){
       document.body.classList.add('coach-pending');
     }
     showScreen(els.game);
@@ -2947,14 +4737,30 @@ const COACH_STEPS = [
   {act:'cross', pick:'diag'},
   {act:null, last:true},
 ];
+// Black Hole Cosmii's every-time walkthrough: same shape as above, plus one
+// extra hands-on step (placing a second Cosmii into the zone that already
+// holds the first one) to teach the 4th rule before the row/column and
+// touch drills, which are unchanged from the normal tutorial.
+const HARD_COACH_STEPS = [
+  {act:null},
+  {act:'place', pick:'solo'},
+  {act:'place', pick:'place2'},
+  {act:'cross', pick:'rowcol'},
+  {act:'cross', pick:'diag'},
+  {act:null, last:true},
+];
 
-let coach = {active:false, idx:0, act:null, targets:[], remaining:null, lastPlaced:null};
+let coach = {active:false, mode:'normal', idx:0, act:null, targets:[], remaining:null, lastPlaced:null};
 
 // The tutorial is a one-time, level-1-only event. It used to depend purely on
 // the stored `seen-tutorial` flag, which meant any environment where the write
 // didn't stick replayed it on every board. This in-memory latch plus a hard
 // level gate makes that impossible regardless of storage behaviour.
 let coachDone = false;
+// Black Hole Cosmii's walkthrough is once-per-day rather than once-ever: this
+// holds the calendar date (YYYY-MM-DD) it last ran, loaded from storage at
+// startup and re-saved every time it runs.
+let hardCoachSeenDate = null;
 
 function coachKey(r,c){ return r+'_'+c; }
 function coachAllowsCell(r,c){
@@ -3023,8 +4829,24 @@ function remainingCrossCells(){
   }
   return out;
 }
+// The other solution cell in the same star zone as the last placement — the
+// zone's capacity is exactly 2 in Black Hole Cosmii, so this is always the
+// zone's remaining member once the first Cosmii is down.
+function pickPlace2Cell(){
+  const n = state.n;
+  if(!coach.lastPlaced) return [];
+  const [lr, lc] = coach.lastPlaced;
+  const reg = state.regionOf[lr][lc];
+  for(let r=0;r<n;r++){
+    const c = state.solution[r];
+    if(state.board[r][c]===1) continue;
+    if(state.regionOf[r][c]===reg) return [[r,c]];
+  }
+  return [];
+}
 function pickCoachCells(kind){
   if(kind==='solo') return [pickSoloCell()];
+  if(kind==='place2') return pickPlace2Cell();
   if(kind==='rowcol') return rowColCells();
   if(kind==='remaining') return remainingCrossCells();
   return diagCells();
@@ -3059,16 +4881,23 @@ function fitBoardForCoach(){
     const g = grid.getBoundingClientRect();
     const sheet = els.coach.getBoundingClientRect();
     const room = sheet.top - g.top - 14;              // 14px breathing space
-    if(g.height > room && room > 0){
-      grid.style.transform = `scale(${Math.max(0.55, room/g.height)})`;
-    }
+    // A tall tip card (long rule text) can push `room` to zero or negative.
+    // The old guard (`room > 0`) skipped scaling entirely whenever that
+    // happened, leaving a full-size board sitting *under* the tip card with
+    // the target cell literally unreachable. Always compute a clamped scale
+    // instead, so the board keeps shrinking (down to a legible floor) no
+    // matter how much text the current step has.
+    const scale = Math.min(1, Math.max(0.35, room / g.height));
+    grid.style.transform = scale < 1 ? `scale(${scale})` : '';
   });
 }
 
+function currentCoachSteps(){ return coach.mode==='hard' ? HARD_COACH_STEPS : COACH_STEPS; }
+function currentCoachText(){ return coach.mode==='hard' ? t('hardCoach') : t('coach'); }
 function renderCoachStep(){
-  const step = COACH_STEPS[coach.idx];
+  const step = currentCoachSteps()[coach.idx];
   clearCoachTarget();
-  els.coachTip.innerHTML = t('coach')[coach.idx];
+  els.coachTip.innerHTML = currentCoachText()[coach.idx];
   if(step.act){
     coach.act = step.act;
     coach.targets = pickCoachCells(step.pick);
@@ -3113,7 +4942,7 @@ function coachCellDone(r,c){
 }
 
 function refreshCoachTargets(){
-  const step = COACH_STEPS[coach.idx];
+  const step = currentCoachSteps()[coach.idx];
   if(!step || !step.act) return;
   const fresh = pickCoachCells(step.pick)
     .filter(([r,c]) => state.board[r][c] === 0);
@@ -3129,12 +4958,20 @@ function refreshCoachTargets(){
 }
 function coachAdvance(){
   coach.idx++;
-  if(coach.idx >= COACH_STEPS.length){ endCoach(); return; }
+  if(coach.idx >= currentCoachSteps().length){ endCoach(); return; }
   renderCoachStep();
 }
-function startCoach(){
-  gaDesign('Tutorial:Start');
-  coachDone = true;                      // latch before anything can re-enter
+function startCoach(mode){
+  coach.mode = mode || 'normal';
+  gaDesign(coach.mode==='hard' ? 'HardTutorial:Start' : 'Tutorial:Start');
+  if(coach.mode==='normal'){
+    coachDone = true;   // latch before anything can re-enter
+  } else {
+    // Once-per-day, not once-ever: latch today's date before anything can
+    // re-enter, same reasoning as the normal tutorial's latch above.
+    hardCoachSeenDate = todayStr();
+    saveJSON('hard-tutorial-date', hardCoachSeenDate);
+  }
   coach.active = true; coach.idx = 0; coach.lastPlaced = null;
   document.body.classList.remove('coach-pending');
   document.body.classList.add('coaching');
@@ -3145,22 +4982,37 @@ function startCoach(){
 function endCoach(){
   // Reached either by finishing the last step or by tapping skip; the step
   // index separates the two and shows where people drop out.
-  if(coach.active) gaDesign('Tutorial:End', coach.idx);
+  const wasHard = coach.mode === 'hard';
+  if(coach.active) gaDesign((wasHard ? 'HardTutorial:End' : 'Tutorial:End'), coach.idx);
   coach.active = false;
-  coachDone = true;
   clearCoachTarget();
   document.body.classList.remove('coaching');
   document.body.classList.remove('coach-pending');
   els.coach.classList.remove('active');
   els.gridWrap.style.transform='';
-  saveJSON('seen-tutorial', true);
+  // The Black Hole Cosmii walkthrough's "seen today" flag is latched in
+  // startCoach() already, independent of the one-time Lv.1 tutorial below —
+  // finishing this one must never mark that one as seen, or vice versa.
+  if(!wasHard){
+    coachDone = true;
+    saveJSON('seen-tutorial', true);
+  }
+  coach.mode = 'normal';
   state.elapsed = 0;
   startTimer();
   checkWin();
 }
 function maybeStartCoach(){
+  // Black Hole Cosmii teaches its own 4-rule walkthrough once per calendar
+  // day (never inside Time Attack) — this takes priority over, and is
+  // independent from, the one-time Lv.1 tutorial below.
+  if(state && state.hardMode && !state.timeAttack){
+    if(coach.active || hardCoachSeenDate === todayStr()){ document.body.classList.remove('coach-pending'); return; }
+    startCoach('hard');
+    return;
+  }
   if(coachDone || coach.active){ document.body.classList.remove('coach-pending'); return; }
-  if(isDailyMode){ document.body.classList.remove('coach-pending'); return; }
+  if(isHardMode){ document.body.classList.remove('coach-pending'); return; }
   if(progress.cleared > 0){
     coachDone = true;
     document.body.classList.remove('coach-pending');
@@ -3175,12 +5027,13 @@ function maybeStartCoach(){
       document.body.classList.remove('coach-pending');
       return;
     }
-    startCoach();
+    startCoach('normal');
   }).catch(()=>{ document.body.classList.remove('coach-pending'); });
 }
 
 /* ---------------- Event bindings ---------------- */
 document.getElementById('btn-splash-start').addEventListener('click', () => {
+  unlockAudio();
   // Render before revealing: init() is async, so a fast tap can reach the
   // title before the stored progress has been read and the play button
   // labelled. Every other route into the title already does this.
@@ -3188,12 +5041,22 @@ document.getElementById('btn-splash-start').addEventListener('click', () => {
   showScreen(els.title);
 });
 const bgm = document.getElementById('bgm');
+if(bgm){
+  bgm.volume = BGM_VOLUME;
+  bgm.preload = 'auto';
+}
+function unlockAudioFromUserGesture(){
+  unlockAudio();
+  updateBgmPlayback();
+}
+window.addEventListener('pointerdown', unlockAudioFromUserGesture, {capture:true});
+window.addEventListener('keydown', unlockAudioFromUserGesture, {capture:true});
 
 const btnPlay = document.getElementById('btn-play');
 let startPlayPending = false;
 async function startPlayLevel(){
   updateBgmPlayback();
-  isDailyMode = false;
+  isHardMode = false;
   await startGame(levelToConfig(progress.cleared + 1));   // owns the overlay
 }
 function handleStartButton(e){
@@ -3377,19 +5240,27 @@ if(promoStrip){
   }, true);
 }
 
-document.getElementById('card-daily').addEventListener('click', ()=>{
+document.getElementById('card-hard').addEventListener('click', ()=>{
   const level = progress.cleared+1;
-  if(level < DAILY_UNLOCK_LEVEL){ showToast(t('toast_daily_locked', DAILY_UNLOCK_LEVEL)); return; }
-  isDailyMode=true;
-  gaDesign('Daily:Start');
-  startGame({n:7, smalls:[1,2], compact:0.35, hearts:3, hints:3, prefillChance:0},
-            hashStr('cosmii-daily-'+todayStr()));
+  const hardUnlocked = HARD_MODE_FORCE_UNLOCK_FOR_TESTING || level >= HARD_UNLOCK_LEVEL;
+  if(!hardUnlocked){ showToast(t('toast_daily_locked', HARD_UNLOCK_LEVEL)); return; }
+  isHardMode=true;
+  gaDesign('Hard:Start');
+  startGame({n:randomHardN(), hard:true, hearts:3, hints:3, prefillChance:0});
 });
-document.getElementById('card-streak').addEventListener('click', ()=>{
-  showToast(t('toast_streak', streakData.streak||0));
+document.getElementById('card-timeattack').addEventListener('click', ()=>{
+  gaDesign('TimeAttack:OpenIntro');
+  openTimeAttackIntro();
 });
 document.getElementById('coin-chip').addEventListener('click', ()=>{
   showToast(t('toast_coins', progress.coins));
+});
+document.getElementById('suntv-collab-banner').addEventListener('click', ()=>{
+  document.getElementById('suntv-info-modal').classList.add('active');
+  gaDesign('CollabInfo:Open');
+});
+document.getElementById('btn-suntv-info-close').addEventListener('click', ()=>{
+  document.getElementById('suntv-info-modal').classList.remove('active');
 });
 document.getElementById('btn-avatar').addEventListener('click', ()=>{ openProfileModal(); });
 document.getElementById('btn-name-edit').addEventListener('click', ()=>{
@@ -3413,15 +5284,118 @@ document.getElementById('btn-profile-confirm').addEventListener('click', ()=>{
   document.getElementById('profile-modal').classList.remove('active');
   showToast(t('toast_profile_saved'));
 });
-document.getElementById('btn-settings-title').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); });
+document.getElementById('btn-settings-title').addEventListener('click', ()=>{ openSettings({showRestart:false}); });
+document.getElementById('btn-shop').addEventListener('click', ()=>{
+  renderShop();
+  document.getElementById('shop-modal').classList.add('active');
+});
+document.getElementById('btn-shop-close').addEventListener('click', ()=>{
+  document.getElementById('shop-modal').classList.remove('active');
+});
+document.querySelectorAll('.shop-buy-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>buyShopItem(btn.dataset.kind, parseInt(btn.dataset.qty, 10)));
+});
+document.getElementById('card-mission').addEventListener('click', ()=>{
+  renderMissions();
+  document.getElementById('mission-modal').classList.add('active');
+  const weeklyActive = document.getElementById('mission-tab-weekly').classList.contains('active');
+  document.getElementById('mission-reset-note').style.display = weeklyActive ? 'flex' : 'none';
+  if(weeklyActive) startMissionCountdown();
+});
+document.getElementById('btn-mission-close').addEventListener('click', ()=>{
+  document.getElementById('mission-modal').classList.remove('active');
+  stopMissionCountdown();
+});
+document.getElementById('mission-tab-daily').addEventListener('click', ()=>{
+  document.getElementById('mission-tab-daily').classList.add('active');
+  document.getElementById('mission-tab-weekly').classList.remove('active');
+  document.getElementById('mission-list-daily').style.display = 'flex';
+  document.getElementById('mission-list-weekly').style.display = 'none';
+  document.getElementById('mission-reset-note').style.display = 'none';
+  stopMissionCountdown();
+});
+document.getElementById('mission-tab-weekly').addEventListener('click', ()=>{
+  document.getElementById('mission-tab-weekly').classList.add('active');
+  document.getElementById('mission-tab-daily').classList.remove('active');
+  document.getElementById('mission-list-weekly').style.display = 'flex';
+  document.getElementById('mission-list-daily').style.display = 'none';
+  document.getElementById('mission-reset-note').style.display = 'flex';
+  startMissionCountdown();
+});
+document.getElementById('card-ranking').addEventListener('click', ()=>{
+  renderRankingModal();
+  document.getElementById('ranking-modal').classList.add('active');
+});
+document.getElementById('btn-ranking-close').addEventListener('click', ()=>{
+  document.getElementById('ranking-modal').classList.remove('active');
+});
+document.getElementById('ranking-tab-ta').addEventListener('click', ()=>{
+  document.getElementById('ranking-tab-ta').classList.add('active');
+  document.getElementById('ranking-tab-normal').classList.remove('active');
+  document.getElementById('ranking-list-ta').style.display = 'flex';
+  document.getElementById('ranking-list-normal').style.display = 'none';
+});
+document.getElementById('ranking-tab-normal').addEventListener('click', ()=>{
+  document.getElementById('ranking-tab-normal').classList.add('active');
+  document.getElementById('ranking-tab-ta').classList.remove('active');
+  document.getElementById('ranking-list-normal').style.display = 'flex';
+  document.getElementById('ranking-list-ta').style.display = 'none';
+});
+document.getElementById('btn-ta-retry').addEventListener('click', ()=>{
+  document.getElementById('ta-result-modal').classList.remove('active');
+  openTimeAttackIntro();
+});
+document.getElementById('btn-ta-menu').addEventListener('click', ()=>{
+  document.getElementById('ta-result-modal').classList.remove('active');
+  renderTitleScreen();
+  showScreen(els.title);
+});
+document.getElementById('btn-ta-intro-start').addEventListener('click', ()=>{
+  document.getElementById('ta-intro-modal').classList.remove('active');
+  startTimeAttack();
+});
+document.getElementById('btn-ta-intro-cancel').addEventListener('click', ()=>{
+  document.getElementById('ta-intro-modal').classList.remove('active');
+});
+document.getElementById('btn-ta-warning-ok').addEventListener('click', async ()=>{
+  document.getElementById('ta-warning-modal').classList.remove('active');
+  if(!taRun) return;
+  isHardMode = taRun.index >= TA_NORMAL_HALF;
+  await startGame(taConfigForIndex(taRun.index));
+  updateTAProgressUI();
+  updateTAResourceUI();
+});
 
 document.getElementById('btn-profile-close').addEventListener('click', ()=>{ document.getElementById('profile-modal').classList.remove('active'); });
-document.getElementById('btn-back').addEventListener('click', ()=>{ stopTimer(); renderTitleScreen(); showScreen(els.title); });
+document.getElementById('btn-back').addEventListener('click', ()=>{
+  stopTimer();
+  // Backing out mid-puzzle (before it's actually cleared) shouldn't burn the
+  // サンテレビ event for this stage — same reasoning as a genuine fail: only
+  // an actual clear should count as having used it. Also clean up any
+  // in-progress animation state so nothing lingers into the next screen.
+  if(state && !state.finished){
+    if(state.suntvFired){
+      const stageNum = progress.cleared + 1;
+      delete suntvSeenStages[stageNum];
+      saveJSON('suntv-seen-stages', suntvSeenStages);
+    }
+    state.suntvFired = false;
+    state.suntvBusy = false;
+    suntvCancelEvent();
+  }
+  taRun = null;
+  updateTAProgressUI();
+  renderTitleScreen();
+  showScreen(els.title);
+});
 function updatePlaceUsesUI(){
   const el = els.placeCount;
   if(!el) return;
-  const remaining = state ? Math.max(0, state.placeUses) : 0;
+  const remaining = state && state.timeAttack
+    ? (taRun ? Math.max(0, taRun.placesLeft) : 0)
+    : (state ? Math.max(0, state.placeUses>0 ? state.placeUses : (progress.placeBank||0)) : 0);
   el.textContent = remaining;
+  el.classList.toggle('bank', !!(state && !state.timeAttack && state.placeUses<=0));
   el.style.display = 'flex';
 }
 
@@ -3434,7 +5408,7 @@ function placeRandomCosmii(){
   }
   if(!candidates.length) return false;
   const target = candidates[Math.floor(Math.random()*candidates.length)];
-  handleDoubleTap(target.r, target.c);
+  handleDoubleTap(target.r, target.c, true);
   return true;
 }
 
@@ -3606,7 +5580,9 @@ function saveProfileState(){
 function renderPlaceMode(){
   const btn = document.getElementById('btn-place-mode');
   if(!btn) return;
-  const canUse = !!state && state.placeUses > 0;
+  const canUse = state && state.timeAttack
+    ? (taRun && taRun.placesLeft > 0)
+    : (!!state && (state.placeUses > 0 || (progress.placeBank||0) > 0));
   btn.classList.toggle('on', !!settings.placeMode);
   btn.classList.toggle('disabled', !canUse && !settings.placeMode);
   updatePlaceUsesUI();
@@ -3615,14 +5591,32 @@ function renderPlaceMode(){
 function renderHintState(){
   const btn = document.getElementById('btn-hint');
   if(!btn || !state) return;
-  const canUse = !state.finished && state.hintsLeft > 0 && !coach.active;
+  // Time Attack's hint pool is its own thing — 2 uses for the whole 10-puzzle
+  // run, no top-up from the shop's purchased hints.
+  const canUse = state.timeAttack
+    ? (!state.finished && !coach.active && taRun && taRun.hintsLeft > 0)
+    : (!state.finished && !coach.active && (state.hintsLeft > 0 || (progress.hintBank||0) > 0));
   btn.classList.toggle('disabled', !canUse);
 }
 
 document.getElementById('btn-place-mode').addEventListener('click', ()=>{
   if(coach.active) return;
   if(!state) return;
-  if(state.placeUses <= 0){
+  if(state.timeAttack){
+    // Its own 2-per-run pool: no top-up from the normal per-puzzle allowance.
+    if(!taRun || taRun.placesLeft <= 0){ showToast(t('toast_place_used')); return; }
+    if(!placeRandomCosmii()){ showToast(t('toast_place_none')); return; }
+    taRun.placesLeft = Math.max(0, taRun.placesLeft - 1);
+    updatePlaceUsesUI();
+    if(taRun.placesLeft === 0){ settings.placeMode = false; }
+    renderPlaceMode();
+    beep(620, 0.06, 'sine');
+    vibrate(12);
+    gaDesign('TimeAttack:AutoPlace', TA_PLACE_LIMIT - taRun.placesLeft);
+    return;
+  }
+  const usingBank = state.placeUses <= 0;
+  if(usingBank && (progress.placeBank||0)<=0){
     showToast(t('toast_place_used'));
     return;
   }
@@ -3630,33 +5624,145 @@ document.getElementById('btn-place-mode').addEventListener('click', ()=>{
     showToast(t('toast_place_none'));
     return;
   }
-  state.placeUses = Math.max(0, state.placeUses - 1);
+  if(usingBank){
+    progress.placeBank = Math.max(0, (progress.placeBank||0) - 1);
+    saveJSON('progress', progress);
+    renderShop();
+  } else {
+    state.placeUses = Math.max(0, state.placeUses - 1);
+  }
   updatePlaceUsesUI();
-  if(state.placeUses === 0){
+  if(state.placeUses === 0 && (progress.placeBank||0) === 0){
     settings.placeMode = false;
     renderPlaceMode();
   }
   beep(620, 0.06, 'sine');
   vibrate(12);
-  gaDesign('Help:AutoPlace:' + state.n + 'x' + state.n, 3 - state.placeUses);
+  gaDesign('Help:AutoPlace:' + state.n + 'x' + state.n, 1 - state.placeUses);
+  onDailyPlaceUsedForMissions();
 });
-document.getElementById('btn-hint').addEventListener('click', useHint);
+// Sharing a clear is an easy, optimistic reward — no server round trip to
+// confirm the share actually happened, just crediting it the moment the
+// share sheet opens.
+//
+// PLACE_BANK_MAX only caps the stockpile, so on its own it stopped nothing:
+// spend a placement and you could share for another, on every clear screen,
+// through either of the two share buttons — an endless supply of "solve one
+// row for free". The lifetime counter below is the cap that actually bites.
+const SHARE_APP_URL = 'https://apps.apple.com/jp/app/id6797260932';
+const SHARE_REWARD_LIFETIME_MAX = 10;
+function suntvShareData(){
+  const stageNum = progress.cleared;
+  return {
+    title:'Cosmii Sudoku',
+    text:`Stage:${stageNum}達成！一緒にやりましょう！\n\nCosmii Sudoku`,
+    url:SHARE_APP_URL
+  };
+}
+function suntvShareURL(kind){
+  const data = suntvShareData();
+  const text = encodeURIComponent(data.text);
+  // Name-slug form (…/cosmii-sudoku-論理パズル/id…) breaks when LINE/X auto-link
+  // the tweet/message text: their link-detection regexes don't reliably treat
+  // percent-encoded non-ASCII path segments as part of the URL, so the link
+  // gets cut off mid-path. The ID-only form is the same, permanent App Store
+  // link without any non-ASCII characters to trip that up.
+  const url = encodeURIComponent(data.url);
+  if(kind==='line') return `https://social-plugins.line.me/lineit/share?url=${url}&text=${text}`;
+  return `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+}
+async function shareClear(kind){
+  const data = suntvShareData();
+  if(navigator.share && (!navigator.canShare || navigator.canShare(data))){
+    try{
+      const sharePromise = navigator.share(data);
+      grantShareReward();
+      await sharePromise.catch(()=>{});
+      return;
+    }catch(e){}
+  }
+  openExternal(suntvShareURL(kind));
+  grantShareReward();
+}
+async function grantShareReward(){
+  if((progress.shareRewards||0) >= SHARE_REWARD_LIFETIME_MAX){
+    showToast(t('toast_share_max'));
+    return;
+  }
+  if((progress.placeBank||0) >= PLACE_BANK_MAX){
+    showToast(t('toast_share_max'));
+    return;
+  }
+  progress.shareRewards = (progress.shareRewards||0) + 1;
+  progress.placeBank = Math.min(PLACE_BANK_MAX, (progress.placeBank||0) + 1);
+  await saveJSON('progress', progress);
+  showToast(t('toast_share_reward', progress.placeBank));
+  renderShop();
+  renderPlaceMode();
+}
+document.getElementById('btn-share-line').addEventListener('click', ()=>{
+  shareClear('line');
+});
+document.getElementById('btn-share-x').addEventListener('click', ()=>{
+  shareClear('x');
+});
 document.getElementById('btn-next').addEventListener('click', ()=>{
   els.clearModal.classList.remove('active');
-  isDailyMode=false;
-  startGame(levelToConfig(progress.cleared+1));
+  updateHeaderStats();   // the level number ticks up right here, on the tap
+  // Black Hole Cosmii stays on its own track: "next puzzle" from a Hard Mode
+  // clear must hand you another Hard Mode puzzle, not quietly drop you back
+  // into the normal ladder with normal rules.
+  if(isHardMode){
+    startGame({n:randomHardN(), hard:true, hearts:3, hints:3, prefillChance:0});
+  } else {
+    startGame(levelToConfig(progress.cleared+1));
+  }
 });
-document.getElementById('btn-menu-1').addEventListener('click', ()=>{ els.clearModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
+document.getElementById('btn-menu-1').addEventListener('click', ()=>{ els.clearModal.classList.remove('active'); updateHeaderStats(); stopTimer(); renderTitleScreen(); showScreen(els.title); });
 document.getElementById('btn-retry').addEventListener('click', ()=>{
   els.overModal.classList.remove('active');
   gaDesign('Retry:AfterFail');
-  resetBoard();
-  gaStageStart();
+  if(state && state.timeAttack && taRun){
+    // The time already sunk into the attempt that just failed still counts.
+    // Without this, losing on purpose reset the clock for that puzzle, so a
+    // player who stalled for five minutes could dump those minutes and post a
+    // total far below the time they actually took.
+    taBankElapsed();
+    // A retry inside Time Attack shouldn't hand back the exact board that
+    // just beat you — generate a fresh puzzle for the same slot instead.
+    isHardMode = taRun.index >= TA_NORMAL_HALF;
+    // startGame() fires its own gaStageStart() once the new board exists;
+    // calling it here as well reported a Start against the board that had
+    // just been abandoned.
+    startGame(taConfigForIndex(taRun.index));
+  } else {
+    resetBoard();
+    gaStageStart();
+  }
 });
-document.getElementById('btn-menu-2').addEventListener('click', ()=>{ els.overModal.classList.remove('active'); stopTimer(); renderTitleScreen(); showScreen(els.title); });
+document.getElementById('btn-menu-2').addEventListener('click', ()=>{
+  els.overModal.classList.remove('active');
+  stopTimer();
+  taRun = null;
+  updateTAProgressUI();
+  renderTitleScreen();
+  showScreen(els.title);
+});
 
 // Opening settings mid-board is a pause, so the clock stops with it.
-document.getElementById('btn-settings').addEventListener('click', ()=>{ els.settingsModal.classList.add('active'); suspendTimer(); });
+// While a サンテレビ event is in progress, nothing else on the screen should
+// respond to taps — without this, a tap meant to advance the event (which
+// listens on pointerdown) could *also* land on whatever button happens to be
+// underneath and fire its own click handler (e.g. opening Settings). This
+// runs in the capture phase so it intercepts before the click ever reaches
+// its target. The back button is the one deliberate exception — leaving
+// mid-event has to always work, not just once the animation finishes.
+document.getElementById('game-screen').addEventListener('click', (e)=>{
+  if(state && state.suntvBusy && !e.target.closest('#btn-back')){
+    e.stopPropagation(); e.preventDefault();
+  }
+}, true);
+document.getElementById('btn-settings').addEventListener('click', ()=>{ openSettings({showRestart:true}); });
 document.getElementById('btn-settings-close').addEventListener('click', ()=>{ els.settingsModal.classList.remove('active'); resumeTimerIfPlayable(); });
 document.getElementById('btn-restart').addEventListener('click', ()=>{
   els.settingsModal.classList.remove('active');
@@ -3665,7 +5771,6 @@ document.getElementById('btn-restart').addEventListener('click', ()=>{
   resetBoard();
   gaStageStart();
 });
-document.getElementById('btn-feedback').addEventListener('click', ()=>{ showToast(t('toast_feedback')); });
 document.querySelectorAll('#lang-toggle button').forEach(b=>{
   b.addEventListener('click', ()=>{
     if(lang === b.dataset.lang) return;
@@ -3698,12 +5803,16 @@ els.coachSkip.addEventListener('click', endCoach);
 document.getElementById('toggle-sound').addEventListener('change', e=>{
   settings.sound=e.target.checked;
   saveJSON('settings', settings);
+  if(!settings.sound) pauseAllAudio();
   updateBgmPlayback();
 });
 document.getElementById('toggle-vibrate').addEventListener('change', e=>{ settings.vibrate=e.target.checked; saveJSON('settings', settings); });
 document.getElementById('toggle-pattern').addEventListener('change', e=>{
   settings.pattern=e.target.checked; saveJSON('settings', settings);
   els.gridWrap.classList.toggle('pattern-on', settings.pattern);
+});
+document.getElementById('toggle-suntv').addEventListener('change', e=>{
+  settings.suntvEvents = e.target.checked; saveJSON('settings', settings);
 });
 
 /* ---------------- Init ---------------- */
@@ -3715,11 +5824,17 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
   // shapes rather than trusting whatever comes back.
   bestTimes = await loadJSON('best-times', {});
   if(!bestTimes || typeof bestTimes !== 'object') bestTimes = {};
-  progress = {...{score:0, cleared:0, coins:0}, ...(await loadJSON('progress', {}))};
+  progress = {...{score:0, cleared:0, coins:0, hintBank:0, placeBank:0, shareRewards:0},
+              ...(await loadJSON('progress', {}))};
   if(typeof progress.score !== 'number') progress.score = 0;
   if(typeof progress.cleared !== 'number') progress.cleared = 0;
   // Saves written before coins existed have no such field.
   if(typeof progress.coins !== 'number') progress.coins = 0;
+  if(typeof progress.hintBank !== 'number') progress.hintBank = 0;
+  if(typeof progress.placeBank !== 'number') progress.placeBank = 0;
+  // Saves from before the share cap existed have no counter; starting them at
+  // zero is the intended grandfathering — they keep what they already earned.
+  if(typeof progress.shareRewards !== 'number') progress.shareRewards = 0;
   profileState = await loadProfileState();
   // Saves made before frames and names existed lack those fields.
   profileState = {...DEFAULT_PROFILE, ...profileState};
@@ -3739,15 +5854,23 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
   }
   if(!profileState.owned.includes(profileState.current)) profileState.owned.push(profileState.current);
   if(!profileState.name){ profileState.name = randomPlayerName(); saveProfileState(); }
-  settings = {...{sound:true, vibrate:true, pattern:false, placeMode:false},
+  settings = {...{sound:true, vibrate:true, pattern:false, placeMode:false, suntvEvents:true},
               ...(await loadJSON('settings', {}))};
-  streakData = {...{lastDate:null, streak:0}, ...(await loadJSON('streak', {}))};
-  dailyProgress = {...{date:null, cleared:false, time:0}, ...(await loadJSON('daily-progress', {}))};
+  missionState = {...freshMissionState(), ...(await loadJSON('missions', {}))};
+  hardCoachSeenDate = await loadJSON('hard-tutorial-date', null);
+  suntvSeenStages = await loadJSON('suntv-seen-stages', {});
+  if(typeof suntvSeenStages !== 'object' || !suntvSeenStages) suntvSeenStages = {};
+  if(!Array.isArray(missionState.loginDays)) missionState.loginDays = [];
+  rollMissionState();
+  await saveMissionState();
+  taLeaderboard = await loadJSON('timeattack-leaderboard', []);
+  if(!Array.isArray(taLeaderboard)) taLeaderboard = [];
   lang = await loadJSON('lang', 'ja');
   if(!I18N[lang]) lang = 'ja';
   document.getElementById('toggle-sound').checked = settings.sound;
   document.getElementById('toggle-vibrate').checked = settings.vibrate;
   document.getElementById('toggle-pattern').checked = settings.pattern;
+  document.getElementById('toggle-suntv').checked = settings.suntvEvents;
   // Don't show a switch that cannot do anything: WKWebView has no
   // navigator.vibrate, so without the Haptics plugin this row is a lie.
   if(!hapticsAvailable()){
@@ -3759,6 +5882,7 @@ document.getElementById('toggle-pattern').addEventListener('change', e=>{
   renderPlaceMode();
   if(progress.cleared > 0) coachDone = true;
   updateHeaderStats();
+  renderMissions();
   applyLang();          // also runs renderTitleScreen()
 })();
 </script>
