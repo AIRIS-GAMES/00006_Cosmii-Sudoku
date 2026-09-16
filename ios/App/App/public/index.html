@@ -1099,6 +1099,22 @@
   .suntv-overlay{
     position:absolute; inset:0; pointer-events:none; z-index:40;
   }
+  .suntv-arrival-title{
+    position:absolute; top:calc(12% + 105px); left:50%; z-index:3;
+    width:max-content; max-width:calc(100% - 16px); box-sizing:border-box;
+    padding:10px 16px; border:2px solid #FFD24C; border-radius:18px;
+    background:#fff8e8; color:#8a421b; text-align:center;
+    font-size:clamp(18px, 5vw, 24px); font-weight:900; white-space:pre;
+    box-shadow:0 6px 20px rgba(60,30,10,.25); pointer-events:none;
+    opacity:0; visibility:hidden; transform:translate(-50%, 10px);
+    transition:opacity .25s ease, transform .25s ease, visibility .25s;
+  }
+  .suntv-overlay.char-rise .suntv-arrival-title{
+    opacity:1; visibility:visible; transform:translate(-50%, 0);
+  }
+  .suntv-overlay.char-set .suntv-arrival-title{
+    opacity:0; visibility:hidden; transform:translate(-50%, 10px);
+  }
   /* Dims the whole play screen (topbar, rule cards, board, bottom bar — not
      just the board) so the character reads as the one lit thing around. A
      lighter touch than the first pass: still readable underneath, not a
@@ -1391,6 +1407,7 @@
       <div id="grid-wrap"></div>
       <div class="suntv-overlay" id="suntv-overlay">
         <div class="suntv-character" id="suntv-character"></div>
+        <div class="suntv-arrival-title">おっ！サン  登場！</div>
       </div>
     </div>
 
