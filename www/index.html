@@ -3305,7 +3305,7 @@ function paintCell(r, c){
   const now = Date.now();
   if(now - lastPaintSound > 45){                    // throttle: a fast sweep
     lastPaintSound = now;                           // shouldn't machine-gun
-    beep(drag.mode==='draw' ? 420 : 330, 0.04, 'triangle');
+    if(drag.mode==='erase') beep(330, 0.04, 'triangle');
     vibrate(8);
   }
   if(coach.active && want===2) coachCellDone(r,c);
@@ -3421,7 +3421,7 @@ function handleSingleTap(r,c){
   if(cur===1 || cur===3){ beep(300,0.07,'sine'); pulseLocked(r,c); return; }
   state.board[r][c] = (cur===0) ? 2 : 0;
   renderCell(r,c);
-  beep(420,0.05,'triangle');
+  if(cur===2) beep(420,0.05,'triangle');
   if(coach.active && coach.act==='cross' && state.board[r][c]===2) coachCellDone(r,c);
 }
 function handleDoubleTap(r,c,fromAutoPlace){
