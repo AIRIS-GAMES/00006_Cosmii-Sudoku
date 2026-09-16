@@ -1125,22 +1125,6 @@
     opacity:0;
   }
   .suntv-character img{width:100%; height:100%; object-fit:contain; display:block; pointer-events:none;}
-  .suntv-character.suntv-gallery{
-    width:min(88vw, 420px); height:auto; min-height:0; padding:8px;
-    border-radius:18px; background:rgba(255,255,255,.92);
-    box-shadow:0 0 30px 8px rgba(255,196,80,0.55), 0 10px 26px rgba(0,0,0,0.3);
-    display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:6px;
-  }
-  .suntv-character.suntv-gallery img{width:100%; height:auto; aspect-ratio:1; object-fit:contain;}
-  .suntv-overlay.char-rise .suntv-character.suntv-gallery{
-    left:50%; transform:translate(-50%,-50%) scale(1);
-  }
-  .suntv-overlay.char-set .suntv-character.suntv-gallery{
-    left:50%; transform:translate(-50%,170%) scale(.5);
-  }
-  @media (max-width:480px){
-    .suntv-character.suntv-gallery{grid-template-columns:repeat(3, minmax(0, 1fr)); gap:4px; padding:6px;}
-  }
   .suntv-overlay.char-rise .suntv-character{
      /* Keep the enlarged image fully inside the playfield instead of letting
        the old left-edge transform crop it. */
@@ -3288,6 +3272,8 @@ function paintCell(r, c){
   const key = r+'_'+c;
   if(drag.painted.has(key)) return;
   drag.painted.add(key);
+  // A queued tap must not undo a mark made by this stroke.
+  if(pendingClicks.has(key)){ clearTimeout(pendingClicks.get(key)); pendingClicks.delete(key); }
   if(state.board[r][c]===1 || state.board[r][c]===3) return;   // sealed cells
   if(coach.active){
     // During the tutorial only the highlighted cells respond, so a stray
@@ -3309,20 +3295,35 @@ function paintCell(r, c){
 }
 
 function onGridPointerDown(e){
-  if(!state || state.finished) return;
+  if(!state || state.finished || state.suntvBusy || drag) return;
   if(e.pointerType==='mouse' && e.button!==0) return;
   const cell = e.target.closest ? e.target.closest('.cell') : null;
   if(!cell || !els.gridWrap.contains(cell)) return;
   drag = {
     r:+cell.dataset.r, c:+cell.dataset.c,
-    x:e.clientX, y:e.clientY,
+    x:e.clientX, y:e.clientY, pointerId:e.pointerId,
+    lastX:e.clientX, lastY:e.clientY,
     mode:null, moved:false, painted:new Set(),
   };
   try{ els.gridWrap.setPointerCapture(e.pointerId); }catch(err){}
 }
 
+function paintGridSegment(x, y){
+  const stroke = drag;
+  const dx = x - stroke.lastX, dy = y - stroke.lastY;
+  // Hit-test along the screen-space path, including rotated boards and gaps.
+  const steps = Math.max(1, Math.ceil(Math.hypot(dx, dy) / 4));
+  for(let i = 1; i <= steps; i++){
+    if(drag !== stroke) return;
+    const cell = cellAtPoint(stroke.lastX + dx * i / steps, stroke.lastY + dy * i / steps);
+    if(cell) paintCell(+cell.dataset.r, +cell.dataset.c);
+  }
+  stroke.lastX = x;
+  stroke.lastY = y;
+}
+
 function onGridPointerMove(e){
-  if(!drag) return;
+  if(!drag || e.pointerId !== drag.pointerId) return;
   if(!drag.moved){
     if(Math.hypot(e.clientX-drag.x, e.clientY-drag.y) < DRAG_THRESHOLD) return;
     // Starting a sweep on a Cosmii or a sealed red X would be ambiguous.
@@ -3335,11 +3336,18 @@ function onGridPointerMove(e){
     if(pendingClicks.has(key)){ clearTimeout(pendingClicks.get(key)); pendingClicks.delete(key); }
     paintCell(drag.r, drag.c);
   }
-  const cell = cellAtPoint(e.clientX, e.clientY);
-  if(cell) paintCell(+cell.dataset.r, +cell.dataset.c);
+  // Coalesced samples preserve bends when the browser batches finger movement.
+  const samples = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+  for(const sample of samples){
+    if(!drag) return;
+    paintGridSegment(sample.clientX, sample.clientY);
+  }
+  if(drag) paintGridSegment(e.clientX, e.clientY);
 }
 
 function finishGridPointer(e, cancelled){
+  if(!drag || e.pointerId !== drag.pointerId) return;
+  if(!cancelled) onGridPointerMove(e);
   if(!drag) return;
   const d = drag; drag = null;
   if(e && e.pointerId !== undefined){
@@ -3651,15 +3659,14 @@ function suntvSetCharacter(type){
     : type === 'clearx' ? [SUN_TV_COLLAB.assets.clearCrossMarks]
     : type === 'reveal2' ? [SUN_TV_COLLAB.assets.revealTwoCosmii]
     : SUN_TV_COLLAB.assets.completeGame;
-  if(paths.length > 1) character.classList.add('suntv-gallery');
-  for(const path of paths){
-    const image = document.createElement('img');
-    image.alt = 'おっ！サンコラボ';
-    image.decoding = 'async';
-    image.addEventListener('error', ()=>image.remove(), {once:true});
-    image.src = path;
-    character.appendChild(image);
-  }
+  // Each event shows one character, including the complete-game variants.
+  const path = paths.length === 1 ? paths[0] : paths[Math.floor(Math.random() * paths.length)];
+  const image = document.createElement('img');
+  image.alt = 'おっ！サンコラボ';
+  image.decoding = 'async';
+  image.addEventListener('error', ()=>image.remove(), {once:true});
+  image.src = path;
+  character.appendChild(image);
 }
 function suntvShowCharacter(){
   const overlay = document.getElementById('suntv-overlay');
